@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, verify_csrf
@@ -13,30 +14,49 @@ from app.schemas.user import RegisterResponse, UserCreate, UserOut
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _cookie_options(max_age: int) -> dict[str, str | bool | int | None]:
+    return {
+        "secure": settings.cookie_secure,
+        "samesite": settings.cookie_samesite,
+        "path": settings.cookie_path,
+        "domain": settings.cookie_domain,
+        "max_age": max_age,
+    }
+
+
 def _set_auth_cookies(response: Response, jwt_token: str, csrf_token: str) -> None:
+    max_age = settings.access_token_expire_minutes * 60
+    cookie_opts = _cookie_options(max_age=max_age)
+
     response.set_cookie(
         key=settings.jwt_cookie_name,
         value=jwt_token,
         httponly=True,
-        samesite="lax",
-        secure=False,
-        max_age=settings.access_token_expire_minutes * 60,
+        **cookie_opts,
     )
     response.set_cookie(
         key=settings.csrf_cookie_name,
         value=csrf_token,
         httponly=False,
-        samesite="lax",
-        secure=False,
-        max_age=settings.access_token_expire_minutes * 60,
+        **cookie_opts,
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.jwt_cookie_name,
+        path=settings.cookie_path,
+        domain=settings.cookie_domain,
+    )
+    response.delete_cookie(
+        key=settings.csrf_cookie_name,
+        path=settings.cookie_path,
+        domain=settings.cookie_domain,
     )
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
-def register(payload: UserCreate, db: Session = Depends(get_db)):
-    if payload.password != payload.repeat_password:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
-
+def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResponse:
     existing_user = db.scalar(
         select(User).where(or_(User.username == payload.username, User.email == payload.email))
     )
@@ -51,18 +71,27 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         password_hash=hash_password(payload.password),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
 
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email is already registered",
+        )
+
+    db.refresh(user)
     return RegisterResponse(message="User registered successfully", user=user)
 
 
 @router.post("/login", response_model=LoginResponse)
-def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
+def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> LoginResponse:
+    login_value = payload.username_or_email
+    login_email = login_value.lower()
+
     user = db.scalar(
-        select(User).where(
-            or_(User.username == payload.username_or_email, User.email == payload.username_or_email)
-        )
+        select(User).where(or_(User.username == login_value, User.email == login_email))
     )
 
     if not user or not verify_password(payload.password, user.password_hash):
@@ -79,26 +108,23 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
 
 
 @router.post("/logout", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
-def logout(response: Response, _: User = Depends(get_current_user)):
-    response.delete_cookie(key=settings.jwt_cookie_name)
-    response.delete_cookie(key=settings.csrf_cookie_name)
+def logout(response: Response, _: User = Depends(get_current_user)) -> MessageResponse:
+    _clear_auth_cookies(response)
     return MessageResponse(message="Logged out successfully")
 
 
 @router.get("/me", response_model=UserOut)
-def me(current_user: User = Depends(get_current_user)):
+def me(current_user: User = Depends(get_current_user)) -> UserOut:
     return current_user
 
 
 @router.get("/csrf", response_model=CsrfResponse)
-def get_csrf_token(response: Response, _: User = Depends(get_current_user)):
+def get_csrf_token(response: Response, _: User = Depends(get_current_user)) -> CsrfResponse:
     csrf_token = create_csrf_token()
     response.set_cookie(
         key=settings.csrf_cookie_name,
         value=csrf_token,
         httponly=False,
-        samesite="lax",
-        secure=False,
-        max_age=settings.access_token_expire_minutes * 60,
+        **_cookie_options(max_age=settings.access_token_expire_minutes * 60),
     )
     return CsrfResponse(csrf_token=csrf_token)
