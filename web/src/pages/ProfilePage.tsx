@@ -2,6 +2,8 @@ import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
 import { mockUserProfile } from '../features/profile/mockData'
+import { TravelPhotoGrid } from '../features/posts/components/TravelPhotoGrid'
+import { mockTravelPosts } from '../features/posts/mockData'
 
 export default function ProfilePage() {
   return (
@@ -13,6 +15,14 @@ export default function ProfilePage() {
         subtitle={`Домашний город: ${mockUserProfile.homeCity}`}
       >
         <ProfileStats stats={mockUserProfile.stats} />
+      </ProfileSection>
+
+
+      <ProfileSection
+        title="Фотоистории из поездок"
+        subtitle={`${mockTravelPosts.length} публикации в ленте`}
+      >
+        <TravelPhotoGrid posts={mockTravelPosts} />
       </ProfileSection>
 
       <ProfileSection
