@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
+import ProfilePage from './pages/ProfilePage.tsx'
 
 function resolvePage() {
   if (window.location.pathname === '/login') {
@@ -12,6 +13,10 @@ function resolvePage() {
 
   if (window.location.pathname === '/register') {
     return <RegisterPage />
+  }
+
+  if (window.location.pathname === '/profile') {
+    return <ProfilePage />
   }
 
   return <App />

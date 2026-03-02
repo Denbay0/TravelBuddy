@@ -1,0 +1,40 @@
+import type { TravelPost } from './types'
+
+export const mockTravelPosts: TravelPost[] = [
+  {
+    id: '1',
+    imageUrl: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1200&q=80',
+    title: 'Закат в Каппадокии',
+    caption: 'Поднялись до рассвета, чтобы увидеть долины с высоты воздушного шара. Невероятный свет и тишина.',
+    date: '14 мая 2026',
+    likes: 128,
+    comments: 19,
+    routeLabel: 'Гёреме → Учисар → Красная долина',
+    transportCategory: 'plane',
+    location: 'Каппадокия',
+  },
+  {
+    id: '2',
+    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80',
+    title: 'Ночной поезд до Праги',
+    caption: 'Мягкий свет купе, чай в подстаканнике и медленно сменяющиеся станции за окном.',
+    date: '2 июня 2026',
+    likes: 86,
+    comments: 12,
+    routeLabel: 'Вена → Брно → Прага',
+    transportCategory: 'train',
+    location: 'Центральная Европа',
+  },
+  {
+    id: '3',
+    imageUrl: 'https://images.unsplash.com/photo-1501554728187-ce583db33af7?auto=format&fit=crop&w=1200&q=80',
+    title: 'Дорога вдоль океана',
+    caption: 'Остановки на смотровых площадках, музыка в машине и открытые окна весь путь.',
+    date: '19 июля 2026',
+    likes: 201,
+    comments: 34,
+    routeLabel: 'Лиссабон → Назаре → Порту',
+    transportCategory: 'car',
+    location: 'Португалия',
+  },
+]
