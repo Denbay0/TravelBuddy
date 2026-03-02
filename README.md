@@ -1,131 +1,105 @@
-# TravelBuddy Auth MVP (FastAPI + SQLite)
+# TravelBuddy Auth Backend (FastAPI + SQLite)
 
-Минимальный backend-модуль аутентификации на FastAPI.
-
-## Что реализовано
-
-- Регистрация пользователя (`/auth/register`)
-- Логин по `username` или `email` + `password` (`/auth/login`)
-- JWT access token в **HttpOnly cookie**
-- CSRF-защита по схеме **double-submit cookie**
-- Текущий пользователь (`/auth/me`)
-- Выход (`/auth/logout`)
-- Получение/обновление CSRF токена (`/auth/csrf`)
-- Заглушка `refresh` (`/auth/refresh`, намеренно без refresh-token логики для MVP)
+Простой backend-проект с JWT-аутентификацией через cookies и CSRF-защитой.
 
 ## Структура проекта
 
 ```text
 .
-├── app
-│   ├── auth.py
-│   ├── config.py
-│   ├── database.py
-│   ├── dependencies.py
-│   ├── models.py
-│   ├── routers
-│   │   └── auth.py
-│   └── schemas.py
+├── app/
+│   ├── api/
+│   │   ├── auth.py
+│   │   └── deps.py
+│   ├── core/
+│   │   ├── config.py
+│   │   └── security.py
+│   ├── db/
+│   │   ├── database.py
+│   │   └── models.py
+│   ├── schemas/
+│   │   ├── auth.py
+│   │   └── user.py
+│   └── main.py
+├── data/
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
 ├── main.py
+├── README.md
 └── requirements.txt
 ```
 
-## Быстрый запуск
+## Что реализовано
 
-### 1) Создать и активировать виртуальное окружение
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
+- `GET /auth/csrf`
+- JWT-аутентификация
+- CSRF (double-submit cookie)
+- Cookies
+- Swagger: `GET /docs`
+
+## Локальный запуск
+
+1. Создайте виртуальное окружение:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 2) Установить зависимости
+2. Установите зависимости:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3) Запустить сервер
+3. Создайте `.env` на основе примера:
 
 ```bash
-uvicorn main:app --reload
+cp .env.example .env
 ```
 
-Сервис будет доступен на:
-- API: `http://127.0.0.1:8000`
-- Swagger UI: `http://127.0.0.1:8000/docs`
-
-## Как тестировать cookie auth в Swagger
-
-1. Откройте `/docs`.
-2. Выполните `POST /auth/register`.
-3. Выполните `POST /auth/login`.
-   - JWT автоматически установится в HttpOnly cookie.
-   - CSRF token вернётся в теле ответа и сохранится в cookie `csrf_token`.
-4. Для `POST /auth/logout` нажмите **Try it out** и добавьте заголовок `X-CSRF-Token` со значением токена из login-ответа.
-5. `GET /auth/me` должен вернуть текущего пользователя, если JWT cookie валиден.
-
-> Кнопка **Authorize** в Swagger здесь не обязательна, потому что авторизация идет через cookie.
-
-## Примеры запросов
-
-### Регистрация
+4. Запустите сервер:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "alice",
-    "email": "alice@example.com",
-    "password": "strongpass123",
-    "repeat_password": "strongpass123"
-  }'
+uvicorn app.main:app --reload
 ```
 
-### Логин
+Swagger будет доступен по адресу: `http://127.0.0.1:8000/docs`
+
+## Запуск через Docker
+
+1. Соберите образ:
 
 ```bash
-curl -i -X POST http://127.0.0.1:8000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username_or_email": "alice",
-    "password": "strongpass123"
-  }'
+docker build -t travelbuddy-backend .
 ```
 
-### Текущий пользователь
+2. Запустите через Docker Compose:
 
 ```bash
-curl -X GET http://127.0.0.1:8000/auth/me \
-  --cookie "access_token=<JWT_FROM_SET_COOKIE>"
+docker compose up --build
 ```
 
-### Logout (с CSRF)
+Swagger будет доступен по адресу: `http://127.0.0.1:8000/docs`
 
-```bash
-curl -X POST http://127.0.0.1:8000/auth/logout \
-  -H "X-CSRF-Token: <CSRF_TOKEN>" \
-  --cookie "access_token=<JWT_FROM_SET_COOKIE>; csrf_token=<CSRF_TOKEN>"
-```
+## Переменные окружения
 
-## Безопасность (важно)
+Смотрите `.env.example`:
 
-- `access_token` cookie: `httponly=True`.
-- `samesite="lax"` выбран как практичный баланс для учебного cookie-based auth.
-- `secure=False` оставлен только для локальной разработки.
-  - В production обязательно переключить на `secure=True` и HTTPS.
-- Пароли хранятся только в хешированном виде (`passlib[bcrypt]`).
+- `SECRET_KEY`
+- `ALGORITHM`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `DATABASE_URL`
+- `CSRF_COOKIE_NAME`
+- `JWT_COOKIE_NAME`
 
-## Конфигурация
+## Примечание по SQLite
 
-По умолчанию используются значения из `app/config.py`.
-Можно переопределять через `.env`:
-
-```env
-DATABASE_URL=sqlite:///./travelbuddy.db
-JWT_SECRET_KEY=super-secret-key
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-JWT_COOKIE_NAME=access_token
-CSRF_COOKIE_NAME=csrf_token
-```
+- Локально и в Docker база хранится в файле `data/travelbuddy.db`.
+- В `docker-compose.yml` папка `data/` примонтирована как volume (`./data:/app/data`), поэтому база не теряется после пересоздания контейнера.
