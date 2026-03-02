@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'framer-motion'
 import {
   ArrowRight,
   BookOpen,
@@ -16,24 +16,9 @@ import {
   Footprints,
   type LucideIcon,
 } from 'lucide-react'
-import { useRef, type ReactNode } from 'react'
-
-type SceneMeta = {
-  id: string
-  badge: string
-  title: string
-  description: string
-}
+import { useRef, useState } from 'react'
 
 const navItems = ['Возможности', 'Маршруты', 'Сообщество', 'Статистика']
-
-const sceneMeta: SceneMeta[] = [
-  { id: 'route', badge: 'Сцена 01', title: 'Планируйте маршрут как цельную историю', description: 'Даты, этапы и заметки друзей складываются в единый travel-сценарий без хаоса.' },
-  { id: 'transport', badge: 'Сцена 02', title: 'Структурируйте поездку по типам транспорта', description: 'Автомобиль, самолёт, поезд и пешком — всё разложено по понятным категориям.' },
-  { id: 'community', badge: 'Сцена 03', title: 'Делитесь моментами в travel-сообществе', description: 'Публикуйте яркие эпизоды, сохраняйте идеи друзей и планируйте вместе.' },
-  { id: 'stats', badge: 'Сцена 04', title: 'Развивайте личную travel-идентичность', description: 'Профиль показывает ритм поездок, любимые форматы и географию впечатлений.' },
-  { id: 'reports', badge: 'Сцена 05', title: 'Собирайте поездки в красивые отчёты', description: 'Финальный digest превращает маршруты и эмоции в аккуратную историю сезона.' },
-]
 
 const features = [
   ['Планирование маршрутов', 'Создавайте гибкие маршруты с этапами, заметками и совместным редактированием.', Route],
@@ -104,13 +89,20 @@ function Hero() {
   )
 }
 
-type LayerVisibility = {
-  opacity: number
-  y: number
-  x: number
-  scale: number
-  blur: string
+type StoryScene = {
+  id: string
+  badge: string
+  title: string
+  description: string
 }
+
+const storyScenes: StoryScene[] = [
+  { id: 'route', badge: 'Сцена 01', title: 'Маршрут без хаоса', description: 'Собирайте этапы, даты и заметки в один аккуратный маршрут.' },
+  { id: 'transport', badge: 'Сцена 02', title: 'Категории транспорта', description: 'Разделяйте каждый этап поездки по типу передвижения.' },
+  { id: 'community', badge: 'Сцена 03', title: 'Истории сообщества', description: 'Публикуйте моменты поездки и сохраняйте находки друзей.' },
+  { id: 'stats', badge: 'Сцена 04', title: 'Личная статистика', description: 'Видите прогресс, любимый формат и свой travel-ритм.' },
+  { id: 'reports', badge: 'Сцена 05', title: 'Итоги и отчёты', description: 'Превращайте поездки в красивый digest, к которому хочется возвращаться.' },
+]
 
 const transportChips: Array<{ label: string; icon: LucideIcon }> = [
   { label: 'Автомобиль', icon: Car },
@@ -119,209 +111,140 @@ const transportChips: Array<{ label: string; icon: LucideIcon }> = [
   { label: 'Пешком', icon: Footprints },
 ]
 
-function getLayerVisibility(progress: number, center: number): LayerVisibility {
-  const distance = Math.abs(progress - center)
-  const blend = Math.max(0, 1 - distance / 0.24)
-
-  return {
-    opacity: 0.04 + blend * 0.96,
-    y: (center - progress) * 85,
-    x: (center - progress) * 24,
-    scale: 0.95 + blend * 0.05,
-    blur: `blur(${(1 - blend) * 8}px)`,
+function SceneContent({ id }: { id: string }) {
+  if (id === 'route') {
+    return (
+      <div className="grid h-full gap-4 md:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-3xl border border-ink/10 bg-white p-7">
+          <p className="text-sm text-ink/55">Маршрут «Балтийская неделя»</p>
+          <h3 className="mt-2 text-2xl font-semibold">Санкт-Петербург → Таллин → Рига</h3>
+          <p className="mt-3 text-sm text-ink/70">14–20 мая · 7 дней · 3 города</p>
+          <ul className="mt-6 space-y-3 text-sm text-ink/75">
+            <li>14 мая — вылет и вечерний маршрут по центру</li>
+            <li>16 мая — день заметок и мест от друзей</li>
+            <li>19 мая — финальный чеклист перед выездом</li>
+          </ul>
+        </article>
+        <aside className="rounded-3xl border border-ink/10 bg-ink p-6 text-white">
+          <p className="text-sm text-white/75">Готовность плана</p>
+          <p className="mt-2 text-4xl font-semibold">92%</p>
+          <p className="mt-3 text-sm text-white/75">Осталось подтвердить один трансфер</p>
+        </aside>
+      </div>
+    )
   }
-}
 
-function SceneShell({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`absolute inset-0 ${className}`}>{children}</div>
-}
+  if (id === 'transport') {
+    return (
+      <div className="grid h-full gap-4">
+        <article className="rounded-3xl border border-ink/10 bg-white p-7">
+          <p className="text-sm text-ink/55">Категории поездки</p>
+          <h3 className="mt-2 text-2xl font-semibold">Один маршрут, четыре типа передвижения</h3>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {transportChips.map(({ label, icon: Icon }) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl border border-ink/10 px-4 py-3">
+                <span className="rounded-lg bg-ink/5 p-2"><Icon size={16} /></span>
+                <span className="text-sm font-medium">{label}</span>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    )
+  }
 
+  if (id === 'community') {
+    return (
+      <div className="grid h-full gap-4 md:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-3xl border border-ink/10 bg-white p-7">
+          <p className="text-sm text-ink/55">История из поездки</p>
+          <p className="mt-3 text-xl font-semibold">«Утренний трамвай в Риге — самый тёплый момент маршрута»</p>
+          <p className="mt-4 text-sm text-ink/70">@maria.travel добавила остановку в общий план и поделилась короткой заметкой для друзей.</p>
+          <div className="mt-6 flex gap-5 text-xs text-ink/60"><span>Нравится 212</span><span>Комментарии 27</span></div>
+        </article>
+        <aside className="rounded-3xl border border-ink/10 bg-white p-6">
+          <p className="text-sm text-ink/55">Сохранено в избранное</p>
+          <p className="mt-2 text-4xl font-semibold">16</p>
+          <p className="mt-3 text-sm text-ink/70">идей рядом с вашим маршрутом</p>
+        </aside>
+      </div>
+    )
+  }
 
-function SceneCaption({ scene, center, progress }: { scene: SceneMeta; center: number; progress: import('framer-motion').MotionValue<number> }) {
-  const opacity = useTransform(progress, (v) => getLayerVisibility(v, center).opacity)
-  const y = useTransform(progress, (v) => (center - v) * 16)
+  if (id === 'stats') {
+    return (
+      <div className="grid h-full gap-4 md:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-3xl border border-ink/10 bg-white p-7">
+          <p className="text-sm text-ink/55">Профиль путешественника</p>
+          <h3 className="mt-2 text-2xl font-semibold">Личная статистика сезона</h3>
+          <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+            <p className="rounded-xl bg-sand px-3 py-2">Поездок: <b>31</b></p>
+            <p className="rounded-xl bg-sand px-3 py-2">Городов: <b>52</b></p>
+            <p className="rounded-xl bg-sand px-3 py-2">Сохранённых маршрутов: <b>74</b></p>
+            <p className="rounded-xl bg-sand px-3 py-2">Любимый транспорт: <b>Поезд</b></p>
+          </div>
+        </article>
+      </div>
+    )
+  }
 
   return (
-    <motion.article className="rounded-2xl border border-white/50 bg-white/70 p-4" style={{ opacity, y }}>
-      <p className="text-xs uppercase tracking-wider text-ink/45">{scene.badge}</p>
-      <h3 className="mt-1 text-sm font-semibold">{scene.title}</h3>
-      <p className="mt-2 text-xs text-ink/65">{scene.description}</p>
-    </motion.article>
+    <div className="grid h-full gap-4">
+      <article className="rounded-3xl border border-ink/10 bg-white p-7">
+        <p className="text-sm text-ink/55">Travel Digest</p>
+        <h3 className="mt-2 text-2xl font-semibold">Итог поездки «Балтийская неделя»</h3>
+        <p className="mt-4 text-sm text-ink/70">Маршрут, лучшие моменты, статистика и заметки друзей — в одном аккуратном отчёте.</p>
+        <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-ink/80">
+          <p>7 дней</p><p>3 города</p><p>18 сохранённых мест</p><p>PDF + web-версия</p>
+        </div>
+      </article>
+    </div>
   )
 }
 
 function StickyShowcase() {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const [activeIndex, setActiveIndex] = useState(0)
 
-  const route = {
-    opacity: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.1).opacity),
-    y: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.1).y),
-    x: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.1).x),
-    scale: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.1).scale),
-    filter: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.1).blur),
-  }
-  const transport = {
-    opacity: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.3).opacity),
-    y: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.3).y),
-    x: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.3).x),
-    scale: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.3).scale),
-    filter: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.3).blur),
-  }
-  const community = {
-    opacity: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.5).opacity),
-    y: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.5).y),
-    x: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.5).x),
-    scale: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.5).scale),
-    filter: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.5).blur),
-  }
-  const stats = {
-    opacity: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.7).opacity),
-    y: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.7).y),
-    x: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.7).x),
-    scale: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.7).scale),
-    filter: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.7).blur),
-  }
-  const reports = {
-    opacity: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.9).opacity),
-    y: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.9).y),
-    x: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.9).x),
-    scale: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.9).scale),
-    filter: useTransform(scrollYProgress, (v) => getLayerVisibility(v, 0.9).blur),
-  }
+  useMotionValueEvent(scrollYProgress, 'change', (value) => {
+    const nextIndex = Math.min(storyScenes.length - 1, Math.floor(value * storyScenes.length))
+    setActiveIndex(nextIndex)
+  })
 
-  const glow = useTransform(scrollYProgress, [0, 0.5, 1], [0.25, 0.55, 0.78])
+  const scene = storyScenes[activeIndex]
 
   return (
-    <section ref={ref} className="relative mx-auto min-h-[420vh] max-w-6xl px-6 py-24">
+    <section ref={ref} className="relative mx-auto min-h-[360vh] max-w-6xl px-6 py-24">
       <div className="sticky top-20">
         <div className="mb-8 text-center">
-          <p className="text-sm uppercase tracking-[0.18em] text-ink/45">Кинематографичная история продукта</p>
-          <h2 className="mt-3 text-4xl font-semibold md:text-5xl">Один живой кадр TravelBuddy</h2>
+          <p className="text-sm uppercase tracking-[0.16em] text-ink/45">История продукта</p>
+          <h2 className="mt-3 text-4xl font-semibold md:text-5xl">TravelBuddy в одном фиксированном кадре</h2>
         </div>
 
-        <div className="relative mx-auto h-[68vh] max-h-[760px] min-h-[520px] w-full overflow-hidden rounded-[2.2rem] border border-white/55 bg-white/65 p-4 shadow-glow backdrop-blur-xl md:p-6">
-          <motion.div className="absolute inset-0 bg-gradient-to-br from-amber/25 via-transparent to-pine/25" style={{ opacity: glow }} />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.8),transparent_45%),radial-gradient(circle_at_80%_85%,rgba(216,135,82,0.12),transparent_38%)]" />
+        <div className="rounded-[2rem] border border-ink/10 bg-[#f7f3eb] p-4 md:p-6">
+          <div className="mb-4 flex items-start justify-between gap-6 rounded-2xl border border-ink/10 bg-white px-5 py-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-ink/45">{scene.badge}</p>
+              <p className="mt-1 text-lg font-semibold">{scene.title}</p>
+            </div>
+            <p className="max-w-md text-sm text-ink/65">{scene.description}</p>
+          </div>
 
-          <motion.div className="absolute inset-0" style={route}>
-            <SceneShell className="p-4 md:p-8">
-              <div className="grid h-full gap-4 md:grid-cols-[1.15fr_0.85fr]">
-                <div className="rounded-3xl bg-white/90 p-6">
-                  <p className="text-sm text-ink/55">Маршрут «Балтийская неделя»</p>
-                  <h3 className="mt-2 text-2xl font-semibold">Санкт-Петербург → Таллин → Рига</h3>
-                  <p className="mt-3 text-sm text-ink/65">7 дней · 3 страны · 9 ключевых точек</p>
-                  <div className="mt-6 space-y-3 text-sm text-ink/75">
-                    <p>14 мая — вылет и первый вечерний маршрут</p>
-                    <p>16 мая — день городских заметок и кафе-спотов</p>
-                    <p>19 мая — финальный чеклист и подборка лучших мест</p>
-                  </div>
-                </div>
-                <div className="grid gap-4">
-                  <div className="rounded-3xl bg-white/90 p-5">
-                    <p className="text-sm text-ink/55">Участники</p>
-                    <p className="mt-2 text-3xl font-semibold">5 друзей</p>
-                    <p className="text-sm text-ink/60">в совместном планировании</p>
-                  </div>
-                  <div className="rounded-3xl bg-ink p-5 text-white">
-                    <p className="text-sm text-white/70">Статус</p>
-                    <p className="mt-2 text-xl font-semibold">Маршрут собран на 92%</p>
-                    <p className="mt-2 text-sm text-white/75">Остались бронь поезда и финальные заметки</p>
-                  </div>
-                </div>
-              </div>
-            </SceneShell>
-          </motion.div>
-
-          <motion.div className="absolute inset-0" style={transport}>
-            <SceneShell className="p-4 md:p-8">
-              <div className="grid h-full gap-5">
-                <div className="rounded-3xl bg-white/90 p-6">
-                  <p className="text-sm text-ink/55">Категории транспорта</p>
-                  <p className="mt-2 text-2xl font-semibold">Разложите каждую часть маршрута по формату движения</p>
-                </div>
-                <div className="grid flex-1 content-center gap-4 md:grid-cols-4">
-                  {transportChips.map(({ label, icon: Icon }) => (
-                    <div key={label} className="rounded-2xl border border-ink/10 bg-white/90 px-4 py-4 text-center">
-                      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-ink/5"><Icon size={18} /></div>
-                      <p className="text-sm font-medium">{label}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="rounded-3xl bg-ink p-6 text-white">
-                  <p className="text-sm text-white/70">Баланс маршрута</p>
-                  <p className="mt-3 text-sm text-white/85">Автомобиль 30% · Самолёт 26% · Поезд 24% · Пешком 20%</p>
-                </div>
-              </div>
-            </SceneShell>
-          </motion.div>
-
-          <motion.div className="absolute inset-0" style={community}>
-            <SceneShell className="p-4 md:p-8">
-              <div className="grid h-full gap-4 md:grid-cols-[1fr_1fr]">
-                <article className="rounded-3xl bg-white/90 p-6">
-                  <p className="text-sm text-ink/55">История дня</p>
-                  <p className="mt-3 text-lg font-semibold">«Утренний трамвай в Риге — лучший кадр поездки»</p>
-                  <p className="mt-4 text-sm text-ink/70">@maria.travel сохранила остановку и добавила её в общий маршрут.</p>
-                  <div className="mt-6 flex gap-5 text-xs text-ink/55"><span>Нравится 212</span><span>Комментарии 27</span><span>Сохранения 49</span></div>
-                </article>
-                <div className="grid gap-4">
-                  <article className="rounded-3xl bg-ink p-6 text-white">
-                    <p className="text-sm text-white/75">Подборка друзей</p>
-                    <p className="mt-2 text-2xl font-semibold">16 идей рядом с вашим маршрутом</p>
-                  </article>
-                  <article className="rounded-3xl bg-white/90 p-6">
-                    <p className="text-sm text-ink/55">Сохранённые моменты</p>
-                    <p className="mt-2 text-lg font-semibold">8 новых stories за неделю</p>
-                    <p className="mt-2 text-sm text-ink/65">Собраны в один travel-альбом команды</p>
-                  </article>
-                </div>
-              </div>
-            </SceneShell>
-          </motion.div>
-
-          <motion.div className="absolute inset-0" style={stats}>
-            <SceneShell className="p-4 md:p-8">
-              <div className="grid h-full gap-4">
-                <div className="rounded-3xl bg-white/90 p-6">
-                  <p className="text-sm text-ink/55">Профиль путешественника</p>
-                  <p className="mt-2 text-2xl font-semibold">Личный travel-паспорт и динамика сезона</p>
-                </div>
-                <div className="grid flex-1 gap-4 md:grid-cols-4">
-                  <div className="rounded-3xl bg-white/90 p-5"><p className="text-sm text-ink/55">Поездок</p><p className="mt-2 text-3xl font-semibold">31</p></div>
-                  <div className="rounded-3xl bg-white/90 p-5"><p className="text-sm text-ink/55">Городов</p><p className="mt-2 text-3xl font-semibold">52</p></div>
-                  <div className="rounded-3xl bg-white/90 p-5"><p className="text-sm text-ink/55">Сохранённых маршрутов</p><p className="mt-2 text-3xl font-semibold">74</p></div>
-                  <div className="rounded-3xl bg-ink p-5 text-white"><p className="text-sm text-white/70">Любимый формат</p><p className="mt-2 text-xl font-semibold">Поезд</p></div>
-                </div>
-              </div>
-            </SceneShell>
-          </motion.div>
-
-          <motion.div className="absolute inset-0" style={reports}>
-            <SceneShell className="p-4 md:p-8">
-              <div className="grid h-full gap-4 md:grid-cols-[1.15fr_0.85fr]">
-                <div className="rounded-3xl bg-white/90 p-6">
-                  <p className="text-sm text-ink/55">Travel Digest</p>
-                  <p className="mt-2 text-2xl font-semibold">Итог поездки «Балтийская неделя»</p>
-                  <p className="mt-4 text-sm text-ink/70">Маршрут, лучшие моменты, статистика, заметки и рекомендации на следующий сезон.</p>
-                  <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-ink/75">
-                    <p>7 дней</p><p>3 страны</p><p>18 сохранённых мест</p><p>1 красивый PDF + web-версия</p>
-                  </div>
-                </div>
-                <div className="rounded-3xl bg-gradient-to-br from-ink to-pine p-6 text-white">
-                  <p className="text-sm text-white/75">Отчёт готов</p>
-                  <p className="mt-2 text-3xl font-semibold">Весна 2026</p>
-                  <p className="mt-4 text-sm text-white/85">Личная хроника поездок, которой хочется делиться и возвращаться к ней позже.</p>
-                </div>
-              </div>
-            </SceneShell>
-          </motion.div>
-        </div>
-
-        <div className="mt-8 grid gap-3 md:grid-cols-5">
-          {sceneMeta.map((scene, index) => (
-            <SceneCaption key={scene.id} scene={scene} center={[0.1, 0.3, 0.5, 0.7, 0.9][index]} progress={scrollYProgress} />
-          ))}
+          <div className="relative h-[54vh] min-h-[430px] overflow-hidden rounded-2xl border border-ink/10 bg-sand p-4 md:p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={scene.id}
+                initial={{ opacity: 0, y: 18, scale: 0.995 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -18, scale: 0.995 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full"
+              >
+                <SceneContent id={scene.id} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </section>
