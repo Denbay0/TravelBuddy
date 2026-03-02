@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     cookie_path: str = "/"
     cookie_domain: str | None = None
 
+    media_root: str = "media"
+
     env: Literal["dev", "test", "prod"] = "dev"
     debug: bool = False
 

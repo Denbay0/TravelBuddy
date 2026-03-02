@@ -1,6 +1,6 @@
 # TravelBuddy Auth Backend (FastAPI + SQLite)
 
-Простой backend-проект с JWT-аутентификацией через cookies и CSRF-защитой.
+Учебный backend-проект с JWT-аутентификацией через cookies, CSRF-защитой и базовым профилем пользователя.
 
 ## Структура проекта
 
@@ -9,7 +9,8 @@
 ├── app/
 │   ├── api/
 │   │   ├── auth.py
-│   │   └── deps.py
+│   │   ├── deps.py
+│   │   └── profile.py
 │   ├── core/
 │   │   ├── config.py
 │   │   └── security.py
@@ -19,28 +20,50 @@
 │   ├── schemas/
 │   │   ├── auth.py
 │   │   └── user.py
-│   └── main.py
+│   ├── main.py
+│   └── utils_profile.py
 ├── data/
+├── media/
+│   └── avatars/
+│       └── default.svg
+├── tests/
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
 ├── Dockerfile
-├── main.py
 ├── README.md
 └── requirements.txt
 ```
 
 ## Что реализовано
 
+### Auth
+
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
 - `GET /auth/csrf`
-- JWT-аутентификация
-- CSRF (double-submit cookie)
-- Cookies
+
+### Профиль
+
+- `GET /profile/me`
+- `PATCH /profile/me`
+- `POST /profile/avatar`
+- `DELETE /profile/avatar`
+
+## Особенности
+
+- единая точка входа: `app/main.py`
+- запуск сервера: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
+- username: 3–32 символа, только латиница, цифры и `_`
+- автоматическая генерация уникального handle (`@username`, `@username1`, ...)
+- обновление handle при изменении username
+- загрузка аватара в `media/avatars/`
+- допустимые форматы: `.jpg`, `.jpeg`, `.png`, `.webp`
+- ограничение размера аватара: 2MB
+- дефолтный аватар: `/media/avatars/default.svg`
 - Swagger: `GET /docs`
 
 ## Локальный запуск
@@ -67,39 +90,30 @@ cp .env.example .env
 4. Запустите сервер:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Swagger будет доступен по адресу: `http://127.0.0.1:8000/docs`
+Swagger: `http://127.0.0.1:8000/docs`
 
 ## Запуск через Docker
-
-1. Соберите образ:
-
-```bash
-docker build -t travelbuddy-backend .
-```
-
-2. Запустите через Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-Swagger будет доступен по адресу: `http://127.0.0.1:8000/docs`
+Swagger: `http://127.0.0.1:8000/docs`
 
-## Переменные окружения
+### Volume'ы в Docker
 
-Смотрите `.env.example`:
-
-- `SECRET_KEY`
-- `ALGORITHM`
-- `ACCESS_TOKEN_EXPIRE_MINUTES`
-- `DATABASE_URL`
-- `CSRF_COOKIE_NAME`
-- `JWT_COOKIE_NAME`
+- `./data:/app/data` — SQLite база
+- `./media:/app/media` — пользовательские аватары
 
 ## Примечание по SQLite
 
-- Локально и в Docker база хранится в файле `data/travelbuddy.db`.
-- В `docker-compose.yml` папка `data/` примонтирована как volume (`./data:/app/data`), поэтому база не теряется после пересоздания контейнера.
+Если у вас была старая SQLite БД без новых полей пользователя, проще удалить локальный файл БД и пересоздать его:
+
+```bash
+rm -f data/travelbuddy.db
+```
+
+После следующего запуска таблицы создадутся заново.
