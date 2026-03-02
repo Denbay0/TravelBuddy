@@ -29,6 +29,7 @@ def test_register_success(client: TestClient) -> None:
     data = response.json()
     assert data["user"]["username"] == "test_user"
     assert data["user"]["email"] == "test@example.com"
+    assert data["user"]["handle"] == "@test_user"
 
 
 def test_register_password_mismatch(client: TestClient) -> None:
@@ -108,6 +109,7 @@ def test_me_authorized(client: TestClient) -> None:
     response = client.get("/auth/me")
     assert response.status_code == 200
     assert response.json()["username"] == "Valid_User"
+    assert response.json()["handle"] == "@valid_user"
 
 
 def test_me_unauthorized(client: TestClient) -> None:

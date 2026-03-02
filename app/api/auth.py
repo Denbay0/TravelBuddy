@@ -10,8 +10,20 @@ from app.db.database import get_db
 from app.db.models import User
 from app.schemas.auth import CsrfResponse, LoginRequest, LoginResponse, MessageResponse
 from app.schemas.user import RegisterResponse, UserCreate, UserOut
+from app.utils_profile import build_avatar_url, generate_unique_handle
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _serialize_user(user: User) -> UserOut:
+    return UserOut(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        handle=f"@{user.handle}",
+        avatar_url=build_avatar_url(user.avatar_path),
+        created_at=user.created_at,
+    )
 
 
 def _cookie_options(max_age: int) -> dict[str, str | bool | int | None]:
@@ -68,6 +80,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
     user = User(
         username=payload.username,
         email=payload.email,
+        handle=generate_unique_handle(db, payload.username),
         password_hash=hash_password(payload.password),
     )
     db.add(user)
@@ -82,7 +95,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
         )
 
     db.refresh(user)
-    return RegisterResponse(message="User registered successfully", user=user)
+    return RegisterResponse(message="User registered successfully", user=_serialize_user(user))
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -115,7 +128,7 @@ def logout(response: Response, _: User = Depends(get_current_user)) -> MessageRe
 
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)) -> UserOut:
-    return current_user
+    return _serialize_user(current_user)
 
 
 @router.get("/csrf", response_model=CsrfResponse)

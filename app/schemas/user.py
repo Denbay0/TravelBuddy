@@ -3,7 +3,8 @@ import re
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
-USERNAME_REGEX = re.compile(r"^[A-Za-z0-9_]+$")
+from app.utils_profile import normalize_username
+
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$")
 
 
@@ -15,17 +16,10 @@ class UserCreate(BaseModel):
 
     @field_validator("username", mode="before")
     @classmethod
-    def normalize_username(cls, value: str) -> str:
+    def validate_username(cls, value: str) -> str:
         if not isinstance(value, str):
             raise ValueError("Username must be a string")
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("Username cannot be empty")
-        if len(normalized) < 3 or len(normalized) > 32:
-            raise ValueError("Username must be between 3 and 32 characters")
-        if not USERNAME_REGEX.fullmatch(normalized):
-            raise ValueError("Username can contain only latin letters, digits, and underscores")
-        return normalized
+        return normalize_username(value)
 
     @field_validator("email", mode="before")
     @classmethod
@@ -53,12 +47,25 @@ class UserCreate(BaseModel):
         return self
 
 
+class ProfileUpdateRequest(BaseModel):
+    username: str
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise ValueError("Username must be a string")
+        return normalize_username(value)
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     username: str
     email: EmailStr
+    handle: str
+    avatar_url: str
     created_at: datetime
 
 

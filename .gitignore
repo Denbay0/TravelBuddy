@@ -34,6 +34,10 @@ env/
 data/*.db
 data/*.sqlite3
 
+# Media uploads
+media/avatars/*
+!media/avatars/default.svg
+
 # Build artifacts
 build/
 dist/
