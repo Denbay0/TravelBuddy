@@ -131,7 +131,7 @@ def me(current_user: User = Depends(get_current_user)) -> UserOut:
 
 
 @router.get("/csrf", response_model=CsrfResponse)
-def get_csrf_token(response: Response, _: User = Depends(get_current_user)) -> CsrfResponse:
+def get_csrf_token(response: Response) -> CsrfResponse:
     csrf_token = create_csrf_token()
     response.set_cookie(
         key=settings.csrf_cookie_name,

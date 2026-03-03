@@ -80,6 +80,10 @@ type RequestOptions = {
   skipCsrf?: boolean
 }
 
+type CsrfTokenPayload = {
+  csrfToken?: string
+}
+
 const NETWORK_ERROR_MESSAGE =
   'Не удалось подключиться к серверу. Проверьте, запущен ли backend на 127.0.0.1:8000.'
 
@@ -145,7 +149,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   const data = await parseJson<T>(response)
-  return (data || {}) as T
+  const typedData = (data || {}) as T
+
+  const csrfToken = (typedData as CsrfTokenPayload).csrfToken
+  if (csrfToken) {
+    csrfTokenCache = csrfToken
+  }
+
+  return typedData
 }
 
 export function clearCsrfTokenCache() {
