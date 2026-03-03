@@ -18,11 +18,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def _serialize_user(user: User) -> UserOut:
     return UserOut(
         id=user.id,
-        username=user.username,
+        name=user.username,
         email=user.email,
         handle=f"@{user.handle}",
-        avatar_url=build_avatar_url(user.avatar_path),
-        created_at=user.created_at,
+        avatarUrl=build_avatar_url(user.avatar_path),
+        createdAt=user.created_at,
     )
 
 
@@ -68,19 +68,19 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
-def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResponse:
+def register(payload: UserCreate, response: Response, db: Session = Depends(get_db)) -> RegisterResponse:
     existing_user = db.scalar(
-        select(User).where(or_(User.username == payload.username, User.email == payload.email))
+        select(User).where(or_(User.username == payload.name, User.email == payload.email))
     )
     if existing_user:
-        if existing_user.username == payload.username:
+        if existing_user.username == payload.name:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username is already taken")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered")
 
     user = User(
-        username=payload.username,
+        username=payload.name,
         email=payload.email,
-        handle=generate_unique_handle(db, payload.username),
+        handle=generate_unique_handle(db, payload.name),
         password_hash=hash_password(payload.password),
     )
     db.add(user)
@@ -95,29 +95,28 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
         )
 
     db.refresh(user)
-    return RegisterResponse(message="User registered successfully", user=_serialize_user(user))
+    jwt_token = create_access_token(subject=str(user.id))
+    csrf_token = create_csrf_token()
+    _set_auth_cookies(response, jwt_token=jwt_token, csrf_token=csrf_token)
+
+    return RegisterResponse(message="User registered successfully", user=_serialize_user(user), csrfToken=csrf_token)
 
 
 @router.post("/login", response_model=LoginResponse)
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> LoginResponse:
-    login_value = payload.username_or_email
-    login_email = login_value.lower()
-
-    user = db.scalar(
-        select(User).where(or_(User.username == login_value, User.email == login_email))
-    )
+    user = db.scalar(select(User).where(User.email == payload.email))
 
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username/email or password",
+            detail="Invalid email or password",
         )
 
     jwt_token = create_access_token(subject=str(user.id))
     csrf_token = create_csrf_token()
     _set_auth_cookies(response, jwt_token=jwt_token, csrf_token=csrf_token)
 
-    return LoginResponse(message="Login successful", csrf_token=csrf_token)
+    return LoginResponse(message="Login successful", user=_serialize_user(user), csrfToken=csrf_token)
 
 
 @router.post("/logout", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
@@ -140,4 +139,4 @@ def get_csrf_token(response: Response, _: User = Depends(get_current_user)) -> C
         httponly=False,
         **_cookie_options(max_age=settings.access_token_expire_minutes * 60),
     )
-    return CsrfResponse(csrf_token=csrf_token)
+    return CsrfResponse(csrfToken=csrf_token)

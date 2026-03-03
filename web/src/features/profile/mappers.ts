@@ -7,13 +7,13 @@ const DEFAULT_TAGLINE = 'Путешествие начинается здесь.
 const DEFAULT_HOME_CITY = 'Не указан'
 
 export function mapApiUserToProfile(user: ApiUser): UserProfile {
-  const absoluteAvatarUrl = user.avatar_url.startsWith('http')
-    ? user.avatar_url
-    : `${env.mediaBaseUrl}${user.avatar_url}`
+  const absoluteAvatarUrl = user.avatarUrl.startsWith('http')
+    ? user.avatarUrl
+    : `${env.mediaBaseUrl}${user.avatarUrl}`
 
   return {
     id: String(user.id),
-    name: user.username,
+    name: user.name,
     avatarUrl: absoluteAvatarUrl,
     travelTagline: DEFAULT_TAGLINE,
     bio: DEFAULT_BIO,
@@ -24,7 +24,7 @@ export function mapApiUserToProfile(user: ApiUser): UserProfile {
       trips: 0,
       posts: 0,
       savedRoutes: 0,
-      favoriteTransport: '—',
+      favoriteTransport: 'Поезд',
     },
   }
 }

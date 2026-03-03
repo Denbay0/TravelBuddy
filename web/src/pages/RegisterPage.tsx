@@ -74,10 +74,10 @@ export default function RegisterPage() {
 
     try {
       await authService.register({
-        username: values.name,
+        name: values.name,
         email: values.email,
         password: values.password,
-        repeat_password: values.confirmPassword,
+        confirmPassword: values.confirmPassword,
       })
 
       setSuccess('Аккаунт создан! Перенаправляем на страницу входа...')

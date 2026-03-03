@@ -11,16 +11,16 @@ PASSWORD_MAX_LENGTH = 72
 
 
 class UserCreate(BaseModel):
-    username: str
+    name: str
     email: EmailStr
     password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
-    repeat_password: str
+    confirmPassword: str
 
-    @field_validator("username", mode="before")
+    @field_validator("name", mode="before")
     @classmethod
-    def validate_username(cls, value: str) -> str:
+    def validate_name(cls, value: str) -> str:
         if not isinstance(value, str):
-            raise ValueError("Username must be a string")
+            raise ValueError("Name must be a string")
         return normalize_username(value)
 
     @field_validator("email", mode="before")
@@ -36,8 +36,6 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        # bcrypt processes only the first 72 bytes of a password, so we fail fast
-        # with a clear validation error instead of silently truncating.
         if len(value) > PASSWORD_MAX_LENGTH:
             raise ValueError(
                 f"Password must be at most {PASSWORD_MAX_LENGTH} characters (bcrypt limit)"
@@ -50,7 +48,7 @@ class UserCreate(BaseModel):
 
     @model_validator(mode="after")
     def passwords_match(self) -> "UserCreate":
-        if self.password != self.repeat_password:
+        if self.password != self.confirmPassword:
             raise ValueError("Passwords do not match")
         return self
 
@@ -70,13 +68,14 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    username: str
+    name: str
     email: EmailStr
     handle: str
-    avatar_url: str
-    created_at: datetime
+    avatarUrl: str
+    createdAt: datetime
 
 
 class RegisterResponse(BaseModel):
     message: str
     user: UserOut
+    csrfToken: str

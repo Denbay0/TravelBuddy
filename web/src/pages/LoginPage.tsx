@@ -60,7 +60,7 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      await authService.login({ username_or_email: values.email, password: values.password })
+      await authService.login({ email: values.email, password: values.password, rememberMe: values.rememberMe })
       await authService.me()
       setSuccess('Вход выполнен успешно. Перенаправляем в профиль...')
       setTimeout(() => {

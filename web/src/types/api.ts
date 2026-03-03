@@ -4,33 +4,36 @@ export type ApiErrorPayload = {
 
 export type ApiUser = {
   id: number
-  username: string
+  name: string
   email: string
   handle: string
-  avatar_url: string
-  created_at: string
+  avatarUrl: string
+  createdAt: string
 }
 
 export type LoginRequest = {
-  username_or_email: string
+  email: string
   password: string
+  rememberMe: boolean
 }
 
 export type LoginResponse = {
   message: string
-  csrf_token: string
+  user: ApiUser
+  csrfToken: string
 }
 
 export type RegisterRequest = {
-  username: string
+  name: string
   email: string
   password: string
-  repeat_password: string
+  confirmPassword: string
 }
 
 export type RegisterResponse = {
   message: string
   user: ApiUser
+  csrfToken: string
 }
 
 export type LogoutResponse = {
@@ -38,5 +41,5 @@ export type LogoutResponse = {
 }
 
 export type CsrfResponse = {
-  csrf_token: string
+  csrfToken: string
 }
