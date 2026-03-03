@@ -18,13 +18,13 @@ export function mapApiUserToProfile(user: ApiProfile): UserProfile {
     travelTagline: user.travelTagline || DEFAULT_TAGLINE,
     bio: user.bio || DEFAULT_BIO,
     homeCity: user.homeCity || DEFAULT_HOME_CITY,
-    visitedCities: user.visitedCities,
-    favoriteRoutes: user.favoriteRoutes,
+    visitedCities: user.visitedCities ?? [],
+    favoriteRoutes: user.favoriteRoutes ?? [],
     stats: {
-      trips: user.stats.trips,
-      posts: user.stats.posts,
-      savedRoutes: user.stats.savedRoutes,
-      favoriteTransport: 'Поезд',
+      trips: user.stats?.trips ?? 0,
+      posts: user.stats?.posts ?? 0,
+      savedRoutes: user.stats?.savedRoutes ?? 0,
+      favoriteTransport: user.stats?.favoriteTransport ?? 'Пешком',
     },
   }
 }

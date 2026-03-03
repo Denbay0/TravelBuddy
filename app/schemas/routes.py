@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import Field
 
 from app.schemas.common import CamelModel, PaginatedResponse
+from app.schemas.transport import TransportType
 
 
 class RouteCreateRequest(CamelModel):
@@ -10,6 +11,7 @@ class RouteCreateRequest(CamelModel):
     description: str = ""
     cities: list[str] = Field(default_factory=list)
     duration_days: int = Field(default=1, ge=1)
+    transport: TransportType = TransportType.WALK
 
 
 class RouteUpdateRequest(CamelModel):
@@ -17,6 +19,7 @@ class RouteUpdateRequest(CamelModel):
     description: str | None = None
     cities: list[str] | None = None
     duration_days: int | None = Field(default=None, ge=1)
+    transport: TransportType | None = None
 
 
 class RouteOwner(CamelModel):
@@ -31,11 +34,19 @@ class RouteOut(CamelModel):
     description: str
     cities: list[str]
     duration_days: int
+    transport: TransportType
     saves_count: int
     owner: RouteOwner
     is_saved: bool
     created_at: datetime
     updated_at: datetime
+
+
+class RouteSaveResponse(CamelModel):
+    message: str
+    saved: bool
+    is_saved: bool
+    saves: int
 
 
 class RouteListResponse(PaginatedResponse[RouteOut]):

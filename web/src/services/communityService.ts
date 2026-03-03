@@ -1,4 +1,4 @@
-import type { ApiPost, ApiPostComment } from '../types/api'
+import type { ApiPost, ApiPostComment, ApiPostReactionResponse } from '../types/api'
 import { postService } from './postService'
 
 type FeedQuery = {
@@ -15,14 +15,14 @@ export const communityService = {
     return postService.create(payload)
   },
 
-  async toggleLike(postId: number, liked: boolean) {
+  async toggleLike(postId: number, liked: boolean): Promise<ApiPostReactionResponse> {
     if (liked) {
       return postService.unlike(postId)
     }
     return postService.like(postId)
   },
 
-  async toggleSave(postId: number, saved: boolean) {
+  async toggleSave(postId: number, saved: boolean): Promise<ApiPostReactionResponse> {
     if (saved) {
       return postService.unsave(postId)
     }

@@ -17,6 +17,7 @@ class User(Base):
     travel_tagline: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     bio: Mapped[str] = mapped_column(Text, nullable=False, default="")
     home_city: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    favorite_transport: Mapped[str] = mapped_column(String(32), nullable=False, default="Пешком")
     visited_cities: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -40,6 +41,7 @@ class Route(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     cities: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    transport: Mapped[str] = mapped_column(String(32), nullable=False, default="Пешком")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
@@ -70,6 +72,7 @@ class Post(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     city: Mapped[str] = mapped_column(String(128), nullable=False)
+    transport: Mapped[str] = mapped_column(String(32), nullable=False, default="Пешком")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
