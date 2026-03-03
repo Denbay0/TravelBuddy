@@ -7,20 +7,20 @@ def _register_and_login(client: TestClient) -> str:
     register_response = client.post(
         "/auth/register",
         json={
-            "username": "valid_user",
+            "name": "valid_user",
             "email": "user@example.com",
             "password": "StrongPass1",
-            "repeat_password": "StrongPass1",
+            "confirmPassword": "StrongPass1",
         },
     )
     assert register_response.status_code == 201
 
     login_response = client.post(
         "/auth/login",
-        json={"username_or_email": "valid_user", "password": "StrongPass1"},
+        json={"email": "user@example.com", "password": "StrongPass1"},
     )
     assert login_response.status_code == 200
-    return login_response.json()["csrf_token"]
+    return login_response.json()["csrfToken"]
 
 
 def test_profile_me(client: TestClient) -> None:
@@ -28,34 +28,39 @@ def test_profile_me(client: TestClient) -> None:
     response = client.get("/profile/me")
 
     assert response.status_code == 200
-    assert response.json()["handle"] == "@valid_user"
-    assert response.json()["avatar_url"] == "/media/avatars/default.svg"
+    body = response.json()
+    assert body["handle"] == "@valid_user"
+    assert body["avatarUrl"] == "/media/avatars/default.svg"
+    assert body["travelTagline"] == ""
+    assert body["bio"] == ""
+    assert body["homeCity"] == ""
+    assert body["visitedCities"] == []
+    assert body["stats"] == {"trips": 0, "posts": 0, "savedRoutes": 0}
+    assert body["favoriteRoutes"] == []
 
 
-def test_profile_update_username_recalculates_handle(client: TestClient) -> None:
+def test_profile_update_fields(client: TestClient) -> None:
     csrf = _register_and_login(client)
 
     response = client.patch(
         "/profile/me",
-        json={"username": "new_name"},
+        json={
+            "name": "new_name",
+            "travelTagline": "Wander more",
+            "bio": "Travel addict",
+            "homeCity": "Rome",
+        },
         headers={"X-CSRF-Token": csrf},
     )
 
     assert response.status_code == 200
-    assert response.json()["username"] == "new_name"
-    assert response.json()["handle"] == "@new_name"
-
-    login_with_old = client.post(
-        "/auth/login",
-        json={"username_or_email": "valid_user", "password": "StrongPass1"},
-    )
-    assert login_with_old.status_code == 401
-
-    login_with_new = client.post(
-        "/auth/login",
-        json={"username_or_email": "new_name", "password": "StrongPass1"},
-    )
-    assert login_with_new.status_code == 200
+    body = response.json()
+    assert body["message"] == "Profile updated successfully"
+    assert body["profile"]["name"] == "new_name"
+    assert body["profile"]["travelTagline"] == "Wander more"
+    assert body["profile"]["bio"] == "Travel addict"
+    assert body["profile"]["homeCity"] == "Rome"
+    assert body["profile"]["handle"] == "@new_name"
 
 
 def test_upload_and_reset_avatar(client: TestClient) -> None:
@@ -68,10 +73,20 @@ def test_upload_and_reset_avatar(client: TestClient) -> None:
     )
 
     assert upload_response.status_code == 200
-    assert upload_response.json()["avatar_url"].startswith("/media/avatars/user_")
+    assert upload_response.json()["avatarUrl"].startswith("/media/avatars/user_")
 
     delete_response = client.delete("/profile/avatar", headers={"X-CSRF-Token": csrf})
     assert delete_response.status_code == 200
+    assert delete_response.json() == {"message": "Avatar reset to default"}
 
-    profile_response = client.get("/profile/me")
-    assert profile_response.json()["avatar_url"] == "/media/avatars/default.svg"
+
+def test_profile_related_lists_are_paginated_and_not_null(client: TestClient) -> None:
+    _register_and_login(client)
+
+    posts_response = client.get("/profile/me/posts", params={"page": 2, "limit": 5})
+    assert posts_response.status_code == 200
+    assert posts_response.json() == {"page": 2, "limit": 5, "total": 0, "items": []}
+
+    routes_response = client.get("/profile/me/favorite-routes", params={"page": 3, "limit": 2})
+    assert routes_response.status_code == 200
+    assert routes_response.json() == {"page": 3, "limit": 2, "total": 0, "items": []}

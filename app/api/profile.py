@@ -1,7 +1,8 @@
+import json
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,7 +11,15 @@ from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import User
 from app.schemas.auth import MessageResponse
-from app.schemas.user import ProfileUpdateRequest, UserOut
+from app.schemas.user import (
+    ProfileAvatarUploadResponse,
+    ProfileFavoriteRoutesPageResponse,
+    ProfileMeResponse,
+    ProfilePostsPageResponse,
+    ProfileStats,
+    ProfileUpdateRequest,
+    ProfileUpdateResponse,
+)
 from app.utils_profile import build_avatar_url, generate_unique_handle, remove_avatar_file
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -19,47 +28,74 @@ ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024
 
 
-def _serialize_user(user: User) -> UserOut:
-    return UserOut(
+def _parse_visited_cities(raw_value: str | None) -> list[str]:
+    if not raw_value:
+        return []
+
+    try:
+        parsed = json.loads(raw_value)
+    except (TypeError, json.JSONDecodeError):
+        return []
+
+    if isinstance(parsed, list):
+        return [str(city) for city in parsed]
+    return []
+
+
+def _serialize_profile(user: User) -> ProfileMeResponse:
+    return ProfileMeResponse(
         id=user.id,
         name=user.username,
         email=user.email,
         handle=f"@{user.handle}",
         avatarUrl=build_avatar_url(user.avatar_path),
+        travelTagline=user.travel_tagline or "",
+        bio=user.bio or "",
+        homeCity=user.home_city or "",
+        visitedCities=_parse_visited_cities(user.visited_cities),
+        stats=ProfileStats(trips=0, posts=0, savedRoutes=0),
+        favoriteRoutes=[],
         createdAt=user.created_at,
     )
 
 
-@router.get("/me", response_model=UserOut)
-def get_my_profile(current_user: User = Depends(get_current_user)) -> UserOut:
-    return _serialize_user(current_user)
+@router.get("/me", response_model=ProfileMeResponse)
+def get_my_profile(current_user: User = Depends(get_current_user)) -> ProfileMeResponse:
+    return _serialize_profile(current_user)
 
 
-@router.patch("/me", response_model=UserOut, dependencies=[Depends(verify_csrf)])
+@router.patch("/me", response_model=ProfileUpdateResponse, dependencies=[Depends(verify_csrf)])
 def update_profile(
     payload: ProfileUpdateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserOut:
-    if payload.username != current_user.username:
-        existing = db.scalar(select(User).where(User.username == payload.username, User.id != current_user.id))
+) -> ProfileUpdateResponse:
+    if payload.name is not None and payload.name != current_user.username:
+        existing = db.scalar(select(User).where(User.username == payload.name, User.id != current_user.id))
         if existing:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username is already taken")
-        current_user.username = payload.username
-        current_user.handle = generate_unique_handle(db, payload.username, exclude_user_id=current_user.id)
+        current_user.username = payload.name
+        current_user.handle = generate_unique_handle(db, payload.name, exclude_user_id=current_user.id)
+
+    if payload.travelTagline is not None:
+        current_user.travel_tagline = payload.travelTagline
+    if payload.bio is not None:
+        current_user.bio = payload.bio
+    if payload.homeCity is not None:
+        current_user.home_city = payload.homeCity
 
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
-    return _serialize_user(current_user)
+    return ProfileUpdateResponse(message="Profile updated successfully", profile=_serialize_profile(current_user))
 
 
-@router.post("/avatar", response_model=UserOut, dependencies=[Depends(verify_csrf)])
+@router.post("/avatar", response_model=ProfileAvatarUploadResponse, dependencies=[Depends(verify_csrf)])
 async def upload_avatar(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserOut:
+) -> ProfileAvatarUploadResponse:
     extension = Path(file.filename or "").suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only .jpg, .jpeg, .png, .webp are allowed")
@@ -80,7 +116,10 @@ async def upload_avatar(
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
-    return _serialize_user(current_user)
+    return ProfileAvatarUploadResponse(
+        message="Avatar uploaded successfully",
+        avatarUrl=build_avatar_url(current_user.avatar_path),
+    )
 
 
 @router.delete("/avatar", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
@@ -93,3 +132,21 @@ def reset_avatar(
     db.add(current_user)
     db.commit()
     return MessageResponse(message="Avatar reset to default")
+
+
+@router.get("/me/posts", response_model=ProfilePostsPageResponse)
+def get_my_posts(
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1, le=100),
+    _: User = Depends(get_current_user),
+) -> ProfilePostsPageResponse:
+    return ProfilePostsPageResponse(page=page, limit=limit, total=0, items=[])
+
+
+@router.get("/me/favorite-routes", response_model=ProfileFavoriteRoutesPageResponse)
+def get_my_favorite_routes(
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1, le=100),
+    _: User = Depends(get_current_user),
+) -> ProfileFavoriteRoutesPageResponse:
+    return ProfileFavoriteRoutesPageResponse(page=page, limit=limit, total=0, items=[])
