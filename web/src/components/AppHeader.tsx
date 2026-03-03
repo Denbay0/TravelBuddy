@@ -32,13 +32,16 @@ export default function AppHeader() {
           <button aria-label="Поиск" className="rounded-full p-2 text-ink/80 transition hover:bg-white/70 hover:text-ink">
             <Search size={18} />
           </button>
-          <button className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-medium text-ink/80 transition hover:bg-white/70 hover:text-ink">
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 font-medium text-ink/80 transition hover:bg-white/70 hover:text-ink"
+          >
             <UserCircle2 size={18} />
             Войти
-          </button>
-          <button className="rounded-full bg-ink px-5 py-2.5 font-medium text-white transition hover:bg-ink/90">
+          </Link>
+          <Link to="/routes" className="rounded-full bg-ink px-5 py-2.5 font-medium text-white transition hover:bg-ink/90">
             Создать маршрут
-          </button>
+          </Link>
         </div>
       </div>
     </header>

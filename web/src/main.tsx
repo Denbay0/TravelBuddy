@@ -6,6 +6,7 @@ import App from './App.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
+import HomePage from './pages/HomePage.tsx'
 import RoutesPage from './pages/RoutesPage.tsx'
 import CommunityPage from './pages/CommunityPage.tsx'
 
@@ -14,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="/routes" replace />} />
+          <Route index element={<HomePage />} />
           <Route path="routes" element={<RoutesPage />} />
           <Route path="community" element={<CommunityPage />} />
           <Route path="profile" element={<ProfilePage />} />
