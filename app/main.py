@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.auth import router as auth_router
 from app.api.profile import router as profile_router
+from app.core.config import settings
 from app.db import models  # noqa: F401
 from app.db.database import SessionLocal, create_tables
 from app.utils_profile import backfill_handles
@@ -32,7 +33,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="TravelBuddy Auth MVP", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.cors_allow_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
