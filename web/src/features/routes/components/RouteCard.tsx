@@ -2,9 +2,11 @@ import type { Route } from '../../../types/travel'
 
 type RouteCardProps = {
   route: Route
+  onToggleSave?: (route: Route) => void
+  isPending?: boolean
 }
 
-export default function RouteCard({ route }: RouteCardProps) {
+export default function RouteCard({ route, onToggleSave, isPending = false }: RouteCardProps) {
   return (
     <article className="card-surface overflow-hidden">
       <img src={route.cover} alt={route.title} className="h-52 w-full object-cover" />
@@ -24,8 +26,12 @@ export default function RouteCard({ route }: RouteCardProps) {
           <button className="rounded-full border border-ink/20 px-4 py-2 text-sm font-medium transition hover:border-ink/40">
             Открыть
           </button>
-          <button className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink/90">
-            Сохранить
+          <button
+            onClick={() => onToggleSave?.(route)}
+            disabled={isPending}
+            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {route.isSaved ? 'Убрать из сохранённых' : 'Сохранить'}
           </button>
         </div>
       </div>

@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CommunityHeader from '../features/community/components/CommunityHeader'
 import CreatePostModal, { type CommunityPostForm } from '../features/community/components/CreatePostModal'
 import FeedPostCard from '../features/community/components/FeedPostCard'
 import FeedSidebar from '../features/community/components/FeedSidebar'
-import { initialPosts, popularAuthors, trendingRoutes } from '../features/community/mockData'
+import { popularAuthors, trendingRoutes } from '../features/community/mockData'
 import type { CommunityPost } from '../features/community/types'
-import type { User } from '../types/travel'
+import { communityService } from '../services/communityService'
+import type { ApiPost } from '../services/postService'
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',
@@ -15,56 +16,142 @@ const emptyForm: CommunityPostForm = {
   date: '',
 }
 
+function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityPost {
+  return {
+    id: post.id,
+    author: {
+      id: post.owner.id,
+      name: post.owner.name,
+      avatarUrl: `https://i.pravatar.cc/160?u=${post.owner.id}`,
+    },
+    route: post.city,
+    date: new Date(post.createdAt).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }),
+    imageUrl: imageUrl || `https://source.unsplash.com/1600x900/?travel,${encodeURIComponent(post.city)}`,
+    caption: post.content,
+    transport: 'Самолёт',
+    likes: post.likesCount,
+    comments: post.commentsCount,
+    saved: post.isSaved,
+    liked: post.isLiked,
+  }
+}
+
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<CommunityPost[]>(initialPosts)
+  const [posts, setPosts] = useState<CommunityPost[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form, setForm] = useState<CommunityPostForm>(emptyForm)
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [pendingPostId, setPendingPostId] = useState<number | null>(null)
+
+  useEffect(() => {
+    async function loadPosts() {
+      setIsLoading(true)
+      setError('')
+
+      try {
+        const response = await communityService.getFeed({ page: 1, limit: 20 })
+        setPosts(response.items.map((post) => mapApiPostToCommunityPost(post)))
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить ленту сообщества.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadPosts()
+  }, [])
 
   const handleFormChange = (field: keyof CommunityPostForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
-    if (!form.imageUrl.trim() || !form.caption.trim() || !form.route.trim() || !form.date) {
+  const handleSubmit = async () => {
+    if (!form.caption.trim() || !form.route.trim()) {
       return
     }
 
-    const currentUser: User = {
-      id: Date.now(),
-      name: 'Вы',
-      avatarUrl: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=200&q=80',
+    try {
+      const createdPost = await communityService.createPost({
+        title: form.caption.slice(0, 50) || `Пост о маршруте ${form.route}`,
+        content: form.caption,
+        city: form.route,
+      })
+
+      setPosts((prev) => [mapApiPostToCommunityPost(createdPost, form.imageUrl || undefined), ...prev])
+      setForm(emptyForm)
+      setIsModalOpen(false)
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'Не удалось создать публикацию.')
+    }
+  }
+
+  const handleToggleLike = async (post: CommunityPost) => {
+    setPendingPostId(post.id)
+    try {
+      await communityService.toggleLike(post.id, Boolean(post.liked))
+      setPosts((prev) =>
+        prev.map((item) =>
+          item.id === post.id
+            ? { ...item, liked: !item.liked, likes: item.likes + (item.liked ? -1 : 1) }
+            : item,
+        ),
+      )
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Не удалось обновить лайк.')
+    } finally {
+      setPendingPostId(null)
+    }
+  }
+
+  const handleToggleSave = async (post: CommunityPost) => {
+    setPendingPostId(post.id)
+    try {
+      await communityService.toggleSave(post.id, Boolean(post.saved))
+      setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, saved: !item.saved } : item)))
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Не удалось обновить сохранение.')
+    } finally {
+      setPendingPostId(null)
+    }
+  }
+
+  const handleComment = async (post: CommunityPost) => {
+    const content = window.prompt('Введите комментарий')
+    if (!content?.trim()) {
+      return
     }
 
-    const createdPost: CommunityPost = {
-      id: Date.now(),
-      author: currentUser,
-      route: form.route,
-      date: new Date(form.date).toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-      imageUrl: form.imageUrl,
-      caption: form.caption,
-      transport: form.transport,
-      likes: 0,
-      comments: 0,
+    try {
+      await communityService.addComment(post.id, content)
+      setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, comments: item.comments + 1 } : item)))
+    } catch (commentError) {
+      setError(commentError instanceof Error ? commentError.message : 'Не удалось добавить комментарий.')
     }
-
-    setPosts((prev) => [createdPost, ...prev])
-    setForm(emptyForm)
-    setIsModalOpen(false)
   }
 
   return (
     <>
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:py-10">
         <CommunityHeader onShareTrip={() => setIsModalOpen(true)} onCreatePost={() => setIsModalOpen(true)} />
+        {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section className="space-y-5">
+            {isLoading ? <p className="text-sm text-ink/65">Загрузка публикаций...</p> : null}
             {posts.map((post) => (
-              <FeedPostCard key={post.id} post={post} />
+              <FeedPostCard
+                key={post.id}
+                post={post}
+                onToggleLike={handleToggleLike}
+                onToggleSave={handleToggleSave}
+                onComment={handleComment}
+                isPending={pendingPostId === post.id}
+              />
             ))}
           </section>
 

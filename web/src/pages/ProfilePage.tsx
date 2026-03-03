@@ -4,14 +4,14 @@ import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
 import { mapApiUserToProfile } from '../features/profile/mappers'
-import { TravelPhotoGrid } from '../features/posts/components/TravelPhotoGrid'
-import { mockTravelPosts } from '../features/posts/mockData'
 import { authService } from '../services/authService'
-import { profileService } from '../services/profileService'
+import { profileService, type ApiProfileFavoriteRoute, type ApiProfilePost } from '../services/profileService'
 import type { UserProfile } from '../features/profile/types'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profilePosts, setProfilePosts] = useState<ApiProfilePost[]>([])
+  const [favoriteRoutes, setFavoriteRoutes] = useState<ApiProfileFavoriteRoute[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -23,8 +23,15 @@ export default function ProfilePage() {
       setError('')
 
       try {
-        const apiProfile = await profileService.me()
+        const [apiProfile, postsResponse, favoriteRoutesResponse] = await Promise.all([
+          profileService.me(),
+          profileService.myPosts(),
+          profileService.myFavoriteRoutes(),
+        ])
+
         setProfile(mapApiUserToProfile(apiProfile))
+        setProfilePosts(postsResponse.items)
+        setFavoriteRoutes(favoriteRoutesResponse.items)
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить профиль.')
       } finally {
@@ -35,7 +42,7 @@ export default function ProfilePage() {
     void loadProfile()
   }, [])
 
-  const postsSubtitle = useMemo(() => `${mockTravelPosts.length} публикации в ленте`, [])
+  const postsSubtitle = useMemo(() => `${profilePosts.length} публикации в ленте`, [profilePosts.length])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -73,17 +80,31 @@ export default function ProfilePage() {
       </ProfileSection>
 
       <ProfileSection title="Фотоистории из поездок" subtitle={postsSubtitle}>
-        <TravelPhotoGrid posts={mockTravelPosts} />
+        {profilePosts.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-ink/20 bg-white px-4 py-4 text-sm text-ink/65">
+            У вас пока нет публикаций.
+          </p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {profilePosts.map((post) => (
+              <article key={post.id} className="rounded-2xl border border-ink/10 bg-white p-4">
+                <h3 className="font-semibold text-ink">{post.title}</h3>
+                <p className="mt-2 text-sm text-ink/65">Город: {post.city}</p>
+                <p className="mt-3 text-xs text-ink/55">{new Date(post.createdAt).toLocaleDateString('ru-RU')}</p>
+              </article>
+            ))}
+          </div>
+        )}
       </ProfileSection>
 
-      <ProfileSection title="Избранные маршруты" subtitle={`${profile.favoriteRoutes.length} маршрута в коллекции`}>
-        {profile.favoriteRoutes.length === 0 ? (
+      <ProfileSection title="Избранные маршруты" subtitle={`${favoriteRoutes.length} маршрута в коллекции`}>
+        {favoriteRoutes.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-ink/20 bg-white px-4 py-4 text-sm text-ink/65">
-            Здесь появятся избранные маршруты после подключения соответствующего API.
+            У вас пока нет избранных маршрутов.
           </p>
         ) : (
           <div className="grid gap-3 md:grid-cols-3">
-            {profile.favoriteRoutes.map((route) => (
+            {favoriteRoutes.map((route) => (
               <article key={route.id} className="rounded-2xl border border-ink/10 bg-white p-4">
                 <h3 className="font-semibold text-ink">{route.title}</h3>
                 <p className="mt-2 text-sm text-ink/65">{route.cities.join(' → ')}</p>
