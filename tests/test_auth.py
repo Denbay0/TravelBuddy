@@ -136,7 +136,7 @@ def test_me_authorized(client: TestClient) -> None:
     response = client.get("/auth/me")
     assert response.status_code == 200
     assert response.json()["username"] == "Valid_User"
-    assert response.json()["handle"] == "@valid_user"
+    assert response.json()["handle"] == "@Valid_User"
 
 
 def test_me_unauthorized(client: TestClient) -> None:
