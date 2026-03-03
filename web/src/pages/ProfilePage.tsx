@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
@@ -14,6 +15,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     async function loadProfile() {
@@ -39,7 +41,7 @@ export default function ProfilePage() {
     setIsLoggingOut(true)
     try {
       await authService.logout()
-      window.location.href = '/login'
+      navigate('/login')
     } catch (logoutError) {
       setError(logoutError instanceof Error ? logoutError.message : 'Не удалось выйти из аккаунта.')
       setIsLoggingOut(false)

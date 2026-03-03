@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
@@ -55,6 +56,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const navigate = useNavigate()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -78,8 +80,11 @@ export default function RegisterPage() {
         repeat_password: values.confirmPassword,
       })
 
-      setSuccess('Аккаунт создан! Теперь можно войти в систему.')
+      setSuccess('Аккаунт создан! Перенаправляем на страницу входа...')
       setValues({ name: '', email: '', password: '', confirmPassword: '' })
+      setTimeout(() => {
+        navigate('/login')
+      }, 500)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
     } finally {
@@ -143,9 +148,9 @@ export default function RegisterPage() {
 
               <p className="text-center text-sm text-ink/70">
                 Уже есть аккаунт?{' '}
-                <a href="/login" className="font-medium text-amber hover:text-amber/80">
+                <Link to="/login" className="font-medium text-amber hover:text-amber/80">
                   Войти
-                </a>
+                </Link>
               </p>
             </form>
           </AuthCard>

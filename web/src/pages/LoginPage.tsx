@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
@@ -42,6 +43,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const navigate = useNavigate()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -62,7 +64,7 @@ export default function LoginPage() {
       await authService.me()
       setSuccess('Вход выполнен успешно. Перенаправляем в профиль...')
       setTimeout(() => {
-        window.location.href = '/profile'
+        navigate('/profile')
       }, 350)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
@@ -128,9 +130,9 @@ export default function LoginPage() {
 
               <p className="text-center text-sm text-ink/70">
                 Нет аккаунта?{' '}
-                <a href="/register" className="font-medium text-amber hover:text-amber/80">
+                <Link to="/register" className="font-medium text-amber hover:text-amber/80">
                   Создать
-                </a>
+                </Link>
               </p>
             </form>
           </AuthCard>
