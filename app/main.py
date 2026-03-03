@@ -9,6 +9,7 @@ from app.api.auth import router as auth_router
 from app.api.profile import router as profile_router
 from app.db import models  # noqa: F401
 from app.db.database import SessionLocal, create_tables
+from app.core.redis import ping_redis
 from app.utils_profile import backfill_handles
 
 
@@ -17,6 +18,8 @@ async def lifespan(_: FastAPI):
     create_tables()
     media_avatars_path = Path("media/avatars")
     media_avatars_path.mkdir(parents=True, exist_ok=True)
+
+    ping_redis()
 
     db: Session = SessionLocal()
     try:

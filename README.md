@@ -1,6 +1,6 @@
-# TravelBuddy Auth Backend (FastAPI + SQLite)
+# TravelBuddy (FastAPI + React/Vite + PostgreSQL + Redis)
 
-Учебный backend-проект с JWT-аутентификацией через cookies, CSRF-защитой и базовым профилем пользователя.
+Учебный fullstack-проект с JWT-аутентификацией через cookies, CSRF-защитой и профилем пользователя.
 
 ## Структура проекта
 
@@ -13,6 +13,7 @@
 │   │   └── profile.py
 │   ├── core/
 │   │   ├── config.py
+│   │   ├── redis.py
 │   │   └── security.py
 │   ├── db/
 │   │   ├── database.py
@@ -22,11 +23,11 @@
 │   │   └── user.py
 │   ├── main.py
 │   └── utils_profile.py
-├── data/
 ├── media/
 │   └── avatars/
 │       └── default.svg
 ├── tests/
+├── web/
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
@@ -53,20 +54,13 @@
 - `POST /profile/avatar`
 - `DELETE /profile/avatar`
 
-## Особенности
+## Хранилище данных
 
-- единая точка входа: `app/main.py`
-- запуск сервера: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
-- username: 3–32 символа, только латиница, цифры и `_`
-- автоматическая генерация уникального handle (`@username`, `@username1`, ...)
-- обновление handle при изменении username
-- загрузка аватара в `media/avatars/`
-- допустимые форматы: `.jpg`, `.jpeg`, `.png`, `.webp`
-- ограничение размера аватара: 2MB
-- дефолтный аватар: `/media/avatars/default.svg`
-- Swagger: `GET /docs`
+- Основная база: **PostgreSQL** (SQLAlchemy URL через `DATABASE_URL`).
+- Кэш/инфраструктура: **Redis** (подключение и ping на старте через `REDIS_URL`).
+- Медиа-файлы: директория `media/` (в БД хранится только путь аватара).
 
-## Локальный запуск
+## Локальный запуск backend (без Docker)
 
 1. Создайте виртуальное окружение:
 
@@ -87,33 +81,51 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-4. Запустите сервер:
+4. Убедитесь, что PostgreSQL и Redis доступны по URL из `.env`.
+
+5. Запустите сервер:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Swagger: `http://127.0.0.1:8000/docs`
+Документация API: `http://127.0.0.1:8000/docs`
 
-## Запуск через Docker
+## Запуск через Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-Swagger: `http://127.0.0.1:8000/docs`
+Снаружи:
 
-### Volume'ы в Docker
+- frontend: `http://127.0.0.1:5173`
+- backend docs: `http://127.0.0.1:8000/docs`
 
-- `./data:/app/data` — SQLite база
-- `./media:/app/media` — пользовательские аватары
+Внутри docker-сети:
 
-## Примечание по SQLite
+- backend -> postgres: `postgres:5432`
+- backend -> redis: `redis:6379`
 
-Если у вас была старая SQLite БД без новых полей пользователя, проще удалить локальный файл БД и пересоздать его:
+## Docker-сервисы
 
-```bash
-rm -f data/travelbuddy.db
-```
+- `backend` — FastAPI
+- `frontend` — React/Vite (dev server на `0.0.0.0:5173`)
+- `postgres` — PostgreSQL 16
+- `redis` — Redis 7
 
-После следующего запуска таблицы создадутся заново.
+## Переменные окружения
+
+Минимальный набор:
+
+- `SECRET_KEY`
+- `ALGORITHM`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `JWT_COOKIE_NAME`
+- `CSRF_COOKIE_NAME`
+- `COOKIE_SECURE`
+- `COOKIE_SAMESITE`
+- `COOKIE_PATH`
+- `FRONTEND_ORIGINS`
