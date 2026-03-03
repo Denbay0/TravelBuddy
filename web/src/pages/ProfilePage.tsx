@@ -8,6 +8,7 @@ import { authService } from '../services/authService'
 import { profileService } from '../services/profileService'
 import type { ApiProfileFavoriteRoute, ApiProfilePost } from '../types/api'
 import type { UserProfile } from '../features/profile/types'
+import { useAuth } from '../features/auth/useAuth'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { clearAuthenticatedUser } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function ProfilePage() {
     setIsLoggingOut(true)
     try {
       await authService.logout()
+      clearAuthenticatedUser()
       navigate('/login')
     } catch (logoutError) {
       setError(logoutError instanceof Error ? logoutError.message : 'Не удалось выйти из аккаунта.')
