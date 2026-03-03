@@ -5,7 +5,8 @@ import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
 import { mapApiUserToProfile } from '../features/profile/mappers'
 import { authService } from '../services/authService'
-import { profileService, type ApiProfileFavoriteRoute, type ApiProfilePost } from '../services/profileService'
+import { profileService } from '../services/profileService'
+import type { ApiProfileFavoriteRoute, ApiProfilePost } from '../types/api'
 import type { UserProfile } from '../features/profile/types'
 
 export default function ProfilePage() {

@@ -48,14 +48,14 @@ def _serialize_profile(user: User) -> ProfileMeResponse:
         name=user.username,
         email=user.email,
         handle=f"@{user.handle}",
-        avatarUrl=build_avatar_url(user.avatar_path),
-        travelTagline=user.travel_tagline or "",
+        avatar_url=build_avatar_url(user.avatar_path),
+        travel_tagline=user.travel_tagline or "",
         bio=user.bio or "",
-        homeCity=user.home_city or "",
-        visitedCities=_parse_visited_cities(user.visited_cities),
-        stats=ProfileStats(trips=0, posts=0, savedRoutes=0),
-        favoriteRoutes=[],
-        createdAt=user.created_at,
+        home_city=user.home_city or "",
+        visited_cities=_parse_visited_cities(user.visited_cities),
+        stats=ProfileStats(trips=0, posts=0, saved_routes=0),
+        favorite_routes=[],
+        created_at=user.created_at,
     )
 
 
@@ -77,12 +77,12 @@ def update_profile(
         current_user.username = payload.name
         current_user.handle = generate_unique_handle(db, payload.name, exclude_user_id=current_user.id)
 
-    if payload.travelTagline is not None:
-        current_user.travel_tagline = payload.travelTagline
+    if payload.travel_tagline is not None:
+        current_user.travel_tagline = payload.travel_tagline
     if payload.bio is not None:
         current_user.bio = payload.bio
-    if payload.homeCity is not None:
-        current_user.home_city = payload.homeCity
+    if payload.home_city is not None:
+        current_user.home_city = payload.home_city
 
     db.add(current_user)
     db.commit()
@@ -118,7 +118,7 @@ async def upload_avatar(
     db.refresh(current_user)
     return ProfileAvatarUploadResponse(
         message="Avatar uploaded successfully",
-        avatarUrl=build_avatar_url(current_user.avatar_path),
+        avatar_url=build_avatar_url(current_user.avatar_path),
     )
 
 
