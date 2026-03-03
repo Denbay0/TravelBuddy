@@ -1,10 +1,10 @@
-export type TransportType = 'Автомобиль' | 'Самолёт' | 'Поезд' | 'Пешком'
+import { transportCategories, type TransportCategory } from '../../../types/travel'
 
 export type CreateRouteFormState = {
   title: string
   stops: string
   duration: string
-  transport: TransportType
+  transport: TransportCategory
   note: string
 }
 
@@ -13,8 +13,6 @@ type CreateRouteCardProps = {
   onChange: (field: keyof CreateRouteFormState, value: string) => void
   onSubmit: () => void
 }
-
-const transportOptions: TransportType[] = ['Автомобиль', 'Самолёт', 'Поезд', 'Пешком']
 
 export default function CreateRouteCard({ form, onChange, onSubmit }: CreateRouteCardProps) {
   return (
@@ -62,7 +60,7 @@ export default function CreateRouteCard({ form, onChange, onSubmit }: CreateRout
             onChange={(e) => onChange('transport', e.target.value)}
             className="mt-2 w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none transition focus:border-ink/35"
           >
-            {transportOptions.map((option) => (
+            {transportCategories.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>

@@ -1,7 +1,8 @@
-import RouteCard, { type RouteItem } from './RouteCard'
+import type { Route } from '../../../types/travel'
+import RouteCard from './RouteCard'
 
 type FeaturedRoutesSectionProps = {
-  routes: RouteItem[]
+  routes: Route[]
 }
 
 export default function FeaturedRoutesSection({ routes }: FeaturedRoutesSectionProps) {

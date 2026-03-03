@@ -1,9 +1,11 @@
+import type { User } from '../../../types/travel'
+import type { TrendingRoute } from '../types'
 import PopularAuthorsCard from './PopularAuthorsCard'
 import TrendingRoutesCard from './TrendingRoutesCard'
 
 type FeedSidebarProps = {
-  authors: Array<{ id: number; name: string; focus: string; avatarUrl: string }>
-  routes: Array<{ id: number; name: string; meta: string }>
+  authors: User[]
+  routes: TrendingRoute[]
 }
 
 export default function FeedSidebar({ authors, routes }: FeedSidebarProps) {

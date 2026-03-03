@@ -1,10 +1,11 @@
 import type { FormEvent } from 'react'
+import { transportCategories, type TransportCategory } from '../../../types/travel'
 
 export type CommunityPostForm = {
   imageUrl: string
   caption: string
   route: string
-  transport: string
+  transport: TransportCategory
   date: string
 }
 
@@ -15,8 +16,6 @@ type CreatePostModalProps = {
   onChange: (field: keyof CommunityPostForm, value: string) => void
   onSubmit: () => void
 }
-
-const transports = ['Самолёт', 'Поезд', 'Автомобиль', 'Автобус', 'Паром', 'Пешком']
 
 export default function CreatePostModal({
   isOpen,
@@ -86,7 +85,7 @@ export default function CreatePostModal({
               onChange={(event) => onChange('transport', event.target.value)}
               className="rounded-2xl border border-ink/15 bg-white px-4 py-2.5 outline-none transition focus:border-ink/30"
             >
-              {transports.map((transport) => (
+              {transportCategories.map((transport) => (
                 <option key={transport} value={transport}>
                   {transport}
                 </option>

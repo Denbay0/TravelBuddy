@@ -1,8 +1,4 @@
-type TrendingRoute = {
-  id: number
-  name: string
-  meta: string
-}
+import type { TrendingRoute } from '../types'
 
 type TrendingRoutesCardProps = {
   routes: TrendingRoute[]

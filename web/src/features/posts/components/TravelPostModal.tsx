@@ -1,15 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Heart, MessageCircle, Bookmark, Share2, X } from 'lucide-react'
-import type { TravelPost, TransportCategory } from '../types'
+import type { TravelPost } from '../types'
 
-const transportLabels: Record<TransportCategory, string> = {
-  plane: 'Самолёт',
-  train: 'Поезд',
-  car: 'Авто',
-  bus: 'Автобус',
-  ferry: 'Паром',
-  walk: 'Пешком',
-}
 
 type TravelPostModalProps = {
   post: TravelPost | null
@@ -50,7 +42,7 @@ export function TravelPostModal({ post, onClose }: TravelPostModalProps) {
 
             <div className="overflow-y-auto p-6">
               <div className="mb-3 flex items-center gap-2 text-xs text-ink/60">
-                <span className="rounded-full border border-ink/10 bg-sand px-2.5 py-1">{transportLabels[post.transportCategory]}</span>
+                <span className="rounded-full border border-ink/10 bg-sand px-2.5 py-1">{post.transportCategory}</span>
                 <span>{post.location}</span>
               </div>
 

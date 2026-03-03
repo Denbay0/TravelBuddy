@@ -1,22 +1,10 @@
 import clsx from 'clsx'
-
-export const routeFilterChips = [
-  'По городам',
-  'По странам',
-  'По транспорту',
-  'По длительности',
-  'Популярные',
-  'Новые',
-  'Сохранённые',
-] as const
-
-export const routeSortOptions = ['Популярные', 'Новые', 'Короткие', 'Длинные'] as const
-
-export type RouteSort = (typeof routeSortOptions)[number]
+import type { RouteFilter } from '../../../types/travel'
+import { routeSortOptions, type RouteSort, routeFilterChips } from './routeFiltersConfig'
 
 type RouteFiltersProps = {
-  activeFilter: (typeof routeFilterChips)[number]
-  onFilterChange: (chip: (typeof routeFilterChips)[number]) => void
+  activeFilter: RouteFilter
+  onFilterChange: (chip: RouteFilter) => void
   search: string
   onSearchChange: (value: string) => void
   sort: RouteSort

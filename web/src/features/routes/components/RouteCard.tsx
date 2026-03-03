@@ -1,21 +1,7 @@
-import type { TransportType } from './CreateRouteCard'
-
-export type RouteItem = {
-  id: number
-  title: string
-  cover: string
-  cities: string[]
-  durationDays: number
-  transport: TransportType
-  saves: number
-  author: string
-  country: string
-  isNew?: boolean
-  isSaved?: boolean
-}
+import type { Route } from '../../../types/travel'
 
 type RouteCardProps = {
-  route: RouteItem
+  route: Route
 }
 
 export default function RouteCard({ route }: RouteCardProps) {
