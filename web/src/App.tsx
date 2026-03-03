@@ -17,8 +17,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+import AppHeader from './components/AppHeader'
 
-const navItems = ['Возможности', 'Маршруты', 'Сообщество', 'Статистика']
 
 const features = [
   ['Планирование маршрутов', 'Создавайте гибкие маршруты с этапами, заметками и совместным редактированием.', Route],
@@ -28,27 +28,6 @@ const features = [
   ['Избранные маршруты', 'Сохраняйте лучшие маршруты друзей и возвращайтесь к ним перед новой поездкой.', Heart],
   ['Отчеты и дайджесты', 'Генерируйте стильные итоги поездок в PDF и web-формате.', FileText],
 ] as const
-
-function Header() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/30 bg-sand/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <div className="text-xl font-bold tracking-tight">TravelBuddy</div>
-        <nav className="hidden gap-8 text-sm text-ink/70 md:flex">
-          {navItems.map((item) => (
-            <a key={item} href="#" className="transition hover:text-ink">
-              {item}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3 text-sm">
-          <button className="rounded-full px-4 py-2 font-medium text-ink/80 hover:text-ink">Войти</button>
-          <button className="rounded-full bg-ink px-5 py-2.5 font-medium text-white transition hover:bg-ink/90">Начать бесплатно</button>
-        </div>
-      </div>
-    </header>
-  )
-}
 
 const heroCards: Array<{ title: string; subtitle: string; icon: LucideIcon }> = [
   { title: 'Маршрут “Скандинавская осень”', subtitle: '8 городов · 12 дней', icon: Compass },
@@ -254,7 +233,7 @@ function StickyShowcase() {
 export default function App() {
   return (
     <div>
-      <Header />
+      <AppHeader />
       <main>
         <Hero />
         <StickyShowcase />

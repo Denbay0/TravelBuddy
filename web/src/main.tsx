@@ -1,29 +1,26 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
-
-function resolvePage() {
-  if (window.location.pathname === '/login') {
-    return <LoginPage />
-  }
-
-  if (window.location.pathname === '/register') {
-    return <RegisterPage />
-  }
-
-  if (window.location.pathname === '/profile') {
-    return <ProfilePage />
-  }
-
-  return <App />
-}
+import RoutesPage from './pages/RoutesPage.tsx'
+import CommunityPage from './pages/CommunityPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {resolvePage()}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/routes" element={<RoutesPage />} />
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>,
 )
