@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     cookie_domain: str | None = None
 
     media_root: str = "media"
+    cors_allow_origins: list[str] = [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ]
 
     env: Literal["dev", "test", "prod"] = "dev"
     debug: bool = False
