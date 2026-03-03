@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="/routes" replace />} />
+          <Route index element={<RoutesPage />} />
           <Route path="routes" element={<RoutesPage />} />
           <Route path="community" element={<CommunityPage />} />
           <Route path="profile" element={<ProfilePage />} />
