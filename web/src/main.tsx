@@ -9,21 +9,27 @@ import ProfilePage from './pages/ProfilePage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import RoutesPage from './pages/RoutesPage.tsx'
 import CommunityPage from './pages/CommunityPage.tsx'
+import { AuthProvider } from './features/auth/AuthContext.tsx'
+import { GuestOnlyRoute } from './features/auth/GuestOnlyRoute.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<HomePage />} />
-          <Route path="routes" element={<RoutesPage />} />
-          <Route path="community" element={<CommunityPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-        </Route>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route index element={<HomePage />} />
+            <Route path="routes" element={<RoutesPage />} />
+            <Route path="community" element={<CommunityPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<GuestOnlyRoute />}>
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   </StrictMode>,
 )
