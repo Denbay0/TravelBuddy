@@ -1,4 +1,4 @@
-export type TransportCategory = 'Автомобиль' | 'Самолёт' | 'Поезд' | 'Пешком'
+export type TransportCategory = 'Автомобиль' | 'Самолёт' | 'Поезд' | 'Пешком' | '—'
 
 export type ProfileStats = {
   trips: number

@@ -2,9 +2,11 @@ import type { UserProfile } from '../types'
 
 type ProfileHeaderProps = {
   profile: UserProfile
+  onLogout?: () => void
+  isLoggingOut?: boolean
 }
 
-export function ProfileHeader({ profile }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, onLogout, isLoggingOut = false }: ProfileHeaderProps) {
   return (
     <header className="card-surface flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
@@ -24,8 +26,12 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <button className="rounded-full border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink transition hover:bg-ink/5">
           Редактировать профиль
         </button>
-        <button className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90">
-          Выйти
+        <button
+          onClick={onLogout}
+          disabled={isLoggingOut}
+          className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoggingOut ? 'Выходим...' : 'Выйти'}
         </button>
       </div>
     </header>

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
-import { mockAuthService } from '../services/mockAuthService'
+import { authService } from '../services/authService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -25,7 +25,7 @@ function validate(values: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {}
 
   if (!values.name.trim()) {
-    errors.name = 'Введите ваше имя.'
+    errors.name = 'Введите имя.'
   }
 
   if (!values.email.trim()) {
@@ -36,12 +36,12 @@ function validate(values: RegisterValues): RegisterErrors {
 
   if (!values.password) {
     errors.password = 'Введите пароль.'
-  } else if (values.password.length < 6) {
-    errors.password = 'Пароль должен содержать минимум 6 символов.'
+  } else if (values.password.length < 8) {
+    errors.password = 'Пароль должен содержать минимум 8 символов.'
   }
 
   if (!values.confirmPassword) {
-    errors.confirmPassword = 'Повторите пароль.'
+    errors.confirmPassword = 'Подтвердите пароль.'
   } else if (values.confirmPassword !== values.password) {
     errors.confirmPassword = 'Пароли не совпадают.'
   }
@@ -71,8 +71,15 @@ export default function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      await mockAuthService.register({ name: values.name, email: values.email, password: values.password })
-      setSuccess('Регистрация прошла успешно! Теперь вы можете войти в аккаунт.')
+      await authService.register({
+        username: values.name,
+        email: values.email,
+        password: values.password,
+        repeat_password: values.confirmPassword,
+      })
+
+      setSuccess('Аккаунт создан! Теперь можно войти в систему.')
+      setValues({ name: '', email: '', password: '', confirmPassword: '' })
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
     } finally {
@@ -111,7 +118,7 @@ export default function RegisterPage() {
                 id="register-password"
                 label="Пароль"
                 type="password"
-                placeholder="Минимум 6 символов"
+                placeholder="Минимум 8 символов"
                 autoComplete="new-password"
                 value={values.password}
                 onChange={(password) => setValues((prev) => ({ ...prev, password }))}
