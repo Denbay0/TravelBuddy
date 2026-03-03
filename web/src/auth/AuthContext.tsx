@@ -1,15 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { authService } from '../services/authService'
 import type { ApiUser } from '../types/api'
-
-type AuthContextValue = {
-  user: ApiUser | null
-  isLoading: boolean
-  setUser: (user: ApiUser | null) => void
-  logout: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+import { AuthContext, type AuthContextValue } from './authContext'
 
 type AuthProviderProps = {
   children: ReactNode
@@ -40,22 +32,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isLoading,
       setUser,
       logout: async () => {
-        await authService.logout()
         setUser(null)
+        await authService.logout()
       },
     }),
     [isLoading, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-
-  return context
 }

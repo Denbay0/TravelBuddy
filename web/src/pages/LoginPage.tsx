@@ -5,7 +5,7 @@ import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
 import { authService } from '../services/authService'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../auth/useAuth'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -43,7 +43,6 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<LoginErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const { setUser } = useAuth()
   const navigate = useNavigate()
 
@@ -53,7 +52,6 @@ export default function LoginPage() {
     const nextErrors = validate(values)
     setErrors(nextErrors)
     setError('')
-    setSuccess('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -64,10 +62,7 @@ export default function LoginPage() {
     try {
       const response = await authService.login({ email: values.email, password: values.password, rememberMe: values.rememberMe })
       setUser(response.user)
-      setSuccess('Вход выполнен успешно. Перенаправляем в профиль...')
-      setTimeout(() => {
-        navigate('/profile')
-      }, 350)
+      navigate('/profile', { replace: true })
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
     } finally {
@@ -126,8 +121,6 @@ export default function LoginPage() {
               </div>
 
               {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-              {success ? <p className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</p> : null}
-
               <SubmitButton text="Войти" loadingText="Проверяем данные..." isSubmitting={isSubmitting} />
 
               <p className="text-center text-sm text-ink/70">
