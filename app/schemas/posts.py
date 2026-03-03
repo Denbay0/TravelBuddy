@@ -1,59 +1,59 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import CamelModel, PaginatedResponse
 
 
-class PostCreateRequest(BaseModel):
+class PostCreateRequest(CamelModel):
     title: str = Field(min_length=1, max_length=255)
     content: str = Field(min_length=1)
     city: str = Field(min_length=1, max_length=128)
 
 
-class PostUpdateRequest(BaseModel):
+class PostUpdateRequest(CamelModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     content: str | None = Field(default=None, min_length=1)
     city: str | None = Field(default=None, min_length=1, max_length=128)
 
 
-class CommentCreateRequest(BaseModel):
+class CommentCreateRequest(CamelModel):
     content: str = Field(min_length=1)
 
 
-class CommentOwner(BaseModel):
+class CommentOwner(CamelModel):
     id: int
     name: str
     handle: str
 
 
-class PostCommentOut(BaseModel):
+class PostCommentOut(CamelModel):
     id: int
     content: str
     owner: CommentOwner
-    createdAt: datetime
-    updatedAt: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
-class PostOwner(BaseModel):
+class PostOwner(CamelModel):
     id: int
     name: str
     handle: str
 
 
-class PostOut(BaseModel):
+class PostOut(CamelModel):
     id: int
     title: str
     content: str
     city: str
     owner: PostOwner
-    likesCount: int
-    commentsCount: int
-    savesCount: int
-    isLiked: bool
-    isSaved: bool
-    createdAt: datetime
-    updatedAt: datetime
+    likes_count: int
+    comments_count: int
+    saves_count: int
+    is_liked: bool
+    is_saved: bool
+    created_at: datetime
+    updated_at: datetime
 
 
 class PostListResponse(PaginatedResponse[PostOut]):

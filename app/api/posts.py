@@ -28,13 +28,13 @@ def _serialize_post(post: Post, current_user_id: int | None = None) -> PostOut:
         content=post.content,
         city=post.city,
         owner=PostOwner(id=post.owner.id, name=post.owner.username, handle=f"@{post.owner.handle}"),
-        likesCount=len(post.likes),
-        commentsCount=len(post.comments),
-        savesCount=len(post.saves),
-        isLiked=bool(current_user_id and any(like.user_id == current_user_id for like in post.likes)),
-        isSaved=bool(current_user_id and any(save.user_id == current_user_id for save in post.saves)),
-        createdAt=post.created_at,
-        updatedAt=post.updated_at,
+        likes_count=len(post.likes),
+        comments_count=len(post.comments),
+        saves_count=len(post.saves),
+        is_liked=bool(current_user_id and any(like.user_id == current_user_id for like in post.likes)),
+        is_saved=bool(current_user_id and any(save.user_id == current_user_id for save in post.saves)),
+        created_at=post.created_at,
+        updated_at=post.updated_at,
     )
 
 
@@ -43,8 +43,8 @@ def _serialize_comment(comment: PostComment) -> PostCommentOut:
         id=comment.id,
         content=comment.content,
         owner=CommentOwner(id=comment.owner.id, name=comment.owner.username, handle=f"@{comment.owner.handle}"),
-        createdAt=comment.created_at,
-        updatedAt=comment.updated_at,
+        created_at=comment.created_at,
+        updated_at=comment.updated_at,
     )
 
 

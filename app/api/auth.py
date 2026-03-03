@@ -21,8 +21,8 @@ def _serialize_user(user: User) -> UserOut:
         name=user.username,
         email=user.email,
         handle=f"@{user.handle}",
-        avatarUrl=build_avatar_url(user.avatar_path),
-        createdAt=user.created_at,
+        avatar_url=build_avatar_url(user.avatar_path),
+        created_at=user.created_at,
     )
 
 
@@ -99,7 +99,7 @@ def register(payload: UserCreate, response: Response, db: Session = Depends(get_
     csrf_token = create_csrf_token()
     _set_auth_cookies(response, jwt_token=jwt_token, csrf_token=csrf_token)
 
-    return RegisterResponse(message="User registered successfully", user=_serialize_user(user), csrfToken=csrf_token)
+    return RegisterResponse(message="User registered successfully", user=_serialize_user(user), csrf_token=csrf_token)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -116,7 +116,7 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
     csrf_token = create_csrf_token()
     _set_auth_cookies(response, jwt_token=jwt_token, csrf_token=csrf_token)
 
-    return LoginResponse(message="Login successful", user=_serialize_user(user), csrfToken=csrf_token)
+    return LoginResponse(message="Login successful", user=_serialize_user(user), csrf_token=csrf_token)
 
 
 @router.post("/logout", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
@@ -139,4 +139,4 @@ def get_csrf_token(response: Response) -> CsrfResponse:
         httponly=False,
         **_cookie_options(max_age=settings.access_token_expire_minutes * 60),
     )
-    return CsrfResponse(csrfToken=csrf_token)
+    return CsrfResponse(csrf_token=csrf_token)

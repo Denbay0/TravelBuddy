@@ -33,8 +33,8 @@ def popular_users(
             id=user.id,
             name=user.username,
             handle=f"@{user.handle}",
-            postsCount=posts_count,
-            followersCount=0,
+            posts_count=posts_count,
+            followers_count=0,
         )
         for user, posts_count in rows
     ]

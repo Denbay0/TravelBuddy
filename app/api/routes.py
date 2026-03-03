@@ -19,12 +19,12 @@ def _serialize_route(route: Route, current_user_id: int | None = None) -> RouteO
         title=route.title,
         description=route.description,
         cities=json.loads(route.cities) if route.cities else [],
-        durationDays=route.duration_days,
-        savesCount=len(route.saves),
+        duration_days=route.duration_days,
+        saves_count=len(route.saves),
         owner=RouteOwner(id=route.owner.id, name=route.owner.username, handle=f"@{route.owner.handle}"),
-        isSaved=bool(current_user_id and any(save.user_id == current_user_id for save in route.saves)),
-        createdAt=route.created_at,
-        updatedAt=route.updated_at,
+        is_saved=bool(current_user_id and any(save.user_id == current_user_id for save in route.saves)),
+        created_at=route.created_at,
+        updated_at=route.updated_at,
     )
 
 
@@ -57,7 +57,7 @@ def create_route(
         title=payload.title,
         description=payload.description,
         cities=json.dumps(payload.cities),
-        duration_days=payload.durationDays,
+        duration_days=payload.duration_days,
     )
     db.add(route)
     db.commit()
@@ -118,8 +118,8 @@ def update_route(
         route.description = updates["description"]
     if "cities" in updates:
         route.cities = json.dumps(updates["cities"])
-    if "durationDays" in updates:
-        route.duration_days = updates["durationDays"]
+    if "duration_days" in updates:
+        route.duration_days = updates["duration_days"]
 
     db.add(route)
     db.commit()

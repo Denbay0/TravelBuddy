@@ -1,53 +1,11 @@
 import { apiRequest } from '../lib/api'
-
-export type ApiPost = {
-  id: number
-  title: string
-  content: string
-  city: string
-  owner: {
-    id: number
-    name: string
-    handle: string
-  }
-  likesCount: number
-  commentsCount: number
-  savesCount: number
-  isLiked: boolean
-  isSaved: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export type ApiPostComment = {
-  id: number
-  content: string
-  owner: {
-    id: number
-    name: string
-    handle: string
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-type MessageResponse = {
-  message: string
-}
-
-type PostListResponse = {
-  page: number
-  limit: number
-  total: number
-  items: ApiPost[]
-}
-
-type PostCommentsResponse = {
-  page: number
-  limit: number
-  total: number
-  items: ApiPostComment[]
-}
+import type {
+  ApiMessageResponse,
+  ApiPost,
+  ApiPostComment,
+  PostCommentsResponse,
+  PostListResponse,
+} from '../types/api'
 
 export const postService = {
   async list(page = 1, limit = 10): Promise<PostListResponse> {
@@ -61,20 +19,20 @@ export const postService = {
     })
   },
 
-  async like(postId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/posts/${postId}/like`, { method: 'POST' })
+  async like(postId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/posts/${postId}/like`, { method: 'POST' })
   },
 
-  async unlike(postId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/posts/${postId}/like`, { method: 'DELETE' })
+  async unlike(postId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/posts/${postId}/like`, { method: 'DELETE' })
   },
 
-  async save(postId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/posts/${postId}/save`, { method: 'POST' })
+  async save(postId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/posts/${postId}/save`, { method: 'POST' })
   },
 
-  async unsave(postId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/posts/${postId}/save`, { method: 'DELETE' })
+  async unsave(postId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/posts/${postId}/save`, { method: 'DELETE' })
   },
 
   async comments(postId: number, page = 1, limit = 10): Promise<PostCommentsResponse> {

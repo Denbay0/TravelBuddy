@@ -1,8 +1,9 @@
 from datetime import datetime
 import re
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 
+from app.schemas.common import CamelModel
 from app.utils_profile import normalize_username
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$")
@@ -10,11 +11,11 @@ PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 72
 
 
-class UserCreate(BaseModel):
+class UserCreate(CamelModel):
     name: str
     email: EmailStr
     password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
-    confirmPassword: str
+    confirm_password: str
 
     @field_validator("name", mode="before")
     @classmethod
@@ -48,16 +49,16 @@ class UserCreate(BaseModel):
 
     @model_validator(mode="after")
     def passwords_match(self) -> "UserCreate":
-        if self.password != self.confirmPassword:
+        if self.password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
 
 
-class ProfileUpdateRequest(BaseModel):
+class ProfileUpdateRequest(CamelModel):
     name: str | None = None
-    travelTagline: str | None = None
+    travel_tagline: str | None = None
     bio: str | None = None
-    homeCity: str | None = None
+    home_city: str | None = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -69,76 +70,76 @@ class ProfileUpdateRequest(BaseModel):
         return normalize_username(value)
 
 
-class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class UserOut(CamelModel):
+    model_config = CamelModel.model_config | {"from_attributes": True}
 
     id: int
     name: str
     email: EmailStr
     handle: str
-    avatarUrl: str
-    createdAt: datetime
+    avatar_url: str
+    created_at: datetime
 
 
-class RegisterResponse(BaseModel):
+class RegisterResponse(CamelModel):
     message: str
     user: UserOut
-    csrfToken: str
+    csrf_token: str
 
 
-class ProfileStats(BaseModel):
+class ProfileStats(CamelModel):
     trips: int
     posts: int
-    savedRoutes: int
+    saved_routes: int
 
 
-class ProfileFavoriteRouteItem(BaseModel):
+class ProfileFavoriteRouteItem(CamelModel):
     id: str
     title: str
     cities: list[str]
-    durationDays: int
+    duration_days: int
 
 
-class ProfilePostItem(BaseModel):
+class ProfilePostItem(CamelModel):
     id: str
     title: str
     city: str
-    createdAt: datetime
+    created_at: datetime
 
 
-class ProfileMeResponse(BaseModel):
+class ProfileMeResponse(CamelModel):
     id: int
     name: str
     email: EmailStr
     handle: str
-    avatarUrl: str
-    travelTagline: str
+    avatar_url: str
+    travel_tagline: str
     bio: str
-    homeCity: str
-    visitedCities: list[str]
+    home_city: str
+    visited_cities: list[str]
     stats: ProfileStats
-    favoriteRoutes: list[ProfileFavoriteRouteItem]
-    createdAt: datetime
+    favorite_routes: list[ProfileFavoriteRouteItem]
+    created_at: datetime
 
 
-class ProfileUpdateResponse(BaseModel):
+class ProfileUpdateResponse(CamelModel):
     message: str
     profile: ProfileMeResponse
 
 
-class ProfileAvatarUploadResponse(BaseModel):
+class ProfileAvatarUploadResponse(CamelModel):
     message: str
-    avatarUrl: str
+    avatar_url: str
 
 
-class ProfilePostsPageResponse(BaseModel):
+class ProfilePostsPageResponse(CamelModel):
     page: int
     limit: int
     total: int
     items: list[ProfilePostItem]
 
 
-class ProfileFavoriteRoutesPageResponse(BaseModel):
+class ProfileFavoriteRoutesPageResponse(CamelModel):
     page: int
     limit: int
     total: int

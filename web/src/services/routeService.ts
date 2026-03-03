@@ -1,4 +1,5 @@
 import { apiRequest } from '../lib/api'
+import type { ApiMessageResponse, ApiRoute, RouteListResponse } from '../types/api'
 
 export type RoutesQuery = {
   page?: number
@@ -8,39 +9,11 @@ export type RoutesQuery = {
   savedOnly?: boolean
 }
 
-export type ApiRoute = {
-  id: number
-  title: string
-  description: string
-  cities: string[]
-  durationDays: number
-  savesCount: number
-  owner: {
-    id: number
-    name: string
-    handle: string
-  }
-  isSaved: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-type RouteListResponse = {
-  page: number
-  limit: number
-  total: number
-  items: ApiRoute[]
-}
-
 type RouteCreateRequest = {
   title: string
   description?: string
   cities: string[]
   durationDays: number
-}
-
-type MessageResponse = {
-  message: string
 }
 
 function buildRoutesQueryString(query: RoutesQuery): string {
@@ -102,14 +75,14 @@ export const routeService = {
     })
   },
 
-  async save(routeId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/routes/${routeId}/save`, {
+  async save(routeId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/routes/${routeId}/save`, {
       method: 'POST',
     })
   },
 
-  async unsave(routeId: number): Promise<MessageResponse> {
-    return apiRequest<MessageResponse>(`/routes/${routeId}/save`, {
+  async unsave(routeId: number): Promise<ApiMessageResponse> {
+    return apiRequest<ApiMessageResponse>(`/routes/${routeId}/save`, {
       method: 'DELETE',
     })
   },

@@ -1,4 +1,5 @@
-import { postService, type ApiPost, type ApiPostComment } from './postService'
+import type { ApiPost, ApiPostComment } from '../types/api'
+import { postService } from './postService'
 
 type FeedQuery = {
   page?: number

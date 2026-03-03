@@ -6,7 +6,7 @@ import FeedSidebar from '../features/community/components/FeedSidebar'
 import { popularAuthors, trendingRoutes } from '../features/community/mockData'
 import type { CommunityPost } from '../features/community/types'
 import { communityService } from '../services/communityService'
-import type { ApiPost } from '../services/postService'
+import type { ApiPost } from '../types/api'
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',

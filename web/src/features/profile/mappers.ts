@@ -1,5 +1,5 @@
 import { env } from '../../config/env'
-import type { ApiProfile } from '../../services/profileService'
+import type { ApiProfile } from '../../types/api'
 import type { UserProfile } from './types'
 
 const DEFAULT_BIO = 'Расскажите о себе и ваших любимых направлениях в следующих релизах TravelBuddy.'
