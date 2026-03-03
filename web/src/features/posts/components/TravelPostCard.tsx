@@ -1,14 +1,6 @@
 import { MessageCircle, Heart } from 'lucide-react'
-import type { TravelPost, TransportCategory } from '../types'
+import type { TravelPost } from '../types'
 
-const transportLabels: Record<TransportCategory, string> = {
-  plane: 'Самолёт',
-  train: 'Поезд',
-  car: 'Авто',
-  bus: 'Автобус',
-  ferry: 'Паром',
-  walk: 'Пешком',
-}
 
 type TravelPostCardProps = {
   post: TravelPost
@@ -42,7 +34,7 @@ export function TravelPostCard({ post, onClick }: TravelPostCardProps) {
         <div className="flex items-center justify-between gap-3">
           <h3 className="line-clamp-1 text-lg font-semibold text-ink">{post.title}</h3>
           <span className="shrink-0 rounded-full border border-ink/10 bg-sand px-3 py-1 text-xs text-ink/75">
-            {transportLabels[post.transportCategory]}
+            {post.transportCategory}
           </span>
         </div>
 

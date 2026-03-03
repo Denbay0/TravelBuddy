@@ -17,14 +17,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-
-const navItems = [
-  { label: 'Возможности', href: '#features' },
-  { label: 'Маршруты', href: '#routes' },
-  { label: 'Сообщество', href: '#community' },
-  { label: 'Статистика', href: '#stats' },
-]
 
 const features = [
   ['Планирование маршрутов', 'Создавайте гибкие маршруты с этапами, заметками и совместным редактированием.', Route],
@@ -34,27 +26,6 @@ const features = [
   ['Избранные маршруты', 'Сохраняйте лучшие маршруты друзей и возвращайтесь к ним перед новой поездкой.', Heart],
   ['Отчеты и дайджесты', 'Генерируйте стильные итоги поездок в PDF и web-формате.', FileText],
 ] as const
-
-function Header() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/30 bg-sand/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <div className="text-xl font-bold tracking-tight">TravelBuddy</div>
-        <nav className="hidden gap-8 text-sm text-ink/70 md:flex">
-          {navItems.map((item) => (
-            <a key={item.label} href={item.href} className="transition hover:text-ink">
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3 text-sm">
-          <Link to="/login" className="rounded-full px-4 py-2 font-medium text-ink/80 hover:text-ink">Войти</Link>
-          <Link to="/register" className="rounded-full bg-ink px-5 py-2.5 font-medium text-white transition hover:bg-ink/90">Начать бесплатно</Link>
-        </div>
-      </div>
-    </header>
-  )
-}
 
 const heroCards: Array<{ title: string; subtitle: string; icon: LucideIcon }> = [
   { title: 'Маршрут “Скандинавская осень”', subtitle: '8 городов · 12 дней', icon: Compass },
@@ -71,7 +42,7 @@ function Hero() {
           <h1 className="text-5xl font-semibold leading-tight md:text-6xl">Планируйте маршруты, проживайте поездки и делитесь ими красиво.</h1>
           <p className="mt-6 max-w-xl text-lg text-ink/70">TravelBuddy объединяет маршруты, истории, статистику и личный travel-профиль в одном современном веб-продукте.</p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 font-medium text-white">Начать путешествие <ArrowRight size={16} /></Link>
+            <button className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 font-medium text-white">Начать путешествие <ArrowRight size={16} /></button>
             <button className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 font-medium">Смотреть демо</button>
           </div>
         </div>
@@ -221,7 +192,7 @@ function StickyShowcase() {
   const scene = storyScenes[activeIndex]
 
   return (
-    <section id="routes" ref={ref} className="relative mx-auto min-h-[360vh] max-w-6xl px-6 py-24">
+    <section ref={ref} className="relative mx-auto min-h-[360vh] max-w-6xl px-6 py-24">
       <div className="sticky top-20">
         <div className="mb-8 text-center">
           <p className="text-sm uppercase tracking-[0.16em] text-ink/45">История продукта</p>
@@ -259,12 +230,10 @@ function StickyShowcase() {
 
 export default function HomePage() {
   return (
-    <div>
-      <Header />
-      <main>
+    <main>
         <Hero />
         <StickyShowcase />
-        <section id="features" className="mx-auto max-w-6xl px-6 py-20">
+        <section className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="text-4xl font-semibold">Возможности, которые помогают путешествовать осмысленно</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {features.map(([title, desc, Icon]) => (
@@ -276,7 +245,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-        <section id="community" className="mx-auto grid max-w-6xl gap-8 px-6 py-20 lg:grid-cols-2">
+        <section className="mx-auto grid max-w-6xl gap-8 px-6 py-20 lg:grid-cols-2">
           <article className="card-surface p-8">
             <h2 className="text-3xl font-semibold">Сообщество путешественников</h2>
             <p className="mt-4 text-ink/70">Публикуйте истории, собирайте реакции друзей и сохраняйте вдохновение из чужих поездок.</p>
@@ -286,7 +255,7 @@ export default function HomePage() {
               <p>• Комментарии и совместное планирование новых поездок</p>
             </div>
           </article>
-          <article id="stats" className="card-surface p-8">
+          <article className="card-surface p-8">
             <h2 className="text-3xl font-semibold">Профиль и статистика</h2>
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="rounded-2xl bg-white p-4"><p className="text-sm text-ink/60">Поездок</p><p className="text-3xl font-semibold">64</p></div>
@@ -315,18 +284,9 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl rounded-[2rem] bg-ink px-8 py-16 text-center text-white">
             <h2 className="text-4xl font-semibold">TravelBuddy помогает не просто планировать поездки, а красиво проживать их</h2>
             <p className="mx-auto mt-4 max-w-2xl text-white/75">Один аккаунт для маршрутов, историй, статистики и любимых мест. Начните бесплатно и соберите свой личный travel-архив.</p>
-            <Link to="/register" className="mt-8 inline-flex rounded-full bg-white px-6 py-3 font-medium text-ink">Начать бесплатно</Link>
+            <button className="mt-8 rounded-full bg-white px-6 py-3 font-medium text-ink">Начать бесплатно</button>
           </div>
         </section>
       </main>
-      <footer className="border-t border-ink/10 px-6 py-10 text-sm text-ink/60">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
-          <p>© 2026 TravelBuddy</p>
-          <div className="flex gap-5">
-            <a href="#">О продукте</a><a href="#">Блог</a><a href="#">Политика</a><a href="#">Условия</a>
-          </div>
-        </div>
-      </footer>
-    </div>
   )
 }

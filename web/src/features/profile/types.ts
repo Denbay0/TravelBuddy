@@ -1,4 +1,4 @@
-export type TransportCategory = 'Автомобиль' | 'Самолёт' | 'Поезд' | 'Пешком' | '—'
+import type { TransportCategory } from '../../types/travel'
 
 export type ProfileStats = {
   trips: number
