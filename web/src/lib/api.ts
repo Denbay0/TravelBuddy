@@ -54,7 +54,7 @@ export async function fetchCsrfToken(forceRefresh = false): Promise<string> {
     return csrfTokenCache
   }
 
-  const response = await fetch(`${env.apiBaseUrl}/auth/csrf`, {
+  const response = await fetch(joinUrl(env.apiBaseUrl, '/auth/csrf'), {
     method: 'GET',
     credentials: 'include',
   })
@@ -82,6 +82,14 @@ type RequestOptions = {
 
 const NETWORK_ERROR_MESSAGE =
   'Не удалось подключиться к серверу. Проверьте, запущен ли backend на 127.0.0.1:8000.'
+
+function joinUrl(base: string, path: string): string {
+  if (!base || base === '/') {
+    return path
+  }
+
+  return `${base.replace(/\/$/, '')}${path}`
+}
 
 function isNetworkError(error: unknown): boolean {
   return error instanceof TypeError
@@ -112,7 +120,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   let response: Response
 
   try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
+    response = await fetch(joinUrl(env.apiBaseUrl, path), {
       method,
       credentials: 'include',
       headers,
