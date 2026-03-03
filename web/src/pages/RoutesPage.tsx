@@ -1,71 +1,12 @@
 import { useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
-import CreateRouteCard, {
-  type CreateRouteFormState,
-  type TransportType,
-} from '../features/routes/components/CreateRouteCard'
+import CreateRouteCard, { type CreateRouteFormState } from '../features/routes/components/CreateRouteCard'
 import FeaturedRoutesSection from '../features/routes/components/FeaturedRoutesSection'
-import RouteFilters, {
-  type RouteSort,
-  routeFilterChips,
-} from '../features/routes/components/RouteFilters'
+import RouteFilters from '../features/routes/components/RouteFilters'
 import RoutesHero from '../features/routes/components/RoutesHero'
-import type { RouteItem } from '../features/routes/components/RouteCard'
-
-const initialRoutes: RouteItem[] = [
-  {
-    id: 1,
-    title: 'Альпийская панорама',
-    cover:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80',
-    cities: ['Инсбрук', 'Больцано', 'Церматт'],
-    durationDays: 8,
-    transport: 'Поезд',
-    saves: 421,
-    author: 'Елена Маркова',
-    country: 'Австрия, Италия, Швейцария',
-    isNew: false,
-  },
-  {
-    id: 2,
-    title: 'Средиземноморский уикенд',
-    cover:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80',
-    cities: ['Барселона', 'Валенсия', 'Пальма'],
-    durationDays: 5,
-    transport: 'Самолёт',
-    saves: 387,
-    author: 'Артём Данилов',
-    country: 'Испания',
-    isNew: true,
-  },
-  {
-    id: 3,
-    title: 'Норвежские фьорды',
-    cover:
-      'https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1400&q=80',
-    cities: ['Берген', 'Флом', 'Осло'],
-    durationDays: 7,
-    transport: 'Автомобиль',
-    saves: 512,
-    author: 'Мария Тихонова',
-    country: 'Норвегия',
-    isSaved: true,
-  },
-  {
-    id: 4,
-    title: 'Пешком по Стамбулу',
-    cover:
-      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1400&q=80',
-    cities: ['Кадыкёй', 'Султанахмет', 'Галата'],
-    durationDays: 3,
-    transport: 'Пешком',
-    saves: 204,
-    author: 'Илья Шестаков',
-    country: 'Турция',
-    isNew: true,
-  },
-]
+import { initialRoutes } from '../features/routes/mockData'
+import { type RouteSort } from '../features/routes/components/routeFiltersConfig'
+import type { Route, RouteFilter, TransportCategory } from '../types/travel'
 
 const emptyForm: CreateRouteFormState = {
   title: '',
@@ -76,15 +17,15 @@ const emptyForm: CreateRouteFormState = {
 }
 
 export default function RoutesPage() {
-  const [routes, setRoutes] = useState<RouteItem[]>(initialRoutes)
+  const [routes, setRoutes] = useState<Route[]>(initialRoutes)
   const [form, setForm] = useState<CreateRouteFormState>(emptyForm)
-  const [activeFilter, setActiveFilter] = useState<(typeof routeFilterChips)[number]>('Популярные')
+  const [activeFilter, setActiveFilter] = useState<RouteFilter>('Популярные')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<RouteSort>('Популярные')
 
   const handleFieldChange = (field: keyof CreateRouteFormState, value: string) => {
     if (field === 'transport') {
-      setForm((prev) => ({ ...prev, [field]: value as TransportType }))
+      setForm((prev) => ({ ...prev, [field]: value as TransportCategory }))
       return
     }
 
@@ -101,11 +42,10 @@ export default function RoutesPage() {
       .map((city) => city.trim())
       .filter(Boolean)
 
-    const newRoute: RouteItem = {
+    const newRoute: Route = {
       id: Date.now(),
       title: form.title,
-      cover:
-        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80',
+      cover: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80',
       cities,
       durationDays: Number(form.duration),
       transport: form.transport,

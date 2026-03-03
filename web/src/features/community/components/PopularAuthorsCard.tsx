@@ -1,12 +1,7 @@
-type PopularAuthor = {
-  id: number
-  name: string
-  focus: string
-  avatarUrl: string
-}
+import type { User } from '../../../types/travel'
 
 type PopularAuthorsCardProps = {
-  authors: PopularAuthor[]
+  authors: User[]
 }
 
 export default function PopularAuthorsCard({ authors }: PopularAuthorsCardProps) {

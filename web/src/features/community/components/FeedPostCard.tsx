@@ -1,18 +1,5 @@
 import { Bookmark, Heart, MessageCircle, Share2 } from 'lucide-react'
-
-export type CommunityPost = {
-  id: number
-  author: string
-  avatarUrl: string
-  route: string
-  date: string
-  imageUrl: string
-  caption: string
-  transport: string
-  likes: number
-  comments: number
-  saved?: boolean
-}
+import type { CommunityPost } from '../types'
 
 type FeedPostCardProps = {
   post: CommunityPost
@@ -23,9 +10,9 @@ export default function FeedPostCard({ post }: FeedPostCardProps) {
     <article className="overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-glow">
       <div className="flex items-center justify-between gap-3 px-5 py-4">
         <div className="flex items-center gap-3">
-          <img src={post.avatarUrl} alt={post.author} className="h-11 w-11 rounded-full object-cover" />
+          <img src={post.author.avatarUrl} alt={post.author.name} className="h-11 w-11 rounded-full object-cover" />
           <div>
-            <p className="text-sm font-semibold text-ink">{post.author}</p>
+            <p className="text-sm font-semibold text-ink">{post.author.name}</p>
             <p className="text-xs text-ink/60">{post.route}</p>
           </div>
         </div>

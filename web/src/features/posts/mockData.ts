@@ -10,7 +10,7 @@ export const mockTravelPosts: TravelPost[] = [
     likes: 128,
     comments: 19,
     routeLabel: 'Гёреме → Учисар → Красная долина',
-    transportCategory: 'plane',
+    transportCategory: 'Самолёт',
     location: 'Каппадокия',
   },
   {
@@ -22,7 +22,7 @@ export const mockTravelPosts: TravelPost[] = [
     likes: 86,
     comments: 12,
     routeLabel: 'Вена → Брно → Прага',
-    transportCategory: 'train',
+    transportCategory: 'Поезд',
     location: 'Центральная Европа',
   },
   {
@@ -34,7 +34,7 @@ export const mockTravelPosts: TravelPost[] = [
     likes: 201,
     comments: 34,
     routeLabel: 'Лиссабон → Назаре → Порту',
-    transportCategory: 'car',
+    transportCategory: 'Автомобиль',
     location: 'Португалия',
   },
 ]
