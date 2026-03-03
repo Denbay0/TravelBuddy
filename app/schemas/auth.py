@@ -1,21 +1,24 @@
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.user import UserOut
+
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 72
 
 
 class LoginRequest(BaseModel):
-    username_or_email: str = Field(min_length=3, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
+    rememberMe: bool = False
 
-    @field_validator("username_or_email", mode="before")
+    @field_validator("email", mode="before")
     @classmethod
-    def normalize_username_or_email(cls, value: str) -> str:
+    def normalize_email(cls, value: str) -> str:
         if not isinstance(value, str):
-            raise ValueError("username_or_email must be a string")
-        normalized = value.strip()
+            raise ValueError("email must be a string")
+        normalized = value.strip().lower()
         if not normalized:
-            raise ValueError("username_or_email cannot be empty")
+            raise ValueError("email cannot be empty")
         return normalized
 
     @field_validator("password")
@@ -30,11 +33,12 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     message: str
-    csrf_token: str
+    user: UserOut
+    csrfToken: str
 
 
 class CsrfResponse(BaseModel):
-    csrf_token: str
+    csrfToken: str
 
 
 class MessageResponse(BaseModel):

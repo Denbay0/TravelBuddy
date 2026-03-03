@@ -22,11 +22,11 @@ MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024
 def _serialize_user(user: User) -> UserOut:
     return UserOut(
         id=user.id,
-        username=user.username,
+        name=user.username,
         email=user.email,
         handle=f"@{user.handle}",
-        avatar_url=build_avatar_url(user.avatar_path),
-        created_at=user.created_at,
+        avatarUrl=build_avatar_url(user.avatar_path),
+        createdAt=user.created_at,
     )
 
 

@@ -65,12 +65,12 @@ export async function fetchCsrfToken(forceRefresh = false): Promise<string> {
   }
 
   const payload = await parseJson<CsrfResponse>(response)
-  if (!payload?.csrf_token) {
+  if (!payload?.csrfToken) {
     throw new ApiError('CSRF токен отсутствует в ответе сервера.', response.status)
   }
 
-  csrfTokenCache = payload.csrf_token
-  return payload.csrf_token
+  csrfTokenCache = payload.csrfToken
+  return payload.csrfToken
 }
 
 type RequestOptions = {
