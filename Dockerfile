@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/data /app/media/avatars
+RUN mkdir -p /app/media/avatars
 
 EXPOSE 8000
 

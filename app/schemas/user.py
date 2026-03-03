@@ -6,12 +6,14 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, mo
 from app.utils_profile import normalize_username
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$")
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 72
 
 
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    password: str = Field(min_length=8, max_length=72)
+    password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
     repeat_password: str
 
     @field_validator("username", mode="before")
@@ -34,6 +36,12 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        # bcrypt processes only the first 72 bytes of a password, so we fail fast
+        # with a clear validation error instead of silently truncating.
+        if len(value) > PASSWORD_MAX_LENGTH:
+            raise ValueError(
+                f"Password must be at most {PASSWORD_MAX_LENGTH} characters (bcrypt limit)"
+            )
         if not PASSWORD_REGEX.fullmatch(value):
             raise ValueError(
                 "Password must include at least one lowercase letter, one uppercase letter, and one digit"
