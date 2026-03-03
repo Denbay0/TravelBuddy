@@ -6,6 +6,7 @@ import App from './App.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
+import HomePage from './pages/HomePage.tsx'
 import RoutesPage from './pages/RoutesPage.tsx'
 import CommunityPage from './pages/CommunityPage.tsx'
 
