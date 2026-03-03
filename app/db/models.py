@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy import DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -14,6 +14,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     handle: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     avatar_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    travel_tagline: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    bio: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    home_city: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    visited_cities: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

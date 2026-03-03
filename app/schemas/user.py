@@ -54,13 +54,18 @@ class UserCreate(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
-    username: str
+    name: str | None = None
+    travelTagline: str | None = None
+    bio: str | None = None
+    homeCity: str | None = None
 
-    @field_validator("username", mode="before")
+    @field_validator("name", mode="before")
     @classmethod
-    def validate_username(cls, value: str) -> str:
+    def validate_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
         if not isinstance(value, str):
-            raise ValueError("Username must be a string")
+            raise ValueError("Name must be a string")
         return normalize_username(value)
 
 
@@ -79,3 +84,62 @@ class RegisterResponse(BaseModel):
     message: str
     user: UserOut
     csrfToken: str
+
+
+class ProfileStats(BaseModel):
+    trips: int
+    posts: int
+    savedRoutes: int
+
+
+class ProfileFavoriteRouteItem(BaseModel):
+    id: str
+    title: str
+    cities: list[str]
+    durationDays: int
+
+
+class ProfilePostItem(BaseModel):
+    id: str
+    title: str
+    city: str
+    createdAt: datetime
+
+
+class ProfileMeResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    handle: str
+    avatarUrl: str
+    travelTagline: str
+    bio: str
+    homeCity: str
+    visitedCities: list[str]
+    stats: ProfileStats
+    favoriteRoutes: list[ProfileFavoriteRouteItem]
+    createdAt: datetime
+
+
+class ProfileUpdateResponse(BaseModel):
+    message: str
+    profile: ProfileMeResponse
+
+
+class ProfileAvatarUploadResponse(BaseModel):
+    message: str
+    avatarUrl: str
+
+
+class ProfilePostsPageResponse(BaseModel):
+    page: int
+    limit: int
+    total: int
+    items: list[ProfilePostItem]
+
+
+class ProfileFavoriteRoutesPageResponse(BaseModel):
+    page: int
+    limit: int
+    total: int
+    items: list[ProfileFavoriteRouteItem]
