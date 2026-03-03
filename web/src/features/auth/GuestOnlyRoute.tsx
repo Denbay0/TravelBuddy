@@ -1,10 +1,10 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from './useAuth'
+import { useAuth } from '../../auth/AuthContext'
 
 export function GuestOnlyRoute() {
-  const { user, isAuthResolved } = useAuth()
+  const { user, isLoading } = useAuth()
 
-  if (!isAuthResolved) {
+  if (isLoading) {
     return null
   }
 

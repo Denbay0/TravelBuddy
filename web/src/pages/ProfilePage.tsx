@@ -4,11 +4,10 @@ import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
 import { mapApiUserToProfile } from '../features/profile/mappers'
-import { authService } from '../services/authService'
 import { profileService } from '../services/profileService'
 import type { ApiProfileFavoriteRoute, ApiProfilePost } from '../types/api'
 import type { UserProfile } from '../features/profile/types'
-import { useAuth } from '../features/auth/useAuth'
+import { useAuth } from '../auth/AuthContext'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -17,7 +16,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const { clearAuthenticatedUser } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -50,8 +49,7 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
-      await authService.logout()
-      clearAuthenticatedUser()
+      await logout()
       navigate('/login')
     } catch (logoutError) {
       setError(logoutError instanceof Error ? logoutError.message : 'Не удалось выйти из аккаунта.')

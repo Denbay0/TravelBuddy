@@ -9,7 +9,7 @@ import ProfilePage from './pages/ProfilePage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import RoutesPage from './pages/RoutesPage.tsx'
 import CommunityPage from './pages/CommunityPage.tsx'
-import { AuthProvider } from './features/auth/AuthContext.tsx'
+import { AuthProvider } from './auth/AuthContext.tsx'
 import { GuestOnlyRoute } from './features/auth/GuestOnlyRoute.tsx'
 
 createRoot(document.getElementById('root')!).render(
