@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
-import { mockAuthService } from '../services/mockAuthService'
+import { authService } from '../services/authService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -29,8 +29,8 @@ function validate(values: LoginValues): LoginErrors {
 
   if (!values.password) {
     errors.password = 'Введите пароль.'
-  } else if (values.password.length < 6) {
-    errors.password = 'Пароль должен содержать минимум 6 символов.'
+  } else if (values.password.length < 8) {
+    errors.password = 'Пароль должен содержать минимум 8 символов.'
   }
 
   return errors
@@ -58,8 +58,12 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      await mockAuthService.login(values)
-      setSuccess('Вход выполнен успешно. Добро пожаловать обратно!')
+      await authService.login({ username_or_email: values.email, password: values.password })
+      await authService.me()
+      setSuccess('Вход выполнен успешно. Перенаправляем в профиль...')
+      setTimeout(() => {
+        window.location.href = '/profile'
+      }, 350)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
     } finally {
@@ -120,12 +124,12 @@ export default function LoginPage() {
               {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
               {success ? <p className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</p> : null}
 
-              <SubmitButton text="Войти" loadingText="Выполняем вход..." isSubmitting={isSubmitting} />
+              <SubmitButton text="Войти" loadingText="Проверяем данные..." isSubmitting={isSubmitting} />
 
               <p className="text-center text-sm text-ink/70">
                 Нет аккаунта?{' '}
                 <a href="/register" className="font-medium text-amber hover:text-amber/80">
-                  Зарегистрироваться
+                  Создать
                 </a>
               </p>
             </form>

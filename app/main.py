@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
@@ -27,7 +28,15 @@ async def lifespan(_: FastAPI):
     yield
 
 
+
 app = FastAPI(title="TravelBuddy Auth MVP", version="0.1.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 app.mount("/media", StaticFiles(directory="media"), name="media")
 app.include_router(auth_router)
 app.include_router(profile_router)
