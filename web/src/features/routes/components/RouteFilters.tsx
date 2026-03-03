@@ -1,4 +1,5 @@
-import clsx from 'clsx'
+import SearchBar from '../../../components/SearchBar'
+import TransportFilterChips from '../../../components/TransportFilterChips'
 import type { RouteFilter } from '../../../types/travel'
 import { routeSortOptions, type RouteSort, routeFilterChips } from './routeFiltersConfig'
 
@@ -21,29 +22,13 @@ export default function RouteFilters({
 }: RouteFiltersProps) {
   return (
     <section className="card-surface p-5">
-      <div className="flex flex-wrap gap-2">
-        {routeFilterChips.map((chip) => (
-          <button
-            key={chip}
-            onClick={() => onFilterChange(chip)}
-            className={clsx(
-              'rounded-full border px-4 py-2 text-sm transition',
-              activeFilter === chip
-                ? 'border-ink bg-ink text-white'
-                : 'border-ink/15 bg-white text-ink/75 hover:border-ink/35',
-            )}
-          >
-            {chip}
-          </button>
-        ))}
-      </div>
+      <TransportFilterChips items={routeFilterChips} active={activeFilter} onChange={onFilterChange} />
 
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-        <input
+        <SearchBar
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           placeholder="Поиск по городам, странам или названию"
-          className="rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none transition focus:border-ink/35"
         />
         <label className="flex items-center gap-2 text-sm text-ink/65">
           Сортировка

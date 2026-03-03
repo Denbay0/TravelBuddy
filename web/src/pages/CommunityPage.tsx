@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import AppHeader from '../components/AppHeader'
 import CommunityHeader from '../features/community/components/CommunityHeader'
 import CreatePostModal, { type CommunityPostForm } from '../features/community/components/CreatePostModal'
 import FeedPostCard from '../features/community/components/FeedPostCard'
@@ -58,8 +57,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <div>
-      <AppHeader />
+    <>
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:py-10">
         <CommunityHeader onShareTrip={() => setIsModalOpen(true)} onCreatePost={() => setIsModalOpen(true)} />
 
@@ -81,6 +79,6 @@ export default function CommunityPage() {
         onChange={handleFormChange}
         onSubmit={handleSubmit}
       />
-    </div>
+    </>
   )
 }
