@@ -17,6 +17,8 @@ type RouteCreateRequest = {
   transport: ApiRoute['transport']
 }
 
+type RouteUpdateRequest = Partial<RouteCreateRequest>
+
 function buildRoutesQueryString(query: RoutesQuery): string {
   const params = new URLSearchParams()
 
@@ -33,7 +35,8 @@ function buildRoutesQueryString(query: RoutesQuery): string {
 
 export const routeService = {
   async list(query: RoutesQuery = {}): Promise<RouteListResponse> {
-    const result = await apiRequest<RouteListResponse>(`/routes${buildRoutesQueryString(query)}`)
+    const endpoint = query.sort === 'popular' ? '/routes/trending' : '/routes'
+    const result = await apiRequest<RouteListResponse>(`${endpoint}${buildRoutesQueryString(query)}`)
 
     let filteredItems = [...result.items]
 
@@ -54,17 +57,13 @@ export const routeService = {
       filteredItems = filteredItems.filter((route) => route.isSaved)
     }
 
-    if (query.sort === 'popular') {
-      filteredItems.sort((a, b) => b.savesCount - a.savesCount)
-    }
-
     if (query.sort === 'new') {
       filteredItems.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     }
 
     return {
       ...result,
-      total: filteredItems.length,
+      total: query.search || query.savedOnly ? filteredItems.length : result.total,
       items: filteredItems,
     }
   },
@@ -73,6 +72,23 @@ export const routeService = {
     return apiRequest<ApiRoute>('/routes', {
       method: 'POST',
       body: payload,
+    })
+  },
+
+  async getById(routeId: number): Promise<ApiRoute> {
+    return apiRequest<ApiRoute>(`/routes/${routeId}`)
+  },
+
+  async update(routeId: number, payload: RouteUpdateRequest): Promise<ApiRoute> {
+    return apiRequest<ApiRoute>(`/routes/${routeId}`, {
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  async remove(routeId: number): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/routes/${routeId}`, {
+      method: 'DELETE',
     })
   },
 

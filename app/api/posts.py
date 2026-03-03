@@ -237,13 +237,14 @@ def create_comment(
     return _serialize_comment(comment)
 
 
-@router.delete("/comments/{comment_id}", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
+@router.delete("/{post_id}/comments/{comment_id}", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
 def delete_comment(
+    post_id: int,
     comment_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MessageResponse:
-    comment = db.scalar(select(PostComment).where(PostComment.id == comment_id))
+    comment = db.scalar(select(PostComment).where(PostComment.id == comment_id, PostComment.post_id == post_id))
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
     if comment.owner_id != current_user.id:

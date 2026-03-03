@@ -75,7 +75,7 @@ export async function fetchCsrfToken(forceRefresh = false): Promise<string> {
 
 type RequestOptions = {
   method?: string
-  body?: unknown
+  body?: BodyInit | Record<string, unknown>
   headers?: HeadersInit
   skipCsrf?: boolean
 }
@@ -85,7 +85,7 @@ type CsrfTokenPayload = {
 }
 
 const NETWORK_ERROR_MESSAGE =
-  'Не удалось подключиться к серверу. Проверьте, запущен ли backend на 127.0.0.1:8000.'
+  'Не удалось подключиться к серверу. Проверьте, что backend запущен и доступен по dev-proxy target.'
 
 function joinUrl(base: string, path: string): string {
   if (!base || base === '/') {
@@ -104,7 +104,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const headers = new Headers(options.headers)
   const shouldUseCsrf = isMutatingMethod(method) && !options.skipCsrf
 
-  if (options.body && !headers.has('Content-Type')) {
+  const isFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData
+
+  if (options.body && !isFormDataBody && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -122,13 +124,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   let response: Response
+  const requestBody: BodyInit | undefined = options.body
+    ? isFormDataBody
+      ? (options.body as FormData)
+      : JSON.stringify(options.body)
+    : undefined
 
   try {
     response = await fetch(joinUrl(env.apiBaseUrl, path), {
       method,
       credentials: 'include',
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body: requestBody,
     })
   } catch (error) {
     if (isNetworkError(error)) {
