@@ -6,6 +6,7 @@ export const authService = {
     return apiRequest<RegisterResponse>('/auth/register', {
       method: 'POST',
       body: payload,
+      skipCsrf: true,
     })
   },
 
@@ -13,6 +14,7 @@ export const authService = {
     return apiRequest<LoginResponse>('/auth/login', {
       method: 'POST',
       body: payload,
+      skipCsrf: true,
     })
   },
 
