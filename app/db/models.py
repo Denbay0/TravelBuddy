@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 
@@ -22,3 +22,102 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    routes: Mapped[list["Route"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    saved_routes: Mapped[list["RouteSave"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    posts: Mapped[list["Post"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    liked_posts: Mapped[list["PostLike"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    saved_posts: Mapped[list["PostSave"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    comments: Mapped[list["PostComment"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+
+
+class Route(Base):
+    __tablename__ = "routes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    cities: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    owner: Mapped[User] = relationship(back_populates="routes")
+    saves: Mapped[list["RouteSave"]] = relationship(back_populates="route", cascade="all, delete-orphan")
+
+
+class RouteSave(Base):
+    __tablename__ = "route_saves"
+    __table_args__ = (UniqueConstraint("route_id", "user_id", name="uq_route_save_route_user"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    route_id: Mapped[int] = mapped_column(ForeignKey("routes.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    route: Mapped[Route] = relationship(back_populates="saves")
+    user: Mapped[User] = relationship(back_populates="saved_routes")
+
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    city: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    owner: Mapped[User] = relationship(back_populates="posts")
+    likes: Mapped[list["PostLike"]] = relationship(back_populates="post", cascade="all, delete-orphan")
+    saves: Mapped[list["PostSave"]] = relationship(back_populates="post", cascade="all, delete-orphan")
+    comments: Mapped[list["PostComment"]] = relationship(back_populates="post", cascade="all, delete-orphan")
+
+
+class PostLike(Base):
+    __tablename__ = "post_likes"
+    __table_args__ = (UniqueConstraint("post_id", "user_id", name="uq_post_like_post_user"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    post: Mapped[Post] = relationship(back_populates="likes")
+    user: Mapped[User] = relationship(back_populates="liked_posts")
+
+
+class PostSave(Base):
+    __tablename__ = "post_saves"
+    __table_args__ = (UniqueConstraint("post_id", "user_id", name="uq_post_save_post_user"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    post: Mapped[Post] = relationship(back_populates="saves")
+    user: Mapped[User] = relationship(back_populates="saved_posts")
+
+
+class PostComment(Base):
+    __tablename__ = "post_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    post: Mapped[Post] = relationship(back_populates="comments")
+    owner: Mapped[User] = relationship(back_populates="comments")
