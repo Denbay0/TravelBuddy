@@ -60,6 +60,33 @@ def test_register_weak_password(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_register_password_too_long(client: TestClient) -> None:
+    long_password = "A" * 73 + "a1"
+    response = client.post(
+        "/auth/register",
+        json={
+            "username": "test_user",
+            "email": "test@example.com",
+            "password": long_password,
+            "repeat_password": long_password,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_login_password_too_long(client: TestClient) -> None:
+    _register_user(client)
+    long_password = "A" * 73 + "a1"
+
+    response = client.post(
+        "/auth/login",
+        json={"username_or_email": "Valid_User", "password": long_password},
+    )
+
+    assert response.status_code == 422
+
+
 def test_register_invalid_username(client: TestClient) -> None:
     response = client.post(
         "/auth/register",
