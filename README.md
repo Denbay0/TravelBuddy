@@ -104,8 +104,20 @@ docker compose up --build
 
 Внутри docker-сети:
 
+- frontend (Vite proxy) -> backend: `http://backend:8000`
 - backend -> postgres: `postgres:5432`
 - backend -> redis: `redis:6379`
+
+
+## Быстрый smoke-check интеграции
+
+1. Откройте `http://127.0.0.1:5173/register` и создайте пользователя.
+2. Войдите через `http://127.0.0.1:5173/login`.
+3. Проверьте, что профиль открывается на `http://127.0.0.1:5173/profile` без ошибок авторизации.
+4. Проверьте, что маршруты и сообщество загружают реальные данные API:
+   - `http://127.0.0.1:5173/routes`
+   - `http://127.0.0.1:5173/community`
+5. При необходимости сверяйте backend-контракты в `http://127.0.0.1:8000/docs`.
 
 ## Docker-сервисы
 

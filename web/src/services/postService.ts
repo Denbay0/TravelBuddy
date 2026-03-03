@@ -19,6 +19,23 @@ export const postService = {
     })
   },
 
+  async getById(postId: number): Promise<ApiPost> {
+    return apiRequest<ApiPost>(`/posts/${postId}`)
+  },
+
+  async update(postId: number, payload: Partial<{ title: string; content: string; city: string }>): Promise<ApiPost> {
+    return apiRequest<ApiPost>(`/posts/${postId}`, {
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  async remove(postId: number): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/posts/${postId}`, {
+      method: 'DELETE',
+    })
+  },
+
   async like(postId: number): Promise<ApiPostReactionResponse> {
     return apiRequest<ApiPostReactionResponse>(`/posts/${postId}/like`, { method: 'POST' })
   },
@@ -43,6 +60,12 @@ export const postService = {
     return apiRequest<ApiPostComment>(`/posts/${postId}/comments`, {
       method: 'POST',
       body: { content },
+    })
+  },
+
+  async deleteComment(postId: number, commentId: number): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
     })
   },
 }

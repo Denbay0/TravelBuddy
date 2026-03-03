@@ -4,9 +4,10 @@ import CreatePostModal, { type CommunityPostForm } from '../features/community/c
 import FeedPostCard from '../features/community/components/FeedPostCard'
 import FeedSidebar from '../features/community/components/FeedSidebar'
 import { popularAuthors, trendingRoutes } from '../features/community/mockData'
-import type { CommunityPost } from '../features/community/types'
+import type { CommunityPost, TrendingRoute } from '../features/community/types'
 import { communityService } from '../services/communityService'
 import type { ApiPost } from '../types/api'
+import type { User } from '../types/travel'
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',
@@ -48,14 +49,23 @@ export default function CommunityPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [pendingPostId, setPendingPostId] = useState<number | null>(null)
 
+  const [authors, setAuthors] = useState<User[]>(popularAuthors)
+  const [trending, setTrending] = useState<TrendingRoute[]>(trendingRoutes)
+
   useEffect(() => {
     async function loadPosts() {
       setIsLoading(true)
       setError('')
 
       try {
-        const response = await communityService.getFeed({ page: 1, limit: 20 })
-        setPosts(response.items.map((post) => mapApiPostToCommunityPost(post)))
+        const [feedResponse, popularUsersResponse, trendingRoutesResponse] = await Promise.all([
+          communityService.getFeed({ page: 1, limit: 20 }),
+          communityService.getPopularUsers(1, 5),
+          communityService.getTrendingRoutes(1, 5),
+        ])
+        setPosts(feedResponse.items.map((post) => mapApiPostToCommunityPost(post)))
+        setAuthors(popularUsersResponse.length > 0 ? popularUsersResponse : popularAuthors)
+        setTrending(trendingRoutesResponse.length > 0 ? trendingRoutesResponse : trendingRoutes)
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить ленту сообщества.')
       } finally {
@@ -161,7 +171,7 @@ export default function CommunityPage() {
             ))}
           </section>
 
-          <FeedSidebar authors={popularAuthors} routes={trendingRoutes} />
+          <FeedSidebar authors={authors} routes={trending} />
         </div>
       </main>
 
