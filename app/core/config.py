@@ -8,7 +8,8 @@ class Settings(BaseSettings):
     secret_key: str = Field(min_length=32)
     algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
-    database_url: str = "sqlite:///./data/travelbuddy.db"
+    database_url: str = "postgresql+psycopg://travelbuddy:travelbuddy@postgres:5432/travelbuddy"
+    redis_url: str = "redis://redis:6379/0"
 
     jwt_cookie_name: str = "access_token"
     csrf_cookie_name: str = "csrf_token"
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     cookie_path: str = "/"
     cookie_domain: str | None = None
+    frontend_origins: str = "http://127.0.0.1:5173"
 
     media_root: str = "media"
 
