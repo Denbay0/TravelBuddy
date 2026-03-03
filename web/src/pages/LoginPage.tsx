@@ -5,7 +5,7 @@ import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
 import { authService } from '../services/authService'
-import { useAuth } from '../features/auth/useAuth'
+import { useAuth } from '../auth/AuthContext'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const { setAuthenticatedUser } = useAuth()
+  const { setUser } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
     try {
       const response = await authService.login({ email: values.email, password: values.password, rememberMe: values.rememberMe })
-      setAuthenticatedUser(response.user)
+      setUser(response.user)
       setSuccess('Вход выполнен успешно. Перенаправляем в профиль...')
       setTimeout(() => {
         navigate('/profile')

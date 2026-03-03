@@ -5,7 +5,7 @@ import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
 import { authService } from '../services/authService'
-import { useAuth } from '../features/auth/useAuth'
+import { useAuth } from '../auth/AuthContext'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -56,7 +56,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const { setAuthenticatedUser } = useAuth()
+  const { setUser } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -80,7 +80,7 @@ export default function RegisterPage() {
         confirmPassword: values.confirmPassword,
       })
 
-      setAuthenticatedUser(response.user)
+      setUser(response.user)
       setValues({ name: '', email: '', password: '', confirmPassword: '' })
       navigate('/profile', { replace: true })
     } catch (submitError) {
