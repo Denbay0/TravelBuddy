@@ -53,7 +53,7 @@ def _serialize_profile(user: User) -> ProfileMeResponse:
         bio=user.bio or "",
         home_city=user.home_city or "",
         visited_cities=_parse_visited_cities(user.visited_cities),
-        stats=ProfileStats(trips=0, posts=0, saved_routes=0),
+        stats=ProfileStats(trips=0, posts=0, saved_routes=0, favorite_transport=user.favorite_transport or "Пешком"),
         favorite_routes=[],
         created_at=user.created_at,
     )

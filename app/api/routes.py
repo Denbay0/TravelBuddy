@@ -8,21 +8,41 @@ from app.api.deps import get_current_user, verify_csrf
 from app.db.database import get_db
 from app.db.models import Route, RouteSave, User
 from app.schemas.auth import MessageResponse
-from app.schemas.routes import RouteCreateRequest, RouteListResponse, RouteOut, RouteOwner, RouteUpdateRequest
+from app.schemas.routes import (
+    RouteCreateRequest,
+    RouteListResponse,
+    RouteOut,
+    RouteOwner,
+    RouteSaveResponse,
+    RouteUpdateRequest,
+)
 
 router = APIRouter(prefix="/routes", tags=["routes"])
+
+
+def _parse_cities(raw_cities: str | None) -> list[str]:
+    if not raw_cities:
+        return []
+    try:
+        parsed = json.loads(raw_cities)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    if isinstance(parsed, list):
+        return [str(city) for city in parsed]
+    return []
 
 
 def _serialize_route(route: Route, current_user_id: int | None = None) -> RouteOut:
     return RouteOut(
         id=route.id,
         title=route.title,
-        description=route.description,
-        cities=json.loads(route.cities) if route.cities else [],
-        duration_days=route.duration_days,
-        saves_count=len(route.saves),
+        description=route.description or "",
+        cities=_parse_cities(route.cities),
+        duration_days=route.duration_days or 0,
+        transport=route.transport,
+        saves_count=len(route.saves or []),
         owner=RouteOwner(id=route.owner.id, name=route.owner.username, handle=f"@{route.owner.handle}"),
-        is_saved=bool(current_user_id and any(save.user_id == current_user_id for save in route.saves)),
+        is_saved=bool(current_user_id and any(save.user_id == current_user_id for save in (route.saves or []))),
         created_at=route.created_at,
         updated_at=route.updated_at,
     )
@@ -58,6 +78,7 @@ def create_route(
         description=payload.description,
         cities=json.dumps(payload.cities),
         duration_days=payload.duration_days,
+        transport=payload.transport,
     )
     db.add(route)
     db.commit()
@@ -120,6 +141,8 @@ def update_route(
         route.cities = json.dumps(updates["cities"])
     if "duration_days" in updates:
         route.duration_days = updates["duration_days"]
+    if "transport" in updates:
+        route.transport = updates["transport"]
 
     db.add(route)
     db.commit()
@@ -144,12 +167,12 @@ def delete_route(
     return MessageResponse(message="Route deleted")
 
 
-@router.post("/{route_id}/save", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
+@router.post("/{route_id}/save", response_model=RouteSaveResponse, dependencies=[Depends(verify_csrf)])
 def save_route(
     route_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> MessageResponse:
+) -> RouteSaveResponse:
     route = db.scalar(select(Route).where(Route.id == route_id))
     if not route:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Route not found")
@@ -158,17 +181,21 @@ def save_route(
     if not existing:
         db.add(RouteSave(route_id=route_id, user_id=current_user.id))
         db.commit()
-    return MessageResponse(message="Route saved")
+
+    saves = db.scalar(select(func.count(RouteSave.id)).where(RouteSave.route_id == route_id)) or 0
+    return RouteSaveResponse(message="Route saved", saved=True, is_saved=True, saves=saves)
 
 
-@router.delete("/{route_id}/save", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
+@router.delete("/{route_id}/save", response_model=RouteSaveResponse, dependencies=[Depends(verify_csrf)])
 def unsave_route(
     route_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> MessageResponse:
+) -> RouteSaveResponse:
     existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id))
     if existing:
         db.delete(existing)
         db.commit()
-    return MessageResponse(message="Route unsaved")
+
+    saves = db.scalar(select(func.count(RouteSave.id)).where(RouteSave.route_id == route_id)) or 0
+    return RouteSaveResponse(message="Route unsaved", saved=False, is_saved=False, saves=saves)

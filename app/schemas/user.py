@@ -4,6 +4,7 @@ import re
 from pydantic import AliasChoices, EmailStr, Field, field_validator, model_validator
 
 from app.schemas.common import CamelModel
+from app.schemas.transport import TransportType
 from app.utils_profile import normalize_username
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$")
@@ -104,16 +105,18 @@ class RegisterResponse(CamelModel):
 
 
 class ProfileStats(CamelModel):
-    trips: int
-    posts: int
-    saved_routes: int
+    trips: int = 0
+    posts: int = 0
+    saved_routes: int = 0
+    favorite_transport: TransportType = TransportType.WALK
 
 
 class ProfileFavoriteRouteItem(CamelModel):
     id: str
     title: str
-    cities: list[str]
+    cities: list[str] = Field(default_factory=list)
     duration_days: int
+    transport: TransportType = TransportType.WALK
 
 
 class ProfilePostItem(CamelModel):
@@ -129,12 +132,12 @@ class ProfileMeResponse(CamelModel):
     email: EmailStr
     handle: str
     avatar_url: str
-    travel_tagline: str
-    bio: str
-    home_city: str
-    visited_cities: list[str]
-    stats: ProfileStats
-    favorite_routes: list[ProfileFavoriteRouteItem]
+    travel_tagline: str = ""
+    bio: str = ""
+    home_city: str = ""
+    visited_cities: list[str] = Field(default_factory=list)
+    stats: ProfileStats = Field(default_factory=ProfileStats)
+    favorite_routes: list[ProfileFavoriteRouteItem] = Field(default_factory=list)
     created_at: datetime
 
 

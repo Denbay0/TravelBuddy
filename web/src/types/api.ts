@@ -1,3 +1,5 @@
+import type { TransportCategory } from './travel'
+
 export type ApiErrorPayload = {
   detail?: string | { msg?: string }[]
 }
@@ -58,12 +60,14 @@ export type ApiProfile = {
     trips: number
     posts: number
     savedRoutes: number
+    favoriteTransport: TransportCategory
   }
   favoriteRoutes: {
     id: string
     title: string
     cities: string[]
     durationDays: number
+    transport: TransportCategory
   }[]
   createdAt: string
 }
@@ -80,6 +84,7 @@ export type ApiProfileFavoriteRoute = {
   title: string
   cities: string[]
   durationDays: number
+  transport: TransportCategory
 }
 
 export type ProfilePageResponse<T> = {
@@ -94,6 +99,7 @@ export type ApiPost = {
   title: string
   content: string
   city: string
+  transport: TransportCategory
   owner: {
     id: number
     name: string
@@ -126,6 +132,7 @@ export type ApiRoute = {
   description: string
   cities: string[]
   durationDays: number
+  transport: TransportCategory
   savesCount: number
   owner: {
     id: number
@@ -140,4 +147,19 @@ export type ApiRoute = {
 export type PostListResponse = ProfilePageResponse<ApiPost>
 export type PostCommentsResponse = ProfilePageResponse<ApiPostComment>
 export type RouteListResponse = ProfilePageResponse<ApiRoute>
-export type ApiMessageResponse = { message: string }
+
+export type ApiPostReactionResponse = {
+  message: string
+  liked: boolean
+  saved: boolean
+  isSaved: boolean
+  likes: number
+  saves: number
+}
+
+export type ApiRouteSaveResponse = {
+  message: string
+  saved: boolean
+  isSaved: boolean
+  saves: number
+}

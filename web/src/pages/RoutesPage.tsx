@@ -21,12 +21,12 @@ function mapApiRouteToRoute(route: ApiRoute): Route {
     id: route.id,
     title: route.title,
     cover: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80',
-    cities: route.cities,
+    cities: route.cities ?? [],
     durationDays: route.durationDays,
-    transport: 'Поезд',
-    saves: route.savesCount,
+    transport: route.transport,
+    saves: route.savesCount ?? 0,
     author: route.owner.name,
-    country: route.cities.join(', '),
+    country: (route.cities ?? []).join(', '),
     isNew: Date.now() - Date.parse(route.createdAt) < 1000 * 60 * 60 * 24 * 7,
     isSaved: route.isSaved,
   }
@@ -94,6 +94,7 @@ export default function RoutesPage() {
         description: form.note,
         cities,
         durationDays: Number(form.duration),
+        transport: form.transport,
       })
       setRoutes((prev) => [mapApiRouteToRoute(created), ...prev])
       setForm(emptyForm)
@@ -107,16 +108,12 @@ export default function RoutesPage() {
     setError('')
 
     try {
-      if (route.isSaved) {
-        await routeService.unsave(route.id)
-      } else {
-        await routeService.save(route.id)
-      }
+      const response = route.isSaved ? await routeService.unsave(route.id) : await routeService.save(route.id)
 
       setRoutes((prev) =>
         prev.map((item) =>
           item.id === route.id
-            ? { ...item, isSaved: !item.isSaved, saves: item.saves + (item.isSaved ? -1 : 1) }
+            ? { ...item, isSaved: response.isSaved, saves: response.saves }
             : item,
         ),
       )

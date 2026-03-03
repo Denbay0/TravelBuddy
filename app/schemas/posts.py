@@ -3,18 +3,21 @@ from datetime import datetime
 from pydantic import Field
 
 from app.schemas.common import CamelModel, PaginatedResponse
+from app.schemas.transport import TransportType
 
 
 class PostCreateRequest(CamelModel):
     title: str = Field(min_length=1, max_length=255)
     content: str = Field(min_length=1)
     city: str = Field(min_length=1, max_length=128)
+    transport: TransportType = TransportType.WALK
 
 
 class PostUpdateRequest(CamelModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     content: str | None = Field(default=None, min_length=1)
     city: str | None = Field(default=None, min_length=1, max_length=128)
+    transport: TransportType | None = None
 
 
 class CommentCreateRequest(CamelModel):
@@ -46,6 +49,7 @@ class PostOut(CamelModel):
     title: str
     content: str
     city: str
+    transport: TransportType
     owner: PostOwner
     likes_count: int
     comments_count: int
@@ -54,6 +58,15 @@ class PostOut(CamelModel):
     is_saved: bool
     created_at: datetime
     updated_at: datetime
+
+
+class PostReactionResponse(CamelModel):
+    message: str
+    liked: bool
+    saved: bool
+    is_saved: bool
+    likes: int
+    saves: int
 
 
 class PostListResponse(PaginatedResponse[PostOut]):

@@ -1,8 +1,8 @@
 import { apiRequest } from '../lib/api'
 import type {
-  ApiMessageResponse,
   ApiPost,
   ApiPostComment,
+  ApiPostReactionResponse,
   PostCommentsResponse,
   PostListResponse,
 } from '../types/api'
@@ -19,20 +19,20 @@ export const postService = {
     })
   },
 
-  async like(postId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/posts/${postId}/like`, { method: 'POST' })
+  async like(postId: number): Promise<ApiPostReactionResponse> {
+    return apiRequest<ApiPostReactionResponse>(`/posts/${postId}/like`, { method: 'POST' })
   },
 
-  async unlike(postId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/posts/${postId}/like`, { method: 'DELETE' })
+  async unlike(postId: number): Promise<ApiPostReactionResponse> {
+    return apiRequest<ApiPostReactionResponse>(`/posts/${postId}/like`, { method: 'DELETE' })
   },
 
-  async save(postId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/posts/${postId}/save`, { method: 'POST' })
+  async save(postId: number): Promise<ApiPostReactionResponse> {
+    return apiRequest<ApiPostReactionResponse>(`/posts/${postId}/save`, { method: 'POST' })
   },
 
-  async unsave(postId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/posts/${postId}/save`, { method: 'DELETE' })
+  async unsave(postId: number): Promise<ApiPostReactionResponse> {
+    return apiRequest<ApiPostReactionResponse>(`/posts/${postId}/save`, { method: 'DELETE' })
   },
 
   async comments(postId: number, page = 1, limit = 10): Promise<PostCommentsResponse> {

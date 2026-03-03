@@ -32,7 +32,7 @@ function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityP
     }),
     imageUrl: imageUrl || `https://source.unsplash.com/1600x900/?travel,${encodeURIComponent(post.city)}`,
     caption: post.content,
-    transport: 'Самолёт',
+    transport: post.transport,
     likes: post.likesCount,
     comments: post.commentsCount,
     saved: post.isSaved,
@@ -93,11 +93,11 @@ export default function CommunityPage() {
   const handleToggleLike = async (post: CommunityPost) => {
     setPendingPostId(post.id)
     try {
-      await communityService.toggleLike(post.id, Boolean(post.liked))
+      const response = await communityService.toggleLike(post.id, Boolean(post.liked))
       setPosts((prev) =>
         prev.map((item) =>
           item.id === post.id
-            ? { ...item, liked: !item.liked, likes: item.likes + (item.liked ? -1 : 1) }
+            ? { ...item, liked: response.liked, saved: response.isSaved, likes: response.likes }
             : item,
         ),
       )
@@ -111,8 +111,14 @@ export default function CommunityPage() {
   const handleToggleSave = async (post: CommunityPost) => {
     setPendingPostId(post.id)
     try {
-      await communityService.toggleSave(post.id, Boolean(post.saved))
-      setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, saved: !item.saved } : item)))
+      const response = await communityService.toggleSave(post.id, Boolean(post.saved))
+      setPosts((prev) =>
+        prev.map((item) =>
+          item.id === post.id
+            ? { ...item, saved: response.isSaved, liked: response.liked, likes: response.likes }
+            : item,
+        ),
+      )
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : 'Не удалось обновить сохранение.')
     } finally {

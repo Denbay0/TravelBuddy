@@ -1,5 +1,5 @@
 import { apiRequest } from '../lib/api'
-import type { ApiMessageResponse, ApiRoute, RouteListResponse } from '../types/api'
+import type { ApiRoute, ApiRouteSaveResponse, RouteListResponse } from '../types/api'
 
 export type RoutesQuery = {
   page?: number
@@ -14,6 +14,7 @@ type RouteCreateRequest = {
   description?: string
   cities: string[]
   durationDays: number
+  transport: ApiRoute['transport']
 }
 
 function buildRoutesQueryString(query: RoutesQuery): string {
@@ -75,14 +76,14 @@ export const routeService = {
     })
   },
 
-  async save(routeId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/routes/${routeId}/save`, {
+  async save(routeId: number): Promise<ApiRouteSaveResponse> {
+    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, {
       method: 'POST',
     })
   },
 
-  async unsave(routeId: number): Promise<ApiMessageResponse> {
-    return apiRequest<ApiMessageResponse>(`/routes/${routeId}/save`, {
+  async unsave(routeId: number): Promise<ApiRouteSaveResponse> {
+    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, {
       method: 'DELETE',
     })
   },
