@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import AppHeader from '../components/AppHeader'
 import CreateRouteCard, { type CreateRouteFormState } from '../features/routes/components/CreateRouteCard'
 import FeaturedRoutesSection from '../features/routes/components/FeaturedRoutesSection'
 import RouteFilters from '../features/routes/components/RouteFilters'
@@ -97,8 +96,7 @@ export default function RoutesPage() {
   }, [activeFilter, form.transport, routes, search, sort])
 
   return (
-    <div>
-      <AppHeader />
+    <>
       <RoutesHero />
       <main className="mx-auto grid max-w-6xl gap-8 px-6 py-10">
         <CreateRouteCard form={form} onChange={handleFieldChange} onSubmit={handleCreateRoute} />
@@ -112,6 +110,6 @@ export default function RoutesPage() {
         />
         <FeaturedRoutesSection routes={filteredRoutes} />
       </main>
-    </div>
+    </>
   )
 }
