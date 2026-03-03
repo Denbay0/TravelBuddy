@@ -77,32 +77,59 @@ type RequestOptions = {
   method?: string
   body?: unknown
   headers?: HeadersInit
+  skipCsrf?: boolean
+}
+
+const NETWORK_ERROR_MESSAGE =
+  'Не удалось подключиться к серверу. Проверьте, запущен ли backend на 127.0.0.1:8000.'
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof TypeError
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const method = (options.method || 'GET').toUpperCase()
   const headers = new Headers(options.headers)
+  const shouldUseCsrf = isMutatingMethod(method) && !options.skipCsrf
 
   if (options.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
-  if (isMutatingMethod(method)) {
-    const csrfToken = await fetchCsrfToken()
-    headers.set('X-CSRF-Token', csrfToken)
+  if (shouldUseCsrf) {
+    try {
+      const csrfToken = await fetchCsrfToken()
+      headers.set('X-CSRF-Token', csrfToken)
+    } catch (error) {
+      if (isNetworkError(error)) {
+        throw new ApiError(NETWORK_ERROR_MESSAGE, 0)
+      }
+
+      throw error
+    }
   }
 
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
-    method,
-    credentials: 'include',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
+      method,
+      credentials: 'include',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    })
+  } catch (error) {
+    if (isNetworkError(error)) {
+      throw new ApiError(NETWORK_ERROR_MESSAGE, 0)
+    }
+
+    throw error
+  }
 
   if (!response.ok) {
     const payload = await parseJson<ApiErrorPayload>(response)
 
-    if ((response.status === 401 || response.status === 403) && isMutatingMethod(method)) {
+    if ((response.status === 401 || response.status === 403) && shouldUseCsrf) {
       csrfTokenCache = null
     }
 
