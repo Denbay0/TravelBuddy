@@ -11,6 +11,7 @@ export type CommunityPost = {
   likes: number
   comments: number
   saved?: boolean
+  liked?: boolean
 }
 
 export type TrendingRoute = {

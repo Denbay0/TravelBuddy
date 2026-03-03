@@ -1,12 +1,12 @@
 import { env } from '../../config/env'
-import type { ApiUser } from '../../types/api'
+import type { ApiProfile } from '../../services/profileService'
 import type { UserProfile } from './types'
 
 const DEFAULT_BIO = 'Расскажите о себе и ваших любимых направлениях в следующих релизах TravelBuddy.'
 const DEFAULT_TAGLINE = 'Путешествие начинается здесь.'
 const DEFAULT_HOME_CITY = 'Не указан'
 
-export function mapApiUserToProfile(user: ApiUser): UserProfile {
+export function mapApiUserToProfile(user: ApiProfile): UserProfile {
   const absoluteAvatarUrl = user.avatarUrl.startsWith('http')
     ? user.avatarUrl
     : `${env.mediaBaseUrl}${user.avatarUrl}`
@@ -15,15 +15,15 @@ export function mapApiUserToProfile(user: ApiUser): UserProfile {
     id: String(user.id),
     name: user.name,
     avatarUrl: absoluteAvatarUrl,
-    travelTagline: DEFAULT_TAGLINE,
-    bio: DEFAULT_BIO,
-    homeCity: DEFAULT_HOME_CITY,
-    visitedCities: [],
-    favoriteRoutes: [],
+    travelTagline: user.travelTagline || DEFAULT_TAGLINE,
+    bio: user.bio || DEFAULT_BIO,
+    homeCity: user.homeCity || DEFAULT_HOME_CITY,
+    visitedCities: user.visitedCities,
+    favoriteRoutes: user.favoriteRoutes,
     stats: {
-      trips: 0,
-      posts: 0,
-      savedRoutes: 0,
+      trips: user.stats.trips,
+      posts: user.stats.posts,
+      savedRoutes: user.stats.savedRoutes,
       favoriteTransport: 'Поезд',
     },
   }
