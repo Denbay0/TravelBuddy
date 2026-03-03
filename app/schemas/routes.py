@@ -1,41 +1,41 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import CamelModel, PaginatedResponse
 
 
-class RouteCreateRequest(BaseModel):
+class RouteCreateRequest(CamelModel):
     title: str = Field(min_length=1, max_length=255)
     description: str = ""
     cities: list[str] = Field(default_factory=list)
-    durationDays: int = Field(default=1, ge=1)
+    duration_days: int = Field(default=1, ge=1)
 
 
-class RouteUpdateRequest(BaseModel):
+class RouteUpdateRequest(CamelModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
     cities: list[str] | None = None
-    durationDays: int | None = Field(default=None, ge=1)
+    duration_days: int | None = Field(default=None, ge=1)
 
 
-class RouteOwner(BaseModel):
+class RouteOwner(CamelModel):
     id: int
     name: str
     handle: str
 
 
-class RouteOut(BaseModel):
+class RouteOut(CamelModel):
     id: int
     title: str
     description: str
     cities: list[str]
-    durationDays: int
-    savesCount: int
+    duration_days: int
+    saves_count: int
     owner: RouteOwner
-    isSaved: bool
-    createdAt: datetime
-    updatedAt: datetime
+    is_saved: bool
+    created_at: datetime
+    updated_at: datetime
 
 
 class RouteListResponse(PaginatedResponse[RouteOut]):

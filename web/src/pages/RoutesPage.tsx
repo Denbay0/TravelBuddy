@@ -4,7 +4,8 @@ import FeaturedRoutesSection from '../features/routes/components/FeaturedRoutesS
 import RouteFilters from '../features/routes/components/RouteFilters'
 import RoutesHero from '../features/routes/components/RoutesHero'
 import { type RouteSort } from '../features/routes/components/routeFiltersConfig'
-import { routeService, type ApiRoute } from '../services/routeService'
+import { routeService } from '../services/routeService'
+import type { ApiRoute } from '../types/api'
 import type { Route, RouteFilter, TransportCategory } from '../types/travel'
 
 const emptyForm: CreateRouteFormState = {

@@ -1,49 +1,5 @@
 import { apiRequest } from '../lib/api'
-
-export type ApiProfile = {
-  id: number
-  name: string
-  email: string
-  handle: string
-  avatarUrl: string
-  travelTagline: string
-  bio: string
-  homeCity: string
-  visitedCities: string[]
-  stats: {
-    trips: number
-    posts: number
-    savedRoutes: number
-  }
-  favoriteRoutes: {
-    id: string
-    title: string
-    cities: string[]
-    durationDays: number
-  }[]
-  createdAt: string
-}
-
-export type ApiProfilePost = {
-  id: string
-  title: string
-  city: string
-  createdAt: string
-}
-
-export type ApiProfileFavoriteRoute = {
-  id: string
-  title: string
-  cities: string[]
-  durationDays: number
-}
-
-type ProfilePageResponse<T> = {
-  page: number
-  limit: number
-  total: number
-  items: T[]
-}
+import type { ApiProfile, ApiProfileFavoriteRoute, ApiProfilePost, ProfilePageResponse } from '../types/api'
 
 export const profileService = {
   async me(): Promise<ApiProfile> {
