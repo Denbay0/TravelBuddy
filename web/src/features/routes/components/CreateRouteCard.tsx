@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip } from 'react-leaflet'
+import type { RoutePoint } from '../../../types/api'
 import { transportCategories, type TransportCategory } from '../../../types/travel'
 
 export type CreateRouteFormState = {
@@ -11,7 +12,7 @@ export type CreateRouteFormState = {
   note: string
 }
 
-type Point = { name: string; lat: number; lon: number }
+type Point = RoutePoint
 
 const fallbackCities: Record<string, [number, number]> = {
   москва: [55.7558, 37.6176],
@@ -37,38 +38,27 @@ async function geocodeCity(city: string): Promise<Point | null> {
   }
 }
 
-function haversine(a: Point, b: Point) {
-  const R = 6371
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180
-  const dLon = ((b.lon - a.lon) * Math.PI) / 180
-  const lat1 = (a.lat * Math.PI) / 180
-  const lat2 = (b.lat * Math.PI) / 180
-  const x = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
-  return R * (2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)))
-}
-
 type CreateRouteCardProps = {
   form: CreateRouteFormState
   onChange: (field: keyof CreateRouteFormState, value: string) => void
   onSubmit: () => void
+  onPointsResolved?: (points: RoutePoint[]) => void
+  distanceKm?: number
 }
 
-export default function CreateRouteCard({ form, onChange, onSubmit }: CreateRouteCardProps) {
+export default function CreateRouteCard({ form, onChange, onSubmit, onPointsResolved, distanceKm }: CreateRouteCardProps) {
   const [points, setPoints] = useState<Point[]>([])
   const cities = useMemo(() => form.stops.split(',').map((city) => city.trim()).filter(Boolean), [form.stops])
 
   useEffect(() => {
     async function loadPoints() {
       const resolved = await Promise.all(cities.map(geocodeCity))
-      setPoints(resolved.filter(Boolean) as Point[])
+      const cleanPoints = resolved.filter(Boolean) as Point[]
+      setPoints(cleanPoints)
+      onPointsResolved?.(cleanPoints)
     }
     void loadPoints()
-  }, [cities])
-
-  const totalDistance = useMemo(() => {
-    if (points.length < 2) return 0
-    return points.slice(1).reduce((sum, point, index) => sum + haversine(points[index], point), 0)
-  }, [points])
+  }, [cities, onPointsResolved])
 
   return (
     <section className="card-surface p-6">
@@ -98,11 +88,11 @@ export default function CreateRouteCard({ form, onChange, onSubmit }: CreateRout
         <MapContainer center={points[0] ? [points[0].lat, points[0].lon] : [55.7558, 37.6176]} zoom={4} className="h-64 w-full">
           <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {points.map((point) => <Marker key={`${point.name}-${point.lat}`} position={[point.lat, point.lon]}><Tooltip>{point.name}</Tooltip></Marker>)}
-          {points.length > 1 ? <Polyline positions={points.map((point) => [point.lat, point.lon])} pathOptions={{ color: "#D88752" }} /> : null}
+          {points.length > 1 ? <Polyline positions={points.map((point) => [point.lat, point.lon])} pathOptions={{ color: '#D88752' }} /> : null}
         </MapContainer>
       </div>
 
-      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink/5 px-4 py-2 text-sm text-ink/80"><MapPin size={16} /> Примерная дистанция: <b>{Math.round(totalDistance)} км</b></p>
+      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink/5 px-4 py-2 text-sm text-ink/80"><MapPin size={16} /> Примерная дистанция: <b>{Math.round(distanceKm ?? 0)} км</b></p>
 
       <button onClick={onSubmit} className="mt-5 rounded-full bg-pine px-6 py-3 font-medium text-white transition hover:bg-pine/90">Добавить маршрут</button>
     </section>

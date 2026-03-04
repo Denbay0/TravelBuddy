@@ -126,6 +126,12 @@ export type ApiPostComment = {
   updatedAt: string
 }
 
+export type RoutePoint = {
+  name: string
+  lat: number
+  lon: number
+}
+
 export type ApiRoute = {
   id: number
   title: string
@@ -133,6 +139,9 @@ export type ApiRoute = {
   cities: string[]
   durationDays: number
   transport: TransportCategory
+  note: string
+  points: RoutePoint[]
+  distanceKm: number
   savesCount: number
   owner: {
     id: number
@@ -162,4 +171,14 @@ export type ApiRouteSaveResponse = {
   saved: boolean
   isSaved: boolean
   saves: number
+}
+
+export type RoutePreviewResponse = {
+  distanceKm: number
+}
+
+export type SearchResponse = {
+  query: string
+  routes: ApiRoute[]
+  posts: ApiPost[]
 }
