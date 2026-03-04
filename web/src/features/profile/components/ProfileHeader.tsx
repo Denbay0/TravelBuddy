@@ -20,8 +20,8 @@ export function ProfileHeader({ profile, onEdit, onLogout, isLoggingOut = false 
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <button onClick={onEdit} className="rounded-full border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink transition hover:bg-ink/5">Редактировать профиль</button>
-        <button onClick={onLogout} disabled={isLoggingOut} className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60">{isLoggingOut ? 'Выходим...' : 'Выйти'}</button>
+        <button onClick={onEdit} className="btn-outline px-5 py-2.5">Редактировать профиль</button>
+        <button onClick={onLogout} disabled={isLoggingOut} className="btn-primary px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-60">{isLoggingOut ? 'Выходим...' : 'Выйти'}</button>
       </div>
     </header>
   )

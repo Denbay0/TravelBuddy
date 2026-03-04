@@ -111,7 +111,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-2xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error || 'Профиль недоступен. Попробуйте снова позже.'}
         </div>
       </main>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-10">
-      {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+      {error ? <div className="rounded-2xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div> : null}
 
       <ProfileHeader profile={profile} onEdit={openEdit} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
 
@@ -173,19 +173,19 @@ export default function ProfilePage() {
         )}
       </ProfileSection>
       {isEditOpen ? (
-        <div className="fixed inset-0 z-[70] bg-ink/40 p-4" onClick={() => setIsEditOpen(false)}>
+        <div className="fixed inset-0 z-[70] bg-[rgb(var(--overlay))/0.58] p-4" onClick={() => setIsEditOpen(false)}>
           <form onSubmit={handleSaveProfile} onClick={(event) => event.stopPropagation()} className="mx-auto mt-16 max-w-xl rounded-3xl bg-surface p-6">
             <h3 className="text-xl font-semibold">Редактировать профиль</h3>
             <div className="mt-4 grid gap-3">
-              <input value={editForm.name} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="Имя" />
-              <input value={editForm.travelTagline} onChange={(e) => setEditForm((prev) => ({ ...prev, travelTagline: e.target.value }))} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="Короткий слоган" />
-              <input value={editForm.homeCity} onChange={(e) => setEditForm((prev) => ({ ...prev, homeCity: e.target.value }))} className="rounded-xl border border-borderline/70 px-3 py-2" placeholder="Домашний город" />
-              <input value={editForm.travelTags} onChange={(e) => setEditForm((prev) => ({ ...prev, travelTags: e.target.value }))} className="rounded-xl border border-borderline/70 px-3 py-2" placeholder="Теги через запятую: горы, авто, море" />
-              <textarea value={editForm.bio} onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))} rows={3} className="rounded-xl border border-borderline/70 px-3 py-2" placeholder="О себе" />
+              <input value={editForm.name} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} className="form-control rounded-xl px-3 py-2" placeholder="Имя" />
+              <input value={editForm.travelTagline} onChange={(e) => setEditForm((prev) => ({ ...prev, travelTagline: e.target.value }))} className="form-control rounded-xl px-3 py-2" placeholder="Короткий слоган" />
+              <input value={editForm.homeCity} onChange={(e) => setEditForm((prev) => ({ ...prev, homeCity: e.target.value }))} className="form-control rounded-xl px-3 py-2" placeholder="Домашний город" />
+              <input value={editForm.travelTags} onChange={(e) => setEditForm((prev) => ({ ...prev, travelTags: e.target.value }))} className="form-control rounded-xl px-3 py-2" placeholder="Теги через запятую: горы, авто, море" />
+              <textarea value={editForm.bio} onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))} rows={3} className="form-control rounded-xl px-3 py-2" placeholder="О себе" />
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-full border border-borderline/70 px-4 py-2 text-sm">Отмена</button>
-              <button type="submit" className="rounded-full bg-ink px-4 py-2 text-sm text-white">Сохранить</button>
+              <button type="button" onClick={() => setIsEditOpen(false)} className="btn-outline px-4 py-2 text-sm">Отмена</button>
+              <button type="submit" className="btn-primary px-4 py-2 text-sm">Сохранить</button>
             </div>
           </form>
         </div>

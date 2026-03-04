@@ -53,7 +53,7 @@ type CreateRouteCardProps = {
 function PointBadge({ index, total }: { index: number; total: number }) {
   if (index === 0) return <span className="rounded-full bg-pine/15 px-2 py-0.5 text-xs text-pine">Старт</span>
   if (index === total - 1) return <span className="rounded-full bg-amber/20 px-2 py-0.5 text-xs text-amber">Финиш</span>
-  return <span className="rounded-full bg-ink/10 px-2 py-0.5 text-xs">Остановка</span>
+  return <span className="tag-chip px-2 py-0.5 text-xs">Остановка</span>
 }
 
 export default function CreateRouteCard({ form, onChange, onSubmit, onPointsResolved, distanceKm, submitLabel = 'Сохранить маршрут', submitHint }: CreateRouteCardProps) {
@@ -93,32 +93,32 @@ export default function CreateRouteCard({ form, onChange, onSubmit, onPointsReso
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <label className="text-sm text-ink/80">Название
-          <input value={form.title} onChange={(e) => onChange('title', e.target.value)} placeholder="Балканы за 10 дней" className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+          <input value={form.title} onChange={(e) => onChange('title', e.target.value)} placeholder="Балканы за 10 дней" className="mt-2 w-full rounded-2xl form-control px-4 py-3" />
         </label>
         <label className="text-sm text-ink/80">Транспорт
-          <select value={form.transport} onChange={(e) => onChange('transport', e.target.value)} className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5">{transportCategories.map((option) => <option key={option} value={option}>{option}</option>)}</select>
+          <select value={form.transport} onChange={(e) => onChange('transport', e.target.value)} className="mt-2 w-full rounded-2xl form-control px-4 py-3">{transportCategories.map((option) => <option key={option} value={option}>{option}</option>)}</select>
         </label>
         <label className="text-sm text-ink/80">Откуда
-          <input value={form.startLocation} onChange={(e) => onChange('startLocation', e.target.value)} placeholder="Белград" className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+          <input value={form.startLocation} onChange={(e) => onChange('startLocation', e.target.value)} placeholder="Белград" className="mt-2 w-full rounded-2xl form-control px-4 py-3" />
         </label>
         <label className="text-sm text-ink/80">Куда
-          <input value={form.endLocation} onChange={(e) => onChange('endLocation', e.target.value)} placeholder="Котор" className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+          <input value={form.endLocation} onChange={(e) => onChange('endLocation', e.target.value)} placeholder="Котор" className="mt-2 w-full rounded-2xl form-control px-4 py-3" />
         </label>
         <label className="text-sm text-ink/80 md:col-span-2">Промежуточные остановки (через запятую)
-          <input value={form.stops} onChange={(e) => onChange('stops', e.target.value)} placeholder="Сараево, Мостар" className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+          <input value={form.stops} onChange={(e) => onChange('stops', e.target.value)} placeholder="Сараево, Мостар" className="mt-2 w-full rounded-2xl form-control px-4 py-3" />
         </label>
         <label className="text-sm text-ink/80">Длительность (дней)
-          <input value={form.duration} onChange={(e) => onChange('duration', e.target.value)} placeholder="7" type="number" min={1} className="mt-2 w-full rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+          <input value={form.duration} onChange={(e) => onChange('duration', e.target.value)} placeholder="7" type="number" min={1} className="mt-2 w-full rounded-2xl form-control px-4 py-3" />
         </label>
       </div>
 
       <label className="mt-4 block text-sm text-ink/80">Заметка
-        <textarea value={form.note} onChange={(e) => onChange('note', e.target.value)} placeholder="Что важно учесть в поездке?" rows={3} className="mt-2 w-full resize-none rounded-2xl border border-ink/20 bg-white/90 px-4 py-3 outline-none dark:bg-white/5" />
+        <textarea value={form.note} onChange={(e) => onChange('note', e.target.value)} placeholder="Что важно учесть в поездке?" rows={3} className="mt-2 w-full resize-none rounded-2xl form-control px-4 py-3" />
       </label>
 
       <div className="mt-4 flex flex-wrap gap-2 text-sm text-ink/80">
         {routeParts.map((city, index) => (
-          <span key={`${city}-${index}`} className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-white/70 px-3 py-1 dark:bg-white/5">
+          <span key={`${city}-${index}`} className="inline-flex items-center gap-2 rounded-full border border-borderline/70 bg-surface-elevated px-3 py-1">
             <PointBadge index={index} total={routeParts.length} />
             {city}
           </span>
@@ -134,11 +134,11 @@ export default function CreateRouteCard({ form, onChange, onSubmit, onPointsReso
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <p className="inline-flex items-center gap-2 rounded-full bg-ink/10 px-4 py-2 text-sm text-ink"><MapPin size={16} /> Примерная дистанция: <b>{Math.round(distanceKm ?? 0)} км</b></p>
+        <p className="tag-chip inline-flex items-center gap-2 px-4 py-2 text-sm"><MapPin size={16} /> Примерная дистанция: <b>{Math.round(distanceKm ?? 0)} км</b></p>
         {isResolving ? <span className="text-sm text-ink/70">Обновляем маршрут на карте...</span> : null}
       </div>
 
-      <button onClick={onSubmit} className="mt-5 rounded-full bg-pine px-6 py-3 font-medium text-white transition hover:bg-pine/90">{submitLabel}</button>
+      <button onClick={onSubmit} className="btn-primary mt-5 px-6 py-3">{submitLabel}</button>
       {submitHint ? <p className="mt-2 text-sm text-ink/70">{submitHint}</p> : null}
     </section>
   )

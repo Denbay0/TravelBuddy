@@ -5,44 +5,93 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: 247 249 252;
-  --color-elevated: 255 255 255;
-  --color-card: 255 255 255;
-  --color-border: 206 214 224;
-  --color-text-primary: 25 35 50;
-  --color-text-secondary: 79 95 117;
-  --color-text-muted: 118 132 153;
-  --color-accent: 53 121 246;
-  --color-accent-contrast: 247 249 252;
-  --color-input-bg: 249 251 255;
-  --color-placeholder: 133 147 168;
-  --color-success: 39 153 111;
-  --color-warning: 214 143 36;
-  --color-danger: 214 73 73;
-  --color-hero-start: 237 245 255;
-  --color-hero-end: 230 239 252;
+  color-scheme: light;
 
-  color: rgb(var(--color-text-primary));
-  background: rgb(var(--color-bg));
+  --background: 246 248 252;
+  --background-muted: 239 243 250;
+  --surface: 255 255 255;
+  --surface-elevated: 252 254 255;
+  --card: 255 255 255;
+  --border: 206 216 231;
+  --border-soft: 224 231 241;
+
+  --text-primary: 20 30 46;
+  --text-secondary: 73 91 114;
+  --text-muted: 110 126 148;
+  --text-on-accent: 245 249 255;
+
+  --primary: 42 114 240;
+  --primary-hover: 30 96 213;
+  --secondary: 232 238 249;
+  --secondary-hover: 216 227 243;
+
+  --danger: 220 76 76;
+  --success: 45 160 121;
+  --warning: 214 148 49;
+
+  --input-background: 250 252 255;
+  --input-border: 198 212 229;
+  --input-placeholder: 133 149 171;
+
+  --button-primary-bg: var(--primary);
+  --button-primary-text: var(--text-on-accent);
+  --button-secondary-bg: 234 240 250;
+  --button-secondary-text: 33 48 72;
+  --button-ghost-text: 70 91 122;
+
+  --tag-bg: 233 240 249;
+  --tag-text: 52 72 99;
+
+  --overlay: 15 24 37;
+  --shadow: 15 30 56;
+
+  --hero-start: 236 243 255;
+  --hero-end: 226 236 251;
 }
 
 .dark {
-  --color-bg: 11 16 24;
-  --color-elevated: 17 24 36;
-  --color-card: 24 33 47;
-  --color-border: 61 74 97;
-  --color-text-primary: 231 238 248;
-  --color-text-secondary: 183 196 217;
-  --color-text-muted: 132 149 176;
-  --color-accent: 101 161 255;
-  --color-accent-contrast: 10 16 26;
-  --color-input-bg: 18 27 40;
-  --color-placeholder: 111 130 157;
-  --color-success: 76 188 145;
-  --color-warning: 239 178 79;
-  --color-danger: 238 112 112;
-  --color-hero-start: 18 27 41;
-  --color-hero-end: 10 16 27;
+  color-scheme: dark;
+
+  --background: 11 17 27;
+  --background-muted: 16 24 38;
+  --surface: 19 29 44;
+  --surface-elevated: 24 36 53;
+  --card: 22 33 49;
+  --border: 58 77 105;
+  --border-soft: 42 60 86;
+
+  --text-primary: 233 241 252;
+  --text-secondary: 181 198 221;
+  --text-muted: 136 158 186;
+  --text-on-accent: 241 247 255;
+
+  --primary: 88 151 255;
+  --primary-hover: 112 168 255;
+  --secondary: 36 50 71;
+  --secondary-hover: 46 65 90;
+
+  --danger: 244 118 118;
+  --success: 94 196 159;
+  --warning: 238 182 93;
+
+  --input-background: 18 29 46;
+  --input-border: 58 77 104;
+  --input-placeholder: 122 144 175;
+
+  --button-primary-bg: var(--primary);
+  --button-primary-text: 11 19 33;
+  --button-secondary-bg: 35 50 72;
+  --button-secondary-text: 218 230 247;
+  --button-ghost-text: 187 205 231;
+
+  --tag-bg: 32 47 67;
+  --tag-text: 198 216 240;
+
+  --overlay: 2 6 13;
+  --shadow: 1 4 10;
+
+  --hero-start: 16 25 39;
+  --hero-end: 11 17 28;
 }
 
 html,
@@ -54,27 +103,114 @@ body,
 
 body {
   @apply antialiased;
-  background: rgb(var(--color-bg));
-  color: rgb(var(--color-text-primary));
+  background: rgb(var(--background));
+  color: rgb(var(--text-primary));
 }
 
-.card-surface {
-  @apply rounded-3xl border shadow-glow;
-  border-color: rgb(var(--color-border) / 0.55);
-  background: rgb(var(--color-card) / 0.9);
-  backdrop-filter: blur(10px);
+@layer components {
+  .card-surface {
+    @apply rounded-3xl border;
+    border-color: rgb(var(--border) / 0.72);
+    background: rgb(var(--card) / 0.96);
+    box-shadow: 0 14px 35px rgb(var(--shadow) / 0.16);
+  }
+
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition duration-150;
+  }
+
+  .btn-primary {
+    @apply btn-base;
+    background: rgb(var(--button-primary-bg));
+    color: rgb(var(--button-primary-text));
+  }
+
+  .btn-primary:hover {
+    background: rgb(var(--primary-hover));
+  }
+
+  .btn-primary:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+
+  .btn-secondary {
+    @apply btn-base;
+    background: rgb(var(--button-secondary-bg));
+    color: rgb(var(--button-secondary-text));
+    border: 1px solid rgb(var(--border-soft));
+  }
+
+  .btn-secondary:hover {
+    background: rgb(var(--secondary-hover));
+  }
+
+  .btn-outline {
+    @apply btn-base;
+    background: transparent;
+    color: rgb(var(--text-secondary));
+    border: 1px solid rgb(var(--border));
+  }
+
+  .btn-outline:hover {
+    background: rgb(var(--background-muted));
+    color: rgb(var(--text-primary));
+  }
+
+  .btn-ghost {
+    @apply btn-base;
+    background: transparent;
+    color: rgb(var(--button-ghost-text));
+  }
+
+  .btn-ghost:hover {
+    background: rgb(var(--background-muted));
+    color: rgb(var(--text-primary));
+  }
+
+  .btn-danger {
+    @apply btn-base;
+    background: rgb(var(--danger));
+    color: rgb(var(--text-on-accent));
+  }
+
+  .btn-danger:hover {
+    filter: brightness(1.06);
+  }
+
+  .form-control {
+    @apply w-full rounded-2xl border px-4 py-3 text-sm outline-none transition;
+    border-color: rgb(var(--input-border));
+    background: rgb(var(--input-background));
+    color: rgb(var(--text-primary));
+  }
+
+  .form-control::placeholder {
+    color: rgb(var(--input-placeholder));
+  }
+
+  .form-control:focus {
+    border-color: rgb(var(--primary));
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.2);
+  }
+
+  .tag-chip {
+    @apply rounded-full px-3 py-1 text-xs;
+    background: rgb(var(--tag-bg));
+    color: rgb(var(--tag-text));
+    border: 1px solid rgb(var(--border-soft));
+  }
 }
 
 input,
 textarea,
 select {
-  background: rgb(var(--color-input-bg));
-  color: rgb(var(--color-text-primary));
+  background: rgb(var(--input-background));
+  color: rgb(var(--text-primary));
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgb(var(--color-placeholder));
+  color: rgb(var(--input-placeholder));
 }
 
 button,
