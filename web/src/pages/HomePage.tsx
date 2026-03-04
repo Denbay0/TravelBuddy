@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -18,6 +17,7 @@ import {
 import { useRef, useState, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { reportService } from '../services/reportService'
 
 const features = [
   ['Планирование маршрутов', 'Создавайте гибкие маршруты с этапами, заметками и совместным редактированием.', Route],
@@ -92,7 +92,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
               Начать путешествие <ArrowRight size={16} />
             </button>
             <button onClick={onDemo} className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 font-medium">
-              Смотреть обзор
+              Смотреть демо
             </button>
           </div>
         </div>
@@ -161,16 +161,8 @@ export default function HomePage() {
   const demoRef = useRef<HTMLDivElement>(null)
   const [isReportOpen, setIsReportOpen] = useState(false)
 
-  const downloadPdf = () => {
-    const doc = new jsPDF()
-    doc.setFontSize(20)
-    doc.text('TravelBuddy Demo Report', 20, 20)
-    doc.setFontSize(12)
-    doc.text('Маршрут: Санкт-Петербург → Таллин → Рига', 20, 35)
-    doc.text('Длительность: 7 дней', 20, 45)
-    doc.text('Транспорт: Поезд + Пешком', 20, 55)
-    doc.text('Итог: 3 города, 640 км, 18 сохранённых мест.', 20, 65)
-    doc.save('travelbuddy-demo-report.pdf')
+  const downloadPdf = async () => {
+    await reportService.downloadExamplePdf()
   }
 
   return (

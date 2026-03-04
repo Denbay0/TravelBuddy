@@ -1,4 +1,5 @@
 import json
+import math
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -13,6 +14,9 @@ from app.schemas.routes import (
     RouteListResponse,
     RouteOut,
     RouteOwner,
+    RoutePoint,
+    RoutePreviewRequest,
+    RoutePreviewResponse,
     RouteSaveResponse,
     RouteUpdateRequest,
 )
@@ -20,26 +24,89 @@ from app.schemas.routes import (
 router = APIRouter(prefix="/routes", tags=["routes"])
 
 
-def _parse_cities(raw_cities: str | None) -> list[str]:
+def _haversine_km(a: RoutePoint, b: RoutePoint) -> float:
+    r = 6371.0
+    d_lat = math.radians(b.lat - a.lat)
+    d_lon = math.radians(b.lon - a.lon)
+    lat1 = math.radians(a.lat)
+    lat2 = math.radians(b.lat)
+    x = math.sin(d_lat / 2) ** 2 + math.sin(d_lon / 2) ** 2 * math.cos(lat1) * math.cos(lat2)
+    return r * (2 * math.atan2(math.sqrt(x), math.sqrt(1 - x)))
+
+
+def _compute_distance_km(points: list[RoutePoint]) -> float:
+    if len(points) < 2:
+        return 0
+    total = 0.0
+    for idx in range(1, len(points)):
+        total += _haversine_km(points[idx - 1], points[idx])
+    return round(total, 2)
+
+
+def _parse_route_data(raw_cities: str | None) -> tuple[list[str], list[RoutePoint], float, str]:
     if not raw_cities:
-        return []
+        return [], [], 0.0, ""
+
     try:
         parsed = json.loads(raw_cities)
     except (TypeError, json.JSONDecodeError):
-        return []
+        return [], [], 0.0, ""
+
     if isinstance(parsed, list):
-        return [str(city) for city in parsed]
-    return []
+        return [str(city) for city in parsed], [], 0.0, ""
+
+    if isinstance(parsed, dict):
+        points: list[RoutePoint] = []
+        raw_points = parsed.get("points", [])
+        if isinstance(raw_points, list):
+            for item in raw_points:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    points.append(
+                        RoutePoint(name=str(item.get("name", "")), lat=float(item.get("lat")), lon=float(item.get("lon")))
+                    )
+                except (TypeError, ValueError):
+                    continue
+
+        cities = parsed.get("cities", [])
+        safe_cities = [str(city) for city in cities] if isinstance(cities, list) else []
+        distance_km = parsed.get("distance_km")
+        note = parsed.get("note")
+        return (
+            safe_cities,
+            points,
+            float(distance_km) if isinstance(distance_km, (int, float)) else _compute_distance_km(points),
+            str(note) if isinstance(note, str) else "",
+        )
+
+    return [], [], 0.0, ""
+
+
+def _pack_route_data(cities: list[str], points: list[RoutePoint], note: str) -> str:
+    return json.dumps(
+        {
+            "cities": cities,
+            "points": [point.model_dump() for point in points],
+            "distance_km": _compute_distance_km(points),
+            "note": note,
+        },
+        ensure_ascii=False,
+    )
 
 
 def _serialize_route(route: Route, current_user_id: int | None = None) -> RouteOut:
+    cities, points, distance_km, note = _parse_route_data(route.cities)
     return RouteOut(
         id=route.id,
         title=route.title,
         description=route.description or "",
-        cities=_parse_cities(route.cities),
+        cities=cities,
         duration_days=route.duration_days or 0,
         transport=route.transport,
+        note=note,
+        points=points,
+        distance_km=distance_km,
         saves_count=len(route.saves or []),
         owner=RouteOwner(id=route.owner.id, name=route.owner.username, handle=f"@{route.owner.handle}"),
         is_saved=bool(current_user_id and any(save.user_id == current_user_id for save in (route.saves or []))),
@@ -48,21 +115,35 @@ def _serialize_route(route: Route, current_user_id: int | None = None) -> RouteO
     )
 
 
+@router.post("/preview", response_model=RoutePreviewResponse)
+def preview_route(payload: RoutePreviewRequest) -> RoutePreviewResponse:
+    return RoutePreviewResponse(distance_km=_compute_distance_km(payload.points))
+
+
 @router.get("", response_model=RouteListResponse)
 def list_routes(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
+    q: str | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> RouteListResponse:
-    total = db.scalar(select(func.count(Route.id))) or 0
-    routes = (
-        db.execute(select(Route).order_by(Route.created_at.desc()).offset((page - 1) * limit).limit(limit))
-        .scalars()
-        .all()
-    )
+    routes_query = select(Route).order_by(Route.created_at.desc())
+    routes = db.execute(routes_query).scalars().all()
+
+    if q and q.strip():
+        search = q.strip().lower()
+        routes = [
+            route
+            for route in routes
+            if search in route.title.lower() or search in (route.description or "").lower() or search in (route.cities or "").lower()
+        ]
+
+    total = len(routes)
+    start = (page - 1) * limit
+    paginated = routes[start : start + limit]
     return RouteListResponse(
-        items=[_serialize_route(route, current_user.id) for route in routes], page=page, limit=limit, total=total
+        items=[_serialize_route(route, current_user.id) for route in paginated], page=page, limit=limit, total=total
     )
 
 
@@ -76,7 +157,7 @@ def create_route(
         owner_id=current_user.id,
         title=payload.title,
         description=payload.description,
-        cities=json.dumps(payload.cities),
+        cities=_pack_route_data(payload.cities, payload.points, payload.note),
         duration_days=payload.duration_days,
         transport=payload.transport,
     )
@@ -93,19 +174,20 @@ def trending_routes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> RouteListResponse:
-    total = db.scalar(select(func.count(Route.id))) or 0
-    routes = (
+    all_routes = (
         db.execute(
             select(Route)
             .outerjoin(RouteSave, RouteSave.route_id == Route.id)
             .group_by(Route.id)
             .order_by(func.count(RouteSave.id).desc(), Route.created_at.desc())
-            .offset((page - 1) * limit)
-            .limit(limit)
         )
         .scalars()
         .all()
     )
+
+    total = len(all_routes)
+    start = (page - 1) * limit
+    routes = all_routes[start : start + limit]
     return RouteListResponse(
         items=[_serialize_route(route, current_user.id) for route in routes], page=page, limit=limit, total=total
     )
@@ -137,12 +219,16 @@ def update_route(
         route.title = updates["title"]
     if "description" in updates:
         route.description = updates["description"]
-    if "cities" in updates:
-        route.cities = json.dumps(updates["cities"])
     if "duration_days" in updates:
         route.duration_days = updates["duration_days"]
     if "transport" in updates:
         route.transport = updates["transport"]
+
+    cities, points, _, note = _parse_route_data(route.cities)
+    next_cities = updates.get("cities", cities)
+    next_points = updates.get("points", points)
+    next_note = updates.get("note", note)
+    route.cities = _pack_route_data(next_cities, next_points, next_note)
 
     db.add(route)
     db.commit()
@@ -168,11 +254,7 @@ def delete_route(
 
 
 @router.post("/{route_id}/save", response_model=RouteSaveResponse, dependencies=[Depends(verify_csrf)])
-def save_route(
-    route_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> RouteSaveResponse:
+def save_route(route_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> RouteSaveResponse:
     route = db.scalar(select(Route).where(Route.id == route_id))
     if not route:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Route not found")
@@ -187,11 +269,7 @@ def save_route(
 
 
 @router.delete("/{route_id}/save", response_model=RouteSaveResponse, dependencies=[Depends(verify_csrf)])
-def unsave_route(
-    route_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> RouteSaveResponse:
+def unsave_route(route_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> RouteSaveResponse:
     existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id))
     if existing:
         db.delete(existing)

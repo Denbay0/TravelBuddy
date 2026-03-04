@@ -68,13 +68,13 @@ export default function ProfilePage() {
   const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!profile) return
-    const updated = { ...profile, ...editForm }
-    setProfile(updated)
-    setIsEditOpen(false)
+    setError('')
     try {
-      await profileService.updateMe(editForm)
-    } catch {
-      setError('Изменения сохранены локально. Сервер временно недоступен.')
+      const response = await profileService.updateMe(editForm)
+      setProfile(mapApiUserToProfile(response.profile))
+      setIsEditOpen(false)
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Не удалось сохранить профиль.')
     }
   }
 

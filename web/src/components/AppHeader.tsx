@@ -1,5 +1,5 @@
 import { Menu, Moon, Search, Sun, UserCircle2, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useTheme } from '../features/theme/ThemeContext'
@@ -20,15 +20,19 @@ export default function AppHeader() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
+  const targetPath = useMemo(() => {
+    if (location.pathname.startsWith('/community')) return '/community'
+    return '/routes'
+  }, [location.pathname])
+
   const handleSearch = () => {
-    const target = location.pathname.startsWith('/community') ? '/community' : '/routes'
     const next = new URLSearchParams(params)
     if (query.trim()) {
       next.set('q', query.trim())
     } else {
       next.delete('q')
     }
-    navigate(`${target}?${next.toString()}`)
+    navigate(`${targetPath}?${next.toString()}`)
     setIsMenuOpen(false)
   }
 
@@ -73,7 +77,7 @@ export default function AppHeader() {
               <UserCircle2 size={18} /> Войти
             </Link>
           )}
-          <Link to="/routes" className="rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90">Создать маршрут</Link>
+          <Link to="/routes#create" className="rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90">Создать маршрут</Link>
         </div>
 
         <button className="rounded-full border border-ink/20 p-2 md:hidden" onClick={() => setIsMenuOpen((prev) => !prev)}>
@@ -87,8 +91,10 @@ export default function AppHeader() {
             <input value={query} onChange={(event) => setQuery(event.target.value)} className="w-full rounded-xl border border-ink/20 bg-white/80 px-3 py-2 text-sm" placeholder="Поиск" />
             <button onClick={handleSearch} className="rounded-xl bg-ink px-3 py-2 text-sm text-white">Найти</button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {navLinks.map(({ to, label }) => <Link key={to} to={to} onClick={() => setIsMenuOpen(false)} className="rounded-full border border-ink/15 px-3 py-2 text-sm">{label}</Link>)}
+            <Link to="/routes#create" onClick={() => setIsMenuOpen(false)} className="rounded-full border border-ink/15 px-3 py-2 text-sm">Создать маршрут</Link>
+            {user ? <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="rounded-full border border-ink/15 px-3 py-2 text-sm">Профиль</Link> : <Link to="/login" onClick={() => setIsMenuOpen(false)} className="rounded-full border border-ink/15 px-3 py-2 text-sm">Войти</Link>}
             <button onClick={toggleTheme} className="rounded-full border border-ink/15 p-2">{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
           </div>
         </div>

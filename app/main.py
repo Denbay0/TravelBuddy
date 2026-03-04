@@ -10,6 +10,8 @@ from app.api.auth import router as auth_router
 from app.api.posts import router as posts_router
 from app.api.profile import router as profile_router
 from app.api.routes import router as routes_router
+from app.api.search import router as search_router
+from app.api.reports import router as reports_router
 from app.api.users import router as users_router
 from app.core.config import settings
 from app.db import models  # noqa: F401
@@ -50,6 +52,8 @@ app.include_router(profile_router)
 app.include_router(routes_router)
 app.include_router(posts_router)
 app.include_router(users_router)
+app.include_router(search_router)
+app.include_router(reports_router)
 
 
 @app.get("/")

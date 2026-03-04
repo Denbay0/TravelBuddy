@@ -1,51 +1,47 @@
-# TravelBuddy (FastAPI + React/Vite + PostgreSQL + Redis)
+# TravelBuddy
 
-Проект поддерживает **два отдельных режима запуска**: `local` и `server`.
-Один и тот же код запускается разными env/compose файлами — без ручного переписывания конфигов после `git pull`.
+TravelBuddy — fullstack проект на **FastAPI + React/Vite** с cookie-auth (JWT + CSRF), маршрутами, сообществом, поиском, PDF-отчётами, картой (Leaflet) и поддержкой светлой/тёмной темы.
 
-## 1) Файлы окружений
+## Актуальная архитектура
 
-В репозитории есть шаблоны:
+- `app/` — backend API (FastAPI, SQLAlchemy, PostgreSQL, Redis).
+- `web/` — frontend (React + Vite + Tailwind).
+- `docker-compose.local.yml` — локальный режим разработки.
+- `docker-compose.server.yml` — серверный режим behind nginx/HTTPS.
+- `.env.local.example` / `.env.server.example` — шаблоны env для каждого режима.
 
-- `.env.example` — общий базовый шаблон
-- `.env.local.example` — настройки для локальной разработки
-- `.env.server.example` — настройки для сервера (`https://fishingteam.su`)
+## Ключевые возможности
 
-### Подготовка local
+- Авторизация: `register/login/logout`, `GET /auth/me`, `GET /auth/csrf`.
+- Профиль: просмотр и редактирование `PATCH /profile/me`, аватар.
+- Маршруты: создание/редактирование/сохранение, популярные маршруты.
+- Создание маршрута с картой OpenStreetMap + расчетом расстояния на backend (`POST /routes/preview`).
+- Сообщество: публикации, лайки, сохранения, комментарии.
+- Поиск по маршрутам/постам (`GET /search?q=...`).
+- PDF:
+  - `GET /reports/example`
+  - `GET /reports/example/pdf`
+  - `GET /reports/routes/{routeId}/pdf`
+- UI: mobile-first адаптация, переключение dark/light theme с сохранением в `localStorage`.
+
+## Быстрый старт (Local)
+
+1. Создайте env:
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-### Подготовка server
-
-```bash
-cp .env.server.example .env.server
-```
-
-> В git не коммитятся рабочие `.env.local` и `.env.server`.
-
----
-
-## 2) Запуск локально (Local mode)
-
-Используется `docker-compose.local.yml`.
+2. Запустите:
 
 ```bash
 docker compose -f docker-compose.local.yml up -d --build
 ```
 
-После запуска:
-
-- frontend: `http://127.0.0.1:5173` (или `http://localhost:5173`)
-- backend: `http://127.0.0.1:8000`
-- docs: `http://127.0.0.1:8000/docs`
-
-Особенности local:
-
-- `COOKIE_SECURE=false`
-- CORS и origins рассчитаны на `localhost`/`127.0.0.1`
-- frontend работает через Vite dev server и proxy на backend
+3. Откройте:
+- Frontend: `http://127.0.0.1:5173`
+- Backend: `http://127.0.0.1:8000`
+- Swagger: `http://127.0.0.1:8000/docs`
 
 Остановка:
 
@@ -53,72 +49,26 @@ docker compose -f docker-compose.local.yml up -d --build
 docker compose -f docker-compose.local.yml down
 ```
 
----
+## Запуск на сервере (Server)
 
-## 3) Запуск на сервере (Server mode)
+1. Создайте env:
 
-Используется `docker-compose.server.yml`.
+```bash
+cp .env.server.example .env.server
+```
+
+2. Запустите:
 
 ```bash
 docker compose -f docker-compose.server.yml up -d --build
 ```
 
-Особенности server:
+Особенности server mode:
+- backend и frontend проброшены на loopback (`127.0.0.1`),
+- внешний HTTPS/доменный трафик обслуживает nginx,
+- `COOKIE_SECURE=true`, `COOKIE_DOMAIN` из `.env.server`.
 
-- backend публикуется только на `127.0.0.1:8000`
-- frontend preview публикуется только на `127.0.0.1:4173`
-- PostgreSQL и Redis **не торчат наружу**
-- внешний трафик обслуживает nginx
-- `COOKIE_SECURE=true`, `COOKIE_DOMAIN=fishingteam.su`
-
-Остановка:
-
-```bash
-docker compose -f docker-compose.server.yml down
-```
-
----
-
-## 4) Быстрое переключение окружений
-
-Локально:
-
-```bash
-docker compose -f docker-compose.local.yml up -d --build
-```
-
-На сервере:
-
-```bash
-docker compose -f docker-compose.server.yml up -d --build
-```
-
-Никакого ручного редактирования одного общего `.env` не требуется.
-
----
-
-## 5) Что важно в env
-
-Ключевые переменные backend:
-
-- `ENV`, `DEBUG`
-- `FRONTEND_ORIGINS`
-- `CORS_ALLOW_ORIGINS`
-- `COOKIE_SECURE`, `COOKIE_DOMAIN`, `COOKIE_SAMESITE`, `COOKIE_PATH`
-- `APP_BASE_URL`
-
-Ключевые переменные frontend (Vite):
-
-- `VITE_API_BASE_URL`
-- `VITE_MEDIA_BASE_URL`
-- `VITE_DEV_PROXY_TARGET`
-- `VITE_ALLOWED_HOSTS`
-
----
-
-## 6) Обновление сервера после git pull
-
-Типичный сценарий:
+## Обновление сервера после `git pull`
 
 ```bash
 git pull
@@ -126,19 +76,26 @@ docker compose -f docker-compose.server.yml up -d --build
 docker compose -f docker-compose.server.yml ps
 ```
 
-Если менялись только backend/frontend контейнеры, Compose сам пересоберёт нужные сервисы.
+## HTTPS / nginx-compatible setup
 
----
+- `docker-compose.server.yml` рассчитан на reverse proxy (nginx) с TLS.
+- API и frontend не публикуются наружу напрямую на 0.0.0.0 в прод-режиме.
+- Cookie auth работает в доменном режиме при корректных `COOKIE_DOMAIN`, `COOKIE_SECURE`, `APP_BASE_URL`, CORS.
 
-## 7) Проверка интеграции frontend ↔ backend
+## Проверка основных сценариев
 
-Минимальный smoke-check:
+1. **Home**: начать путешествие, смотреть демо, сгенерировать PDF, начать бесплатно, ссылки footer.
+2. **Auth**: register/login/logout, проверка обновления шапки после входа.
+3. **Профиль**: загрузка профиля, редактирование, аватар.
+4. **Маршруты**: обе кнопки «создать маршрут», карта, distance preview, популярные, открытие карточки маршрута.
+5. **Сообщество**: создать публикацию, лайки/сохранения, комментарии.
+6. **Поиск**: ввод в шапке фильтрует маршруты/посты.
+7. **PDF**: скачивание example report и route report.
+8. **UI**: мобилка + переключение тем.
 
-1. Зарегистрироваться: `/register`
-2. Войти: `/login`
-3. Проверить `GET /auth/me` через открытие `/profile`
-4. Проверить маршруты `/routes`
-5. Проверить ленту `/community`
-6. Проверить logout
+## Env-файлы
 
-Для API-контрактов: `http://127.0.0.1:8000/docs` (в local режиме).
+- Local: `.env.local` (из `.env.local.example`)
+- Server: `.env.server` (из `.env.server.example`)
+
+В репозиторий коммитятся только примеры, рабочие env не коммитятся.
