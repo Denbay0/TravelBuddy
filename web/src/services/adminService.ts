@@ -30,7 +30,7 @@ function statusFromAdminFlag(isAdmin: boolean): AccountStatus {
 
 export const adminService = {
   async getDashboardMetrics(): Promise<DashboardMetrics> {
-    const summary = await apiRequest<{ totalUsers: number; totalPosts: number; totalRoutes: number; adminUsers: number }>('/admin/dashboard/summary')
+    const summary = await apiRequest<{ totalUsers: number; totalPosts: number; totalRoutes: number; adminUsers: number }>('/api/admin/dashboard/summary')
     return {
       pendingReports: 0,
       publishedPosts: summary.totalPosts,
@@ -51,7 +51,7 @@ export const adminService = {
   },
 
   async listPosts(query: ListQuery<PostStatus> = {}): Promise<ManagedPost[]> {
-    const response = await apiRequest<AdminPostsApiResponse>(`/admin/posts${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
+    const response = await apiRequest<AdminPostsApiResponse>(`/api/admin/posts${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
     return response.items
       .map((post) => ({
         id: post.id,
@@ -66,7 +66,7 @@ export const adminService = {
   },
 
   async listUsers(query: ListQuery<AccountStatus> = {}): Promise<ManagedUser[]> {
-    const response = await apiRequest<AdminUsersApiResponse>(`/admin/users${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
+    const response = await apiRequest<AdminUsersApiResponse>(`/api/admin/users${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
     return response.items
       .map((user) => ({
         id: user.id,
@@ -81,7 +81,7 @@ export const adminService = {
   },
 
   async listAdmins(query: ListQuery<AccountStatus> & { role?: AdminRole } = {}): Promise<AdminUser[]> {
-    const response = await apiRequest<AdminUsersApiResponse>('/admin/admins')
+    const response = await apiRequest<AdminUsersApiResponse>('/api/admin/admins')
     return response.items
       .map((admin) => ({
         id: admin.id,
@@ -104,19 +104,19 @@ export const adminService = {
   },
 
   async deletePost(postId: number): Promise<void> {
-    await apiRequest(`/admin/posts/${postId}`, { method: 'DELETE' })
+    await apiRequest(`/api/admin/posts/${postId}`, { method: 'DELETE' })
   },
 
   async deleteUser(userId: number): Promise<void> {
-    await apiRequest(`/admin/users/${userId}`, { method: 'DELETE' })
+    await apiRequest(`/api/admin/users/${userId}`, { method: 'DELETE' })
   },
 
   async deleteAdmin(adminId: number): Promise<void> {
-    await apiRequest(`/admin/admins/${adminId}`, { method: 'DELETE' })
+    await apiRequest(`/api/admin/admins/${adminId}`, { method: 'DELETE' })
   },
 
   async createAdmin(payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'> & { password: string }): Promise<AdminUser> {
-    const created = await apiRequest<{ id: number; name: string; email: string; createdAt: string }>('/admin/admins', {
+    const created = await apiRequest<{ id: number; name: string; email: string; createdAt: string }>('/api/admin/admins', {
       method: 'POST',
       body: { name: payload.name, email: payload.email, password: payload.password },
     })

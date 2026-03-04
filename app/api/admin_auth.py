@@ -14,7 +14,7 @@ from app.schemas.auth import LoginResponse, MessageResponse
 from app.schemas.user import UserOut
 from app.utils_profile import build_avatar_url, generate_unique_handle
 
-router = APIRouter(prefix="/admin/auth", tags=["admin-auth"])
+router = APIRouter(prefix="/api/admin/auth", tags=["admin-auth"])
 
 
 def _cookie_options(max_age: int) -> dict[str, str | bool | int | None]:

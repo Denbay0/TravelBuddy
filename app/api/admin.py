@@ -11,7 +11,7 @@ from app.db.models import Post, Route, User
 from app.schemas.admin import AdminDashboardSummary, AdminPostOut, AdminPostsResponse, AdminUserOut, AdminUsersResponse
 from app.utils_profile import generate_unique_handle
 
-router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
 
 
 class AdminCreateRequest(BaseModel):

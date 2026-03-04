@@ -3,7 +3,7 @@ import type { ApiUser, LoginResponse, LogoutResponse } from '../types/api'
 
 export const adminAuthService = {
   async login(payload: { login: string; password: string }): Promise<LoginResponse> {
-    return apiRequest<LoginResponse>('/admin/auth/login', {
+    return apiRequest<LoginResponse>('/api/admin/auth/login', {
       method: 'POST',
       body: payload,
       skipCsrf: true,
@@ -11,11 +11,11 @@ export const adminAuthService = {
   },
 
   async me(): Promise<ApiUser> {
-    return apiRequest<ApiUser>('/admin/auth/me')
+    return apiRequest<ApiUser>('/api/admin/auth/me')
   },
 
   async logout(): Promise<LogoutResponse> {
-    const response = await apiRequest<LogoutResponse>('/admin/auth/logout', { method: 'POST' })
+    const response = await apiRequest<LogoutResponse>('/api/admin/auth/logout', { method: 'POST' })
     clearCsrfTokenCache()
     return response
   },
