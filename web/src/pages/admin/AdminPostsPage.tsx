@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import AdminTable from '../../features/admin/components/AdminTable'
+import DeleteConfirmModal from '../../features/admin/components/DeleteConfirmModal'
 import type { ManagedPost, PostStatus } from '../../features/admin/types'
 import { adminService } from '../../services/adminService'
 import AdminPageTemplate from './AdminPageTemplate'
@@ -7,34 +9,81 @@ export default function AdminPostsPage() {
   const [posts, setPosts] = useState<ManagedPost[]>([])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<PostStatus | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [pendingDelete, setPendingDelete] = useState<ManagedPost | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void adminService.listPosts({ search, status: status || undefined }).then(setPosts)
-    }, 0)
+    const loadPosts = async () => {
+      setIsLoading(true)
+      const items = await adminService.listPosts({ search, status: status || undefined })
+      setPosts(items)
+      setIsLoading(false)
+    }
 
-    return () => window.clearTimeout(timeoutId)
+    void loadPosts()
   }, [search, status])
 
-  const handleDelete = async (postId: number) => {
-    await adminService.deletePost(postId)
-    const items = await adminService.listPosts({ search, status: status || undefined })
-    setPosts(items)
+  const handleDelete = async () => {
+    if (!pendingDelete) {
+      return
+    }
+
+    const current = pendingDelete
+    const snapshot = posts
+    setIsDeleting(true)
+    setPosts((prev) => prev.filter((post) => post.id !== current.id))
+
+    try {
+      await adminService.deletePost(current.id)
+      setPendingDelete(null)
+    } catch {
+      setPosts(snapshot)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
+  const columns = useMemo(
+    () => [
+      { key: 'id', header: 'ID', render: (post: ManagedPost) => <span className="font-medium">#{post.id}</span> },
+      {
+        key: 'title',
+        header: 'Title',
+        render: (post: ManagedPost) => (
+          <div>
+            <p className="font-medium text-ink">{post.title}</p>
+            <p className="text-xs text-ink/60">Author: {post.authorName}</p>
+          </div>
+        ),
+      },
+      { key: 'status', header: 'Status', render: (post: ManagedPost) => post.status },
+      { key: 'likes', header: 'Likes', render: (post: ManagedPost) => post.likesCount },
+      { key: 'reports', header: 'Reports', render: (post: ManagedPost) => post.reportsCount },
+      {
+        key: 'created',
+        header: 'Created',
+        render: (post: ManagedPost) => new Date(post.createdAt).toLocaleDateString(),
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        render: (post: ManagedPost) => (
+          <button
+            type="button"
+            onClick={() => setPendingDelete(post)}
+            className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
+          >
+            Delete
+          </button>
+        ),
+      },
+    ],
+    [],
+  )
+
   return (
-    <AdminPageTemplate
-      title="Admin Posts"
-      description="Create, edit, and curate editorial content for the platform."
-      action={
-        <button
-          type="button"
-          className="rounded-xl border border-amber/20 bg-amber/15 px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-amber/25"
-        >
-          New post
-        </button>
-      }
-    >
+    <AdminPageTemplate title="Admin Posts" description="Search and moderate community content from one place.">
       <div className="mb-4 flex flex-wrap gap-2">
         <input
           value={search}
@@ -54,27 +103,16 @@ export default function AdminPostsPage() {
         </select>
       </div>
 
-      <div className="space-y-2">
-        {posts.map((post) => (
-          <article key={post.id} className="rounded-xl border border-ink/10 bg-white/65 p-4 shadow-sm dark:bg-white/5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-semibold">{post.title}</h3>
-                <p className="text-sm text-ink/60">
-                  {post.authorName} · {post.status} · {post.likesCount} likes · {post.reportsCount} reports
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleDelete(post.id)}
-                className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
+      <AdminTable columns={columns} rows={posts} rowKey={(post) => post.id} isLoading={isLoading} emptyMessage="No posts found for the current filters." />
+
+      <DeleteConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        title="Delete post?"
+        message={pendingDelete ? `Are you sure you want to delete “${pendingDelete.title}”?` : ''}
+        isProcessing={isDeleting}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </AdminPageTemplate>
   )
 }

@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import AdminTable from '../../features/admin/components/AdminTable'
+import DeleteConfirmModal from '../../features/admin/components/DeleteConfirmModal'
 import type { AccountStatus, ManagedUser } from '../../features/admin/types'
 import { adminService } from '../../services/adminService'
 import AdminPageTemplate from './AdminPageTemplate'
@@ -7,23 +9,81 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<AccountStatus | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [pendingDelete, setPendingDelete] = useState<ManagedUser | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void adminService.listUsers({ search, status: status || undefined }).then(setUsers)
-    }, 0)
+    const loadUsers = async () => {
+      setIsLoading(true)
+      const items = await adminService.listUsers({ search, status: status || undefined })
+      setUsers(items)
+      setIsLoading(false)
+    }
 
-    return () => window.clearTimeout(timeoutId)
+    void loadUsers()
   }, [search, status])
 
-  const handleDelete = async (userId: number) => {
-    await adminService.deleteUser(userId)
-    const items = await adminService.listUsers({ search, status: status || undefined })
-    setUsers(items)
+  const handleDelete = async () => {
+    if (!pendingDelete) {
+      return
+    }
+
+    const current = pendingDelete
+    const snapshot = users
+    setIsDeleting(true)
+    setUsers((prev) => prev.filter((user) => user.id !== current.id))
+
+    try {
+      await adminService.deleteUser(current.id)
+      setPendingDelete(null)
+    } catch {
+      setUsers(snapshot)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
+  const columns = useMemo(
+    () => [
+      { key: 'id', header: 'ID', render: (user: ManagedUser) => <span className="font-medium">#{user.id}</span> },
+      {
+        key: 'name',
+        header: 'User',
+        render: (user: ManagedUser) => (
+          <div>
+            <p className="font-medium text-ink">{user.name}</p>
+            <p className="text-xs text-ink/60">{user.email}</p>
+          </div>
+        ),
+      },
+      { key: 'status', header: 'Status', render: (user: ManagedUser) => user.status },
+      { key: 'posts', header: 'Posts', render: (user: ManagedUser) => user.postsCount },
+      { key: 'reports', header: 'Reports', render: (user: ManagedUser) => user.reportsCount },
+      {
+        key: 'joined',
+        header: 'Joined',
+        render: (user: ManagedUser) => new Date(user.joinedAt).toLocaleDateString(),
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        render: (user: ManagedUser) => (
+          <button
+            type="button"
+            onClick={() => setPendingDelete(user)}
+            className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
+          >
+            Delete
+          </button>
+        ),
+      },
+    ],
+    [],
+  )
+
   return (
-    <AdminPageTemplate title="Admin Users" description="Manage user accounts, roles, and support-related actions.">
+    <AdminPageTemplate title="Admin Users" description="View, search, and manage user accounts.">
       <div className="mb-4 flex flex-wrap gap-2">
         <input
           value={search}
@@ -43,27 +103,16 @@ export default function AdminUsersPage() {
         </select>
       </div>
 
-      <div className="space-y-2">
-        {users.map((user) => (
-          <article key={user.id} className="rounded-xl border border-ink/10 bg-white/65 p-4 shadow-sm dark:bg-white/5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-semibold">{user.name}</h3>
-                <p className="text-sm text-ink/60">
-                  {user.email} · {user.status} · {user.postsCount} posts · {user.reportsCount} reports
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleDelete(user.id)}
-                className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
+      <AdminTable columns={columns} rows={users} rowKey={(user) => user.id} isLoading={isLoading} emptyMessage="No users found for the current filters." />
+
+      <DeleteConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        title="Delete user?"
+        message={pendingDelete ? `Are you sure you want to delete ${pendingDelete.name}?` : ''}
+        isProcessing={isDeleting}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </AdminPageTemplate>
   )
 }
