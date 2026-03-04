@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import AdminTable from '../../features/admin/components/AdminTable'
+import CreateAdminModal from '../../features/admin/components/CreateAdminModal'
+import DeleteConfirmModal from '../../features/admin/components/DeleteConfirmModal'
 import type { AccountStatus, AdminRole, AdminUser } from '../../features/admin/types'
 import { adminService } from '../../services/adminService'
 import AdminPageTemplate from './AdminPageTemplate'
@@ -8,34 +11,101 @@ export default function AdminAdminsPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<AccountStatus | ''>('')
   const [role, setRole] = useState<AdminRole | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void adminService.listAdmins({ search, status: status || undefined, role: role || undefined }).then(setAdmins)
-    }, 0)
+    const loadAdmins = async () => {
+      setIsLoading(true)
+      const items = await adminService.listAdmins({ search, status: status || undefined, role: role || undefined })
+      setAdmins(items)
+      setIsLoading(false)
+    }
 
-    return () => window.clearTimeout(timeoutId)
+    void loadAdmins()
   }, [search, status, role])
 
-  const refreshAdmins = async () => {
-    const items = await adminService.listAdmins({ search, status: status || undefined, role: role || undefined })
-    setAdmins(items)
+  const handleDelete = async () => {
+    if (!pendingDelete) {
+      return
+    }
+
+    const current = pendingDelete
+    const snapshot = admins
+    setIsDeleting(true)
+    setAdmins((prev) => prev.filter((admin) => admin.id !== current.id))
+
+    try {
+      await adminService.deleteAdmin(current.id)
+      setPendingDelete(null)
+    } catch {
+      setAdmins(snapshot)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
-  const handleDelete = async (adminId: number) => {
-    await adminService.deleteAdmin(adminId)
-    await refreshAdmins()
+  const handleCreate = async (payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'>) => {
+    const optimisticAdmin: AdminUser = {
+      id: -Date.now(),
+      createdAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+      ...payload,
+    }
+
+    setIsCreating(true)
+    setAdmins((prev) => [optimisticAdmin, ...prev])
+
+    try {
+      const created = await adminService.createAdmin(payload)
+      setAdmins((prev) => prev.map((admin) => (admin.id === optimisticAdmin.id ? created : admin)))
+      setIsCreateOpen(false)
+    } catch {
+      setAdmins((prev) => prev.filter((admin) => admin.id !== optimisticAdmin.id))
+    } finally {
+      setIsCreating(false)
+    }
   }
 
-  const handleCreate = async () => {
-    await adminService.createAdmin({
-      name: 'New Admin',
-      email: `new.admin.${Date.now()}@travelbuddy.dev`,
-      role: 'moderator',
-      status: 'active',
-    })
-    await refreshAdmins()
-  }
+  const columns = useMemo(
+    () => [
+      { key: 'id', header: 'ID', render: (admin: AdminUser) => <span className="font-medium">#{admin.id}</span> },
+      {
+        key: 'name',
+        header: 'Admin',
+        render: (admin: AdminUser) => (
+          <div>
+            <p className="font-medium text-ink">{admin.name}</p>
+            <p className="text-xs text-ink/60">{admin.email}</p>
+          </div>
+        ),
+      },
+      { key: 'role', header: 'Role', render: (admin: AdminUser) => admin.role },
+      { key: 'status', header: 'Status', render: (admin: AdminUser) => admin.status },
+      {
+        key: 'lastActive',
+        header: 'Last active',
+        render: (admin: AdminUser) => new Date(admin.lastActiveAt).toLocaleDateString(),
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        render: (admin: AdminUser) => (
+          <button
+            type="button"
+            onClick={() => setPendingDelete(admin)}
+            className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
+          >
+            Delete
+          </button>
+        ),
+      },
+    ],
+    [],
+  )
 
   return (
     <AdminPageTemplate
@@ -44,7 +114,7 @@ export default function AdminAdminsPage() {
       action={
         <button
           type="button"
-          onClick={() => void handleCreate()}
+          onClick={() => setIsCreateOpen(true)}
           className="rounded-xl border border-amber/20 bg-amber/15 px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-amber/25"
         >
           Create admin
@@ -80,27 +150,29 @@ export default function AdminAdminsPage() {
         </select>
       </div>
 
-      <div className="space-y-2">
-        {admins.map((admin) => (
-          <article key={admin.id} className="rounded-xl border border-ink/10 bg-white/65 p-4 shadow-sm dark:bg-white/5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-semibold">{admin.name}</h3>
-                <p className="text-sm text-ink/60">
-                  {admin.email} · {admin.role} · {admin.status}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleDelete(admin.id)}
-                className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
+      <AdminTable
+        columns={columns}
+        rows={admins}
+        rowKey={(admin) => admin.id}
+        isLoading={isLoading}
+        emptyMessage="No admins found for the current filters."
+      />
+
+      <CreateAdminModal
+        isOpen={isCreateOpen}
+        isSubmitting={isCreating}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(payload) => void handleCreate(payload)}
+      />
+
+      <DeleteConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        title="Delete admin?"
+        message={pendingDelete ? `Remove admin access for ${pendingDelete.name}?` : ''}
+        isProcessing={isDeleting}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </AdminPageTemplate>
   )
 }
