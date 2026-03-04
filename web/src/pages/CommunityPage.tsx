@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import CommunityHeader from '../features/community/components/CommunityHeader'
 import CreatePostModal, { type CommunityPostForm } from '../features/community/components/CreatePostModal'
 import FeedPostCard from '../features/community/components/FeedPostCard'
@@ -8,6 +8,7 @@ import type { CommunityPost, TrendingRoute } from '../features/community/types'
 import { communityService } from '../services/communityService'
 import type { ApiPost } from '../types/api'
 import type { User } from '../types/travel'
+import { useSearchParams } from 'react-router-dom'
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',
@@ -50,6 +51,7 @@ export default function CommunityPage() {
   const [pendingPostId, setPendingPostId] = useState<number | null>(null)
 
   const [authors, setAuthors] = useState<User[]>(popularAuthors)
+  const [params] = useSearchParams()
   const [trending, setTrending] = useState<TrendingRoute[]>(trendingRoutes)
 
   useEffect(() => {
@@ -136,12 +138,8 @@ export default function CommunityPage() {
     }
   }
 
-  const handleComment = async (post: CommunityPost) => {
-    const content = window.prompt('Введите комментарий')
-    if (!content?.trim()) {
-      return
-    }
-
+  const handleComment = async (post: CommunityPost, content: string) => {
+    if (!content?.trim()) return
     try {
       await communityService.addComment(post.id, content)
       setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, comments: item.comments + 1 } : item)))
@@ -150,16 +148,19 @@ export default function CommunityPage() {
     }
   }
 
+  const query = (params.get('q') || '').toLowerCase().trim()
+  const visiblePosts = useMemo(() => posts.filter((post) => !query || post.caption.toLowerCase().includes(query) || post.route.toLowerCase().includes(query)), [posts, query])
+
   return (
     <>
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:py-10">
-        <CommunityHeader onShareTrip={() => setIsModalOpen(true)} onCreatePost={() => setIsModalOpen(true)} />
+        <CommunityHeader onCreatePost={() => setIsModalOpen(true)} />
         {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section className="space-y-5">
             {isLoading ? <p className="text-sm text-ink/65">Загрузка публикаций...</p> : null}
-            {posts.map((post) => (
+            {visiblePosts.map((post) => (
               <FeedPostCard
                 key={post.id}
                 post={post}
