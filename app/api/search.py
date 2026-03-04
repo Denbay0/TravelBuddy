@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user_optional
 from app.api.posts import _serialize_post
 from app.api.routes import _serialize_route
 from app.db.database import get_db
@@ -17,7 +17,7 @@ def global_search(
     q: str = Query(min_length=1),
     limit: int = Query(default=10, ge=1, le=50),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> SearchResponse:
     query = q.strip().lower()
 
@@ -44,8 +44,8 @@ def global_search(
 
     return SearchResponse(
         query=q,
-        routes=[_serialize_route(route, current_user.id) for route in filtered_routes],
-        posts=[_serialize_post(post, current_user.id) for post in filtered_posts],
+        routes=[_serialize_route(route, current_user.id if current_user else None) for route in filtered_routes],
+        posts=[_serialize_post(post, current_user.id if current_user else None) for post in filtered_posts],
         users=[
             SearchUserOut(id=user.id, name=user.username, handle=f"@{user.handle}", avatar_url=user.avatar_url)
             for user in filtered_users

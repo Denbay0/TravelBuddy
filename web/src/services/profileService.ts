@@ -1,7 +1,7 @@
 import { apiRequest } from '../lib/api'
 import type { ApiProfile, ApiProfileFavoriteRoute, ApiProfilePost, ProfilePageResponse } from '../types/api'
 
-type ProfileUpdatePayload = Partial<Pick<ApiProfile, 'name' | 'travelTagline' | 'bio' | 'homeCity'>>
+type ProfileUpdatePayload = Partial<Pick<ApiProfile, 'name' | 'travelTagline' | 'bio' | 'homeCity' | 'travelTags'>>
 
 export const profileService = {
   async me(): Promise<ApiProfile> {

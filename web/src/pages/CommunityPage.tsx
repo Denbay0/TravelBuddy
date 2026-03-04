@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import CommunityHeader from '../features/community/components/CommunityHeader'
 import CreatePostModal, { type CommunityPostForm } from '../features/community/components/CreatePostModal'
 import FeedPostCard from '../features/community/components/FeedPostCard'
 import FeedSidebar from '../features/community/components/FeedSidebar'
 import { popularAuthors, trendingRoutes } from '../features/community/mockData'
 import type { CommunityPost, TrendingRoute } from '../features/community/types'
+import { isAuthError } from '../lib/authGuards'
 import { communityService } from '../services/communityService'
 import type { ApiPost } from '../types/api'
 import type { User } from '../types/travel'
-import { useSearchParams } from 'react-router-dom'
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',
@@ -49,10 +51,16 @@ export default function CommunityPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [pendingPostId, setPendingPostId] = useState<number | null>(null)
-
   const [authors, setAuthors] = useState<User[]>(popularAuthors)
-  const [params] = useSearchParams()
   const [trending, setTrending] = useState<TrendingRoute[]>(trendingRoutes)
+  const [params] = useSearchParams()
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  const openLoginHint = (text: string) => {
+    setError(text)
+    setTimeout(() => navigate('/login'), 600)
+  }
 
   useEffect(() => {
     async function loadPosts() {
@@ -83,9 +91,11 @@ export default function CommunityPage() {
   }
 
   const handleSubmit = async () => {
-    if (!form.caption.trim() || !form.route.trim()) {
+    if (!user) {
+      openLoginHint('Чтобы поделиться поездкой, войдите или зарегистрируйтесь.')
       return
     }
+    if (!form.caption.trim() || !form.route.trim()) return
 
     try {
       const createdPost = await communityService.createPost({
@@ -103,36 +113,26 @@ export default function CommunityPage() {
   }
 
   const handleToggleLike = async (post: CommunityPost) => {
+    if (!user) return openLoginHint('Лайки доступны после входа в аккаунт.')
     setPendingPostId(post.id)
     try {
       const response = await communityService.toggleLike(post.id, Boolean(post.liked))
-      setPosts((prev) =>
-        prev.map((item) =>
-          item.id === post.id
-            ? { ...item, liked: response.liked, saved: response.isSaved, likes: response.likes }
-            : item,
-        ),
-      )
+      setPosts((prev) => prev.map((item) => item.id === post.id ? { ...item, liked: response.liked, saved: response.isSaved, likes: response.likes } : item))
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Не удалось обновить лайк.')
+      setError(isAuthError(actionError) ? 'Лайки доступны после входа в аккаунт.' : actionError instanceof Error ? actionError.message : 'Не удалось обновить лайк.')
     } finally {
       setPendingPostId(null)
     }
   }
 
   const handleToggleSave = async (post: CommunityPost) => {
+    if (!user) return openLoginHint('Чтобы сохранять публикации, войдите в аккаунт.')
     setPendingPostId(post.id)
     try {
       const response = await communityService.toggleSave(post.id, Boolean(post.saved))
-      setPosts((prev) =>
-        prev.map((item) =>
-          item.id === post.id
-            ? { ...item, saved: response.isSaved, liked: response.liked, likes: response.likes }
-            : item,
-        ),
-      )
+      setPosts((prev) => prev.map((item) => item.id === post.id ? { ...item, saved: response.isSaved, liked: response.liked, likes: response.likes } : item))
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Не удалось обновить сохранение.')
+      setError(isAuthError(actionError) ? 'Чтобы сохранять публикации, войдите в аккаунт.' : actionError instanceof Error ? actionError.message : 'Не удалось обновить сохранение.')
     } finally {
       setPendingPostId(null)
     }
@@ -140,11 +140,12 @@ export default function CommunityPage() {
 
   const handleComment = async (post: CommunityPost, content: string) => {
     if (!content?.trim()) return
+    if (!user) return openLoginHint('Комментарии доступны после входа в аккаунт.')
     try {
       await communityService.addComment(post.id, content)
       setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, comments: item.comments + 1 } : item)))
     } catch (commentError) {
-      setError(commentError instanceof Error ? commentError.message : 'Не удалось добавить комментарий.')
+      setError(isAuthError(commentError) ? 'Комментарии доступны после входа в аккаунт.' : commentError instanceof Error ? commentError.message : 'Не удалось добавить комментарий.')
     }
   }
 
@@ -154,12 +155,13 @@ export default function CommunityPage() {
   return (
     <>
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:py-10">
-        <CommunityHeader onCreatePost={() => setIsModalOpen(true)} />
-        {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+        <CommunityHeader onCreatePost={() => user ? setIsModalOpen(true) : openLoginHint('Чтобы поделиться поездкой, войдите или зарегистрируйтесь.')} createHint={!user ? 'Публикация доступна после авторизации.' : undefined} />
+        {error ? <div className="rounded-2xl border border-amber/40 bg-amber/15 px-4 py-3 text-sm text-ink/90">{error}</div> : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section className="space-y-5">
             {isLoading ? <p className="text-sm text-ink/65">Загрузка публикаций...</p> : null}
+            {!isLoading && visiblePosts.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-5 py-6 text-sm text-ink/80">Ничего не найдено. Попробуйте изменить запрос или поищите по названию маршрута/города.</div> : null}
             {visiblePosts.map((post) => (
               <FeedPostCard
                 key={post.id}
@@ -168,6 +170,8 @@ export default function CommunityPage() {
                 onToggleSave={handleToggleSave}
                 onComment={handleComment}
                 isPending={pendingPostId === post.id}
+                canInteract={Boolean(user)}
+                onAuthRequired={() => openLoginHint('Это действие доступно только после входа в аккаунт.')}
               />
             ))}
           </section>

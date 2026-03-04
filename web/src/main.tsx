@@ -14,7 +14,10 @@ import { AuthProvider } from './auth/AuthContext.tsx'
 import { GuestOnlyRoute } from './features/auth/GuestOnlyRoute.tsx'
 import { ProtectedRoute } from './features/auth/ProtectedRoute.tsx'
 import { ThemeProvider } from './features/theme/ThemeContext.tsx'
-import InfoPage from './pages/InfoPage.tsx'
+import AboutPage from './pages/AboutPage.tsx'
+import BlogPage from './pages/BlogPage.tsx'
+import PolicyPage from './pages/PolicyPage.tsx'
+import TermsPage from './pages/TermsPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -26,10 +29,10 @@ createRoot(document.getElementById('root')!).render(
               <Route index element={<HomePage />} />
               <Route path="routes" element={<RoutesPage />} />
               <Route path="community" element={<CommunityPage />} />
-              <Route path="about" element={<InfoPage title="О продукте" />} />
-              <Route path="blog" element={<InfoPage title="Блог" />} />
-              <Route path="policy" element={<InfoPage title="Политика" />} />
-              <Route path="terms" element={<InfoPage title="Условия" />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="blog" element={<BlogPage />} />
+              <Route path="policy" element={<PolicyPage />} />
+              <Route path="terms" element={<TermsPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="profile" element={<ProfilePage />} />
               </Route>
