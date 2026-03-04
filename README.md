@@ -1,10 +1,10 @@
-<!-- Anime-style GitHub header -->
+<!-- Anime-style GitHub header (Lain / GitHub dark vibe) -->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&height=220&text=TravelBuddy&fontAlign=50&fontAlignY=38&desc=Our%20time%2C%20our%20days.&descAlign=50&descAlignY=58&animation=twinkling&color=gradient" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=220&text=TravelBuddy&fontAlign=50&fontAlignY=38&desc=Our%20time%2C%20our%20days.&descAlign=50&descAlignY=58&animation=twinkling&color=timeGradient&customColorList=6,12,13,20,22,24,25" />
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&pause=800&center=true&vCenter=true&width=650&lines=Route+planning+%2B+travel+social+feed;Create+routes+%E2%86%92+share+posts+%E2%86%92+discover+places;FastAPI+%C2%B7+React+%C2%B7+PostgreSQL+%C2%B7+PDF+reports" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&pause=700&center=true&vCenter=true&width=720&lines=Route+planning+%2B+travel+social+feed;Create+routes+%E2%86%92+share+posts+%E2%86%92+discover+places;FastAPI+%C2%B7+React+%C2%B7+PostgreSQL+%C2%B7+PDF+reports" alt="Typing SVG" />
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/language-TypeScript-3178C6" />
   <img src="https://img.shields.io/badge/database-PostgreSQL-336791" />
   <img src="https://img.shields.io/badge/style-TailwindCSS-38BDF8" />
-  <img src="https://img.shields.io/badge/maps-MapLibre%2BGeoapify-3b82f6" />
+  <img src="https://img.shields.io/badge/maps-Leaflet-199900" />
   <img src="https://img.shields.io/badge/reports-PDF-111111" />
 </p>
 
@@ -32,11 +32,11 @@ Create routes, write travel posts, save favorites, search across content, and ex
 
 ## Features
 
-- **Routes**: create/edit routes, cities list, duration & transport, trending, favorites  
-- **Posts**: publish stories, likes, saves, comments  
-- **Profiles**: bio + avatar, personal posts, saved routes  
-- **Search**: global search across routes / posts / users  
-- **PDF Reports**: generate route PDFs for sharing or offline use  
+- **Routes**: create/edit routes, cities list, duration & transport, trending, favorites
+- **Posts**: publish stories, likes, saves, comments
+- **Profiles**: bio + avatar, personal posts, saved routes
+- **Search**: global search across routes / posts / users
+- **PDF Reports**: generate route PDFs for sharing or offline use
 
 ---
 
@@ -53,39 +53,4 @@ Create routes, write travel posts, save favorites, search across content, and ex
 - TailwindCSS
 - React Router
 - Framer Motion
-- MapLibre GL + Geoapify
-
-
----
-
-## Admin access flow
-
-- Admin UI is separated from public routes: ` /admin/login ` and ` /admin `.
-- There is **no admin registration** in UI.
-- Backend enforces `is_admin` for all `/admin/*` endpoints and returns `403` for non-admin users.
-- First admin can be created with env bootstrap on startup (`BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `BOOTSTRAP_ADMIN_USERNAME`) or manually via script:
-
-```bash
-python scripts/create_admin.py --email admin@example.com --password 'StrongAdminPass123' --username admin
-```
-
----
-
-
-## Map & Route Planner
-
-- Frontend map renderer: **MapLibre GL JS**
-- Tile/style provider: **Geoapify Maps**
-- Geocoding/autocomplete + routing are called via backend proxy (`/maps/*`)
-
-Required env:
-
-- Backend: `GEOAPIFY_API_KEY`
-- Frontend: `VITE_GEOAPIFY_MAP_KEY`
-- Frontend (optional): `VITE_GEOAPIFY_STYLE_URL`
-
-Routing modes:
-
-- `Автомобиль`, `Пешком` → real route from Geoapify Routing API
-- `Поезд`, `Самолёт` → schematic polyline between points
-
+- Leaflet / React-Leaflet
