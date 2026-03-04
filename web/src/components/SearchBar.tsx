@@ -8,7 +8,7 @@ type SearchBarProps = {
 
 export default function SearchBar({ value, onChange, placeholder = 'Поиск' }: SearchBarProps) {
   return (
-    <label className="flex items-center gap-2 rounded-2xl border border-ink/15 bg-white px-4 py-3 transition focus-within:border-ink/35">
+    <label className="flex items-center gap-2 rounded-2xl border border-borderline/70 bg-surface px-4 py-3 transition focus-within:border-accent/70">
       <Search size={16} className="text-ink/45" />
       <input
         value={value}

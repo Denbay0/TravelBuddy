@@ -6,7 +6,7 @@ type TrendingRoutesCardProps = {
 
 export default function TrendingRoutesCard({ routes }: TrendingRoutesCardProps) {
   return (
-    <section className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-glow">
+    <section className="card-surface p-5 shadow-glow">
       <h2 className="text-lg font-semibold text-ink">Трендовые маршруты</h2>
       <p className="mt-1 text-sm text-ink/65">Актуальные идеи на ближайшие выходные и короткие отпуска.</p>
       <ul className="mt-4 space-y-3">

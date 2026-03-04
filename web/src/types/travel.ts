@@ -14,6 +14,7 @@ export type Route = {
   country: string
   isNew?: boolean
   isSaved?: boolean
+  distanceKm?: number
 }
 
 export type RouteFilter =

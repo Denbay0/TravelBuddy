@@ -56,6 +56,7 @@ export type ApiProfile = {
   bio: string
   homeCity: string
   visitedCities: string[]
+  travelTags: string[]
   stats: {
     trips: number
     posts: number
@@ -126,13 +127,32 @@ export type ApiPostComment = {
   updatedAt: string
 }
 
+export type RoutePoint = {
+  name: string
+  lat: number
+  lon: number
+}
+
+export type ApiSearchUser = {
+  id: number
+  name: string
+  handle: string
+  avatarUrl: string
+}
+
 export type ApiRoute = {
+  startLocation: string
+  endLocation: string
+  stops: string[]
   id: number
   title: string
   description: string
   cities: string[]
   durationDays: number
   transport: TransportCategory
+  note: string
+  points: RoutePoint[]
+  distanceKm: number
   savesCount: number
   owner: {
     id: number
@@ -162,4 +182,15 @@ export type ApiRouteSaveResponse = {
   saved: boolean
   isSaved: boolean
   saves: number
+}
+
+export type RoutePreviewResponse = {
+  distanceKm: number
+}
+
+export type SearchResponse = {
+  query: string
+  routes: ApiRoute[]
+  posts: ApiPost[]
+  users: ApiSearchUser[]
 }

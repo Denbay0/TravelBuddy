@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -18,6 +17,7 @@ import {
 import { useRef, useState, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { reportService } from '../services/reportService'
 
 const features = [
   ['Планирование маршрутов', 'Создавайте гибкие маршруты с этапами, заметками и совместным редактированием.', Route],
@@ -74,25 +74,25 @@ function Hero({ onDemo }: { onDemo: () => void }) {
     <section className="bg-hero-gradient px-6 pb-20 pt-16">
       <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="mb-5 inline-flex rounded-full border border-amber/30 bg-white/70 px-4 py-2 text-sm text-amber">
+          <p className="mb-5 inline-flex rounded-full border border-accent/35 bg-surface/85 px-4 py-2 text-sm text-amber">
             Лучший сайт для путешественников
           </p>
           <h1 className="text-5xl font-semibold leading-tight md:text-6xl">
             Планируйте маршруты, проживайте поездки и делитесь ими красиво.
           </h1>
-          <p className="mt-6 max-w-xl text-lg text-ink/70">
+          <p className="mt-6 max-w-xl text-lg text-ink/75">
             TravelBuddy объединяет маршруты, истории, статистику и личный travel-профиль в одном современном
             веб-продукте.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <button
               onClick={() => navigate('/routes')}
-              className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 font-medium text-white"
+              className="btn-primary inline-flex items-center gap-2 px-6 py-3"
             >
               Начать путешествие <ArrowRight size={16} />
             </button>
-            <button onClick={onDemo} className="rounded-full border border-ink/20 bg-white/70 px-6 py-3 font-medium">
-              Смотреть обзор
+            <button onClick={onDemo} className="btn-outline px-6 py-3">
+              Смотреть демо
             </button>
           </div>
         </div>
@@ -143,7 +143,7 @@ function HomepageHighlights({ sectionRef }: { sectionRef: RefObject<HTMLDivEleme
             <p className="mt-3 text-sm leading-6 text-ink/70">{description}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               {preview.map((item) => (
-                <span key={item} className="rounded-full border border-ink/10 bg-white px-3 py-1 text-xs text-ink/70">
+                <span key={item} className="tag-chip">
                   {item}
                 </span>
               ))}
@@ -161,16 +161,8 @@ export default function HomePage() {
   const demoRef = useRef<HTMLDivElement>(null)
   const [isReportOpen, setIsReportOpen] = useState(false)
 
-  const downloadPdf = () => {
-    const doc = new jsPDF()
-    doc.setFontSize(20)
-    doc.text('TravelBuddy Demo Report', 20, 20)
-    doc.setFontSize(12)
-    doc.text('Маршрут: Санкт-Петербург → Таллин → Рига', 20, 35)
-    doc.text('Длительность: 7 дней', 20, 45)
-    doc.text('Транспорт: Поезд + Пешком', 20, 55)
-    doc.text('Итог: 3 города, 640 км, 18 сохранённых мест.', 20, 65)
-    doc.save('travelbuddy-demo-report.pdf')
+  const downloadPdf = async () => {
+    await reportService.downloadExamplePdf()
   }
 
   return (
@@ -196,11 +188,11 @@ export default function HomePage() {
           <div>
             <h2 className="text-3xl font-semibold">Отчеты, которые хочется пересматривать</h2>
             <p className="mt-4 text-ink/70">TravelBuddy превращает поездки в аккуратные отчеты.</p>
-            <button onClick={() => setIsReportOpen(true)} className="mt-8 rounded-full bg-ink px-6 py-3 text-white">
+            <button onClick={() => setIsReportOpen(true)} className="btn-primary mt-8 px-6 py-3">
               Сгенерировать пример отчёта
             </button>
           </div>
-          <div className="rounded-3xl bg-gradient-to-br from-ink to-pine p-6 text-white">
+          <div className="rounded-3xl bg-gradient-to-br from-accent to-pine p-6 text-[rgb(var(--text-on-accent))]">
             <Waves />
             <p className="mt-4 text-sm text-white/75">Travel Digest</p>
             <p className="mt-2 text-2xl font-semibold">Весна 2026</p>
@@ -209,13 +201,13 @@ export default function HomePage() {
       </section>
 
       <section className="px-6 pb-20">
-        <div className="mx-auto max-w-6xl rounded-[2rem] bg-ink px-8 py-16 text-center text-white">
-          <h2 className="text-4xl font-semibold">
+        <div className="mx-auto max-w-6xl rounded-[2rem] bg-surface-elevated px-8 py-16 text-center">
+          <h2 className="text-4xl font-semibold text-ink">
             TravelBuddy помогает не просто планировать поездки, а красиво проживать их
           </h2>
           <button
             onClick={() => navigate(user ? '/profile' : '/register')}
-            className="mt-8 rounded-full bg-white px-6 py-3 font-medium text-ink"
+            className="btn-primary mt-8 px-6 py-3"
           >
             Начать бесплатно
           </button>
@@ -223,9 +215,9 @@ export default function HomePage() {
       </section>
 
       {isReportOpen ? (
-        <div className="fixed inset-0 z-[60] bg-ink/50 p-4" onClick={() => setIsReportOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-[rgb(var(--overlay))/0.6] p-4" onClick={() => setIsReportOpen(false)}>
           <div
-            className="mx-auto mt-20 max-w-xl rounded-3xl bg-white p-6 dark:bg-[#1c2230]"
+            className="mx-auto mt-20 max-w-xl rounded-3xl bg-surface p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -234,8 +226,8 @@ export default function HomePage() {
                 <X size={18} />
               </button>
             </div>
-            <p className="text-sm text-ink/70">Краткая выжимка маршрута и статистики. Можно скачать в PDF.</p>
-            <button onClick={downloadPdf} className="mt-5 rounded-full bg-ink px-5 py-2.5 text-sm text-white">
+            <p className="text-sm text-ink/75">Краткая выжимка маршрута и статистики. Можно скачать в PDF.</p>
+            <button onClick={downloadPdf} className="btn-primary mt-5 px-5 py-2.5 text-sm">
               Скачать PDF
             </button>
           </div>

@@ -22,6 +22,7 @@ export type UserProfile = {
   bio: string
   homeCity: string
   visitedCities: string[]
+  travelTags: string[]
   favoriteRoutes: TravelRoute[]
   stats: ProfileStats
 }

@@ -1,5 +1,5 @@
 import { apiRequest } from '../lib/api'
-import type { ApiRoute, ApiRouteSaveResponse, RouteListResponse } from '../types/api'
+import type { ApiRoute, ApiRouteSaveResponse, RouteListResponse, RoutePoint, RoutePreviewResponse } from '../types/api'
 
 export type RoutesQuery = {
   page?: number
@@ -12,9 +12,13 @@ export type RoutesQuery = {
 type RouteCreateRequest = {
   title: string
   description?: string
-  cities: string[]
+  startLocation: string
+  endLocation: string
+  stops: string[]
   durationDays: number
   transport: ApiRoute['transport']
+  note?: string
+  points: RoutePoint[]
 }
 
 type RouteUpdateRequest = Partial<RouteCreateRequest>
@@ -22,12 +26,9 @@ type RouteUpdateRequest = Partial<RouteCreateRequest>
 function buildRoutesQueryString(query: RoutesQuery): string {
   const params = new URLSearchParams()
 
-  if (query.page) {
-    params.set('page', String(query.page))
-  }
-  if (query.limit) {
-    params.set('limit', String(query.limit))
-  }
+  if (query.page) params.set('page', String(query.page))
+  if (query.limit) params.set('limit', String(query.limit))
+  if (query.search?.trim()) params.set('q', query.search.trim())
 
   const queryString = params.toString()
   return queryString ? `?${queryString}` : ''
@@ -39,33 +40,20 @@ export const routeService = {
     const result = await apiRequest<RouteListResponse>(`${endpoint}${buildRoutesQueryString(query)}`)
 
     let filteredItems = [...result.items]
-
-    if (query.search?.trim()) {
-      const normalizedQuery = query.search.trim().toLowerCase()
-      filteredItems = filteredItems.filter((route) => {
-        const cityMatch = route.cities.some((city) => city.toLowerCase().includes(normalizedQuery))
-        return (
-          route.title.toLowerCase().includes(normalizedQuery) ||
-          route.description.toLowerCase().includes(normalizedQuery) ||
-          cityMatch ||
-          route.owner.name.toLowerCase().includes(normalizedQuery)
-        )
-      })
-    }
-
-    if (query.savedOnly) {
-      filteredItems = filteredItems.filter((route) => route.isSaved)
-    }
-
-    if (query.sort === 'new') {
-      filteredItems.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-    }
+    if (query.savedOnly) filteredItems = filteredItems.filter((route) => route.isSaved)
 
     return {
       ...result,
-      total: query.search || query.savedOnly ? filteredItems.length : result.total,
+      total: query.savedOnly ? filteredItems.length : result.total,
       items: filteredItems,
     }
+  },
+
+  async preview(points: RoutePoint[]): Promise<RoutePreviewResponse> {
+    return apiRequest<RoutePreviewResponse>('/routes/preview', {
+      method: 'POST',
+      body: { points },
+    })
   },
 
   async create(payload: RouteCreateRequest): Promise<ApiRoute> {
@@ -87,20 +75,14 @@ export const routeService = {
   },
 
   async remove(routeId: number): Promise<{ message: string }> {
-    return apiRequest<{ message: string }>(`/routes/${routeId}`, {
-      method: 'DELETE',
-    })
+    return apiRequest<{ message: string }>(`/routes/${routeId}`, { method: 'DELETE' })
   },
 
   async save(routeId: number): Promise<ApiRouteSaveResponse> {
-    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, {
-      method: 'POST',
-    })
+    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, { method: 'POST' })
   },
 
   async unsave(routeId: number): Promise<ApiRouteSaveResponse> {
-    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, {
-      method: 'DELETE',
-    })
+    return apiRequest<ApiRouteSaveResponse>(`/routes/${routeId}/save`, { method: 'DELETE' })
   },
 }

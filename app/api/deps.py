@@ -57,3 +57,18 @@ def verify_csrf(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Missing X-CSRF-Token header")
     if not secrets.compare_digest(csrf_header, csrf_cookie):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CSRF token mismatch")
+
+
+def get_current_user_optional(
+    db: Session = Depends(get_db),
+    access_token: str | None = Cookie(default=None, alias=settings.jwt_cookie_name),
+) -> User | None:
+    if not access_token:
+        return None
+    try:
+        payload = decode_access_token(access_token)
+        subject = payload.get("sub")
+        user_id = int(subject)
+    except (ValueError, TypeError):
+        return None
+    return db.scalar(select(User).where(User.id == user_id))

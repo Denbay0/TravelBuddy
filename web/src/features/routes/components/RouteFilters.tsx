@@ -35,7 +35,7 @@ export default function RouteFilters({
           <select
             value={sort}
             onChange={(e) => onSortChange(e.target.value as RouteSort)}
-            className="rounded-xl border border-ink/15 bg-white px-3 py-2 outline-none transition focus:border-ink/35"
+            className="rounded-xl border border-borderline/70 bg-surface px-3 py-2 outline-none transition focus:border-ink/35"
           >
             {routeSortOptions.map((option) => (
               <option key={option} value={option}>

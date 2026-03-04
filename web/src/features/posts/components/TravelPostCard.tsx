@@ -10,7 +10,7 @@ type TravelPostCardProps = {
 export function TravelPostCard({ post, onClick }: TravelPostCardProps) {
   return (
     <article
-      className="group overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-glow transition hover:-translate-y-0.5 hover:shadow-xl"
+      className="group overflow-hidden card-surface shadow-glow transition hover:-translate-y-0.5 hover:shadow-xl"
       onClick={() => onClick?.(post)}
       role="button"
       tabIndex={0}

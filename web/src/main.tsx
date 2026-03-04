@@ -33,10 +33,10 @@ createRoot(document.getElementById('root')!).render(
               <Route index element={<HomePage />} />
               <Route path="routes" element={<RoutesPage />} />
               <Route path="community" element={<CommunityPage />} />
-              <Route path="about" element={<InfoPage title="О продукте" />} />
-              <Route path="blog" element={<InfoPage title="Блог" />} />
-              <Route path="policy" element={<InfoPage title="Политика" />} />
-              <Route path="terms" element={<InfoPage title="Условия" />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="blog" element={<BlogPage />} />
+              <Route path="policy" element={<PolicyPage />} />
+              <Route path="terms" element={<TermsPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="profile" element={<ProfilePage />} />
               </Route>

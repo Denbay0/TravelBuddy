@@ -3,13 +3,13 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, verify_csrf
 from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import Post, Route, RouteSave, User
 from app.schemas.auth import MessageResponse
 from app.schemas.user import (
     ProfileAvatarUploadResponse,
@@ -43,6 +43,7 @@ def _parse_visited_cities(raw_value: str | None) -> list[str]:
 
 
 def _serialize_profile(user: User) -> ProfileMeResponse:
+    tags = _parse_visited_cities(user.visited_cities)
     return ProfileMeResponse(
         id=user.id,
         name=user.username,
@@ -52,8 +53,9 @@ def _serialize_profile(user: User) -> ProfileMeResponse:
         travel_tagline=user.travel_tagline or "",
         bio=user.bio or "",
         home_city=user.home_city or "",
-        visited_cities=_parse_visited_cities(user.visited_cities),
-        stats=ProfileStats(trips=0, posts=0, saved_routes=0, favorite_transport=user.favorite_transport or "Пешком"),
+        visited_cities=tags,
+        travel_tags=tags,
+        stats=ProfileStats(trips=len(user.routes or []), posts=len(user.posts or []), saved_routes=len(user.saved_routes or []), favorite_transport=user.favorite_transport or "Пешком"),
         favorite_routes=[],
         created_at=user.created_at,
     )
@@ -83,6 +85,9 @@ def update_profile(
         current_user.bio = payload.bio
     if payload.home_city is not None:
         current_user.home_city = payload.home_city
+    if payload.travel_tags is not None:
+        clean_tags = [str(tag).strip() for tag in payload.travel_tags if str(tag).strip()]
+        current_user.visited_cities = json.dumps(clean_tags[:12], ensure_ascii=False)
 
     db.add(current_user)
     db.commit()
@@ -138,15 +143,70 @@ def reset_avatar(
 def get_my_posts(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
-    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProfilePostsPageResponse:
-    return ProfilePostsPageResponse(page=page, limit=limit, total=0, items=[])
+    rows = (
+        db.execute(
+            select(Post)
+            .where(Post.owner_id == current_user.id)
+            .order_by(Post.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+        .scalars()
+        .all()
+    )
+    total = db.scalar(select(func.count(Post.id)).where(Post.owner_id == current_user.id)) or 0
+    items = [
+        {
+            "id": str(post.id),
+            "title": post.title,
+            "city": post.city,
+            "created_at": post.created_at,
+        }
+        for post in rows
+    ]
+    return ProfilePostsPageResponse(page=page, limit=limit, total=total, items=items)
 
 
 @router.get("/me/favorite-routes", response_model=ProfileFavoriteRoutesPageResponse)
 def get_my_favorite_routes(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
-    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProfileFavoriteRoutesPageResponse:
-    return ProfileFavoriteRoutesPageResponse(page=page, limit=limit, total=0, items=[])
+    rows = (
+        db.execute(
+            select(Route)
+            .join(RouteSave, RouteSave.route_id == Route.id)
+            .where(RouteSave.user_id == current_user.id)
+            .order_by(RouteSave.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+        .scalars()
+        .all()
+    )
+    total = db.scalar(select(func.count(RouteSave.id)).where(RouteSave.user_id == current_user.id)) or 0
+
+    items = []
+    for route in rows:
+        try:
+            parsed = json.loads(route.cities or "[]")
+            cities = parsed.get("cities", []) if isinstance(parsed, dict) else parsed
+        except (json.JSONDecodeError, TypeError):
+            cities = []
+
+        items.append(
+            {
+                "id": str(route.id),
+                "title": route.title,
+                "cities": [str(city) for city in cities if isinstance(city, (str, int, float))],
+                "duration_days": route.duration_days,
+                "transport": route.transport,
+            }
+        )
+
+    return ProfileFavoriteRoutesPageResponse(page=page, limit=limit, total=total, items=items)
