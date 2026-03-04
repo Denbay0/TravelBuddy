@@ -1,16 +1,18 @@
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin, verify_csrf
 from app.core.config import settings
-from app.core.security import create_access_token, create_csrf_token, verify_password
+from app.core.security import create_access_token, create_csrf_token, hash_password, verify_password
 from app.db.database import get_db
 from app.db.models import User
 from app.schemas.admin import AdminLoginRequest
 from app.schemas.auth import LoginResponse, MessageResponse
 from app.schemas.user import UserOut
-from app.utils_profile import build_avatar_url
+from app.utils_profile import build_avatar_url, generate_unique_handle
 
 router = APIRouter(prefix="/admin/auth", tags=["admin-auth"])
 
@@ -49,15 +51,56 @@ def _serialize_user(user: User) -> UserOut:
     )
 
 
+def _ensure_dev_admin(db: Session, login: str, password: str) -> User:
+    user = db.scalar(select(User).where(func.lower(User.username) == login))
+    synthetic_email = f"{login}@local-admin.dev"
+
+    if user:
+        changed = False
+        if not user.is_admin:
+            user.is_admin = True
+            changed = True
+        if user.email != synthetic_email:
+            user.email = synthetic_email
+            changed = True
+        if not verify_password(password, user.password_hash):
+            user.password_hash = hash_password(password)
+            changed = True
+        if changed:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        return user
+
+    admin = User(
+        username=login,
+        email=synthetic_email,
+        handle=generate_unique_handle(db, login),
+        password_hash=hash_password(password),
+        is_admin=True,
+    )
+    db.add(admin)
+    db.commit()
+    db.refresh(admin)
+    return admin
+
+
 @router.post("/login", response_model=LoginResponse)
 def login(payload: AdminLoginRequest, response: Response, db: Session = Depends(get_db)) -> LoginResponse:
-    raw_email = payload.email.strip().lower()
+    login_value = payload.login.strip().lower()
     password = payload.password
 
-    user = db.scalar(select(User).where(or_(User.email == raw_email, func.lower(User.username) == raw_email)))
-
-    if not user or not user.is_admin or not verify_password(password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+    if settings.env == "dev" and settings.admin_login and settings.admin_password:
+        env_login = settings.admin_login.strip().lower()
+        env_password = settings.admin_password
+        is_valid = secrets.compare_digest(login_value, env_login) and secrets.compare_digest(password, env_password)
+        if not is_valid:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+        user = _ensure_dev_admin(db, login=env_login, password=env_password)
+    else:
+        user = db.scalar(select(User).where(or_(User.email == login_value, func.lower(User.username) == login_value)))
+        if not user or not user.is_admin or not verify_password(password, user.password_hash):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
     jwt_token = create_access_token(subject=str(user.id))
     csrf_token = create_csrf_token()
