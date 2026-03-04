@@ -6,10 +6,18 @@ const DEFAULT_BIO = 'Расскажите о себе и ваших любимы
 const DEFAULT_TAGLINE = 'Путешествие начинается здесь.'
 const DEFAULT_HOME_CITY = 'Не указан'
 
+function joinMediaUrl(base: string, path: string): string {
+  if (!base || base === '/') {
+    return path
+  }
+
+  return `${base.replace(/\/$/, '')}${path}`
+}
+
 export function mapApiUserToProfile(user: ApiProfile): UserProfile {
   const absoluteAvatarUrl = user.avatarUrl.startsWith('http')
     ? user.avatarUrl
-    : `${env.mediaBaseUrl}${user.avatarUrl}`
+    : joinMediaUrl(env.mediaBaseUrl, user.avatarUrl)
 
   return {
     id: String(user.id),
