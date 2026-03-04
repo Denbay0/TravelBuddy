@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/language-TypeScript-3178C6" />
   <img src="https://img.shields.io/badge/database-PostgreSQL-336791" />
   <img src="https://img.shields.io/badge/style-TailwindCSS-38BDF8" />
-  <img src="https://img.shields.io/badge/maps-Leaflet-199900" />
+  <img src="https://img.shields.io/badge/maps-MapLibre%2BGeoapify-3b82f6" />
   <img src="https://img.shields.io/badge/reports-PDF-111111" />
 </p>
 
@@ -53,7 +53,7 @@ Create routes, write travel posts, save favorites, search across content, and ex
 - TailwindCSS
 - React Router
 - Framer Motion
-- Leaflet / React-Leaflet
+- MapLibre GL + Geoapify
 
 
 ---
@@ -68,3 +68,24 @@ Create routes, write travel posts, save favorites, search across content, and ex
 ```bash
 python scripts/create_admin.py --email admin@example.com --password 'StrongAdminPass123' --username admin
 ```
+
+---
+
+
+## Map & Route Planner
+
+- Frontend map renderer: **MapLibre GL JS**
+- Tile/style provider: **Geoapify Maps**
+- Geocoding/autocomplete + routing are called via backend proxy (`/maps/*`)
+
+Required env:
+
+- Backend: `GEOAPIFY_API_KEY`
+- Frontend: `VITE_GEOAPIFY_MAP_KEY`
+- Frontend (optional): `VITE_GEOAPIFY_STYLE_URL`
+
+Routing modes:
+
+- `Автомобиль`, `Пешком` → real route from Geoapify Routing API
+- `Поезд`, `Самолёт` → schematic polyline between points
+

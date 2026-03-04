@@ -16,11 +16,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def _ensure_user_columns() -> None:
-    """Dev-only compatibility helper for older local databases.
-
-    This is intentionally a lightweight fallback for missing columns and is
-    not a replacement for proper schema migrations.
-    """
     inspector = inspect(engine)
     if "users" not in inspector.get_table_names():
         return
@@ -40,14 +35,38 @@ def _ensure_user_columns() -> None:
     with engine.begin() as connection:
         for column_name, column_definition in required_columns.items():
             if column_name not in existing_columns:
-                connection.execute(
-                    text(f"ALTER TABLE users ADD COLUMN {column_name} {column_definition}")
-                )
+                connection.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_definition}"))
+
+
+def _ensure_route_columns() -> None:
+    inspector = inspect(engine)
+    if "routes" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("routes")}
+    required_columns = {
+        "origin_name": "VARCHAR(255) NOT NULL DEFAULT ''",
+        "origin_lat": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+        "origin_lon": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+        "destination_name": "VARCHAR(255) NOT NULL DEFAULT ''",
+        "destination_lat": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+        "destination_lon": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+        "waypoints_json": "TEXT NOT NULL DEFAULT '[]'",
+        "route_geojson": "TEXT",
+        "distance_km": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+        "route_type": "VARCHAR(16) NOT NULL DEFAULT 'schematic'",
+    }
+
+    with engine.begin() as connection:
+        for column_name, column_definition in required_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE routes ADD COLUMN {column_name} {column_definition}"))
 
 
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_user_columns()
+    _ensure_route_columns()
 
 
 def get_db() -> Generator[Session, None, None]:

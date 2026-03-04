@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
     database_url: str = "postgresql+psycopg://travelbuddy:travelbuddy@postgres:5432/travelbuddy"
     redis_url: str = "redis://redis:6379/0"
+    geoapify_api_key: str | None = None
 
     jwt_cookie_name: str = "access_token"
     csrf_cookie_name: str = "csrf_token"

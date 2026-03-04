@@ -142,9 +142,6 @@ export type ApiSearchUser = {
 }
 
 export type ApiRoute = {
-  startLocation: string
-  endLocation: string
-  stops: string[]
   id: number
   title: string
   description: string
@@ -152,8 +149,16 @@ export type ApiRoute = {
   durationDays: number
   transport: TransportCategory
   note: string
-  points: RoutePoint[]
+  originName: string
+  originLat: number
+  originLon: number
+  destinationName: string
+  destinationLat: number
+  destinationLon: number
+  waypoints: RoutePoint[]
+  routeGeojson?: GeoJSON.Feature | null
   distanceKm: number
+  routeType: 'real' | 'schematic'
   savesCount: number
   owner: {
     id: number
@@ -185,9 +190,6 @@ export type ApiRouteSaveResponse = {
   saves: number
 }
 
-export type RoutePreviewResponse = {
-  distanceKm: number
-}
 
 export type SearchResponse = {
   query: string
