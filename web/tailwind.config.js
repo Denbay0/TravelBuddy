@@ -5,23 +5,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        sand: 'rgb(var(--color-bg) / <alpha-value>)',
-        ink: 'rgb(var(--color-text-primary) / <alpha-value>)',
-        amber: 'rgb(var(--color-warning) / <alpha-value>)',
-        pine: 'rgb(var(--color-success) / <alpha-value>)',
-        surface: 'rgb(var(--color-card) / <alpha-value>)',
-        borderline: 'rgb(var(--color-border) / <alpha-value>)',
-        muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
-        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+        sand: 'rgb(var(--background) / <alpha-value>)',
+        ink: 'rgb(var(--text-primary) / <alpha-value>)',
+        amber: 'rgb(var(--warning) / <alpha-value>)',
+        pine: 'rgb(var(--success) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        borderline: 'rgb(var(--border) / <alpha-value>)',
+        muted: 'rgb(var(--text-muted) / <alpha-value>)',
+        accent: 'rgb(var(--primary) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 20px 55px rgba(7, 18, 31, 0.16)',
+        glow: '0 20px 50px rgb(var(--shadow) / 0.28)',
       },
       backgroundImage: {
-        'hero-gradient': 'radial-gradient(circle at 20% 20%, rgb(var(--color-accent) / 0.2), transparent 45%), radial-gradient(circle at 75% 30%, rgb(var(--color-success) / 0.16), transparent 50%), linear-gradient(135deg, rgb(var(--color-hero-start)) 0%, rgb(var(--color-hero-end)) 100%)',
+        'hero-gradient': 'radial-gradient(circle at 20% 20%, rgb(var(--primary) / 0.22), transparent 45%), radial-gradient(circle at 75% 30%, rgb(var(--success) / 0.14), transparent 50%), linear-gradient(135deg, rgb(var(--hero-start)) 0%, rgb(var(--hero-end)) 100%)',
       },
     },
   },

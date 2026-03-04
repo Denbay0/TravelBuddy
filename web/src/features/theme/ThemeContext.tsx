@@ -5,6 +5,7 @@ type Theme = 'light' | 'dark'
 
 type ThemeContextValue = {
   theme: Theme
+  setTheme: (theme: Theme) => void
   toggleTheme: () => void
 }
 
@@ -22,13 +23,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme())
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    const root = document.documentElement
+    root.classList.toggle('dark', theme === 'dark')
+    root.dataset.theme = theme
     window.localStorage.setItem(STORAGE_KEY, theme)
   }, [theme])
 
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
+      setTheme,
       toggleTheme: () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light')),
     }),
     [theme],

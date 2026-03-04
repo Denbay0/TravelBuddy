@@ -25,13 +25,13 @@ export default function RouteCard({ route, onOpen, onToggleSave, isPending = fal
         <p className="mt-4 text-sm text-ink/60">Автор: {route.author}</p>
 
         <div className="mt-4 flex gap-3">
-          <button onClick={() => onOpen?.(route)} className="rounded-full border border-ink/20 px-4 py-2 text-sm font-medium transition hover:border-ink/40">
+          <button onClick={() => onOpen?.(route)} className="btn-outline px-4 py-2">
             Открыть
           </button>
           <button
             onClick={() => onToggleSave?.(route)}
             disabled={isPending}
-            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-primary px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {route.isSaved ? 'Убрать из сохранённых' : 'Сохранить'}
           </button>

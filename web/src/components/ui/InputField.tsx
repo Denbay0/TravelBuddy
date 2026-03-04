@@ -31,13 +31,9 @@ export function InputField({
         value={value}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className={clsx(
-          'w-full rounded-2xl border bg-white/95 px-4 py-3 text-sm text-ink outline-none transition',
-          'placeholder:text-ink/40 focus:ring-2 focus:ring-amber/35',
-          error ? 'border-red-400 focus:border-red-400' : 'border-ink/15 focus:border-amber/60',
-        )}
+        className={clsx('form-control', error ? 'border-red-400 focus:border-red-400 focus:ring-red-300/40' : '')}
       />
-      {error ? <span className="mt-2 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-2 block text-xs text-red-500">{error}</span> : null}
     </label>
   )
 }

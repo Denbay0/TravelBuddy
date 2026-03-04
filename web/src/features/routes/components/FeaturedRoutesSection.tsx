@@ -27,8 +27,8 @@ export default function FeaturedRoutesSection({ routes, onToggleSave, pendingRou
         ))}
       </div>
       {selectedRoute ? (
-        <div className="fixed inset-0 z-[70] bg-ink/40 p-4" onClick={() => setSelectedRoute(null)}>
-          <div onClick={(event) => event.stopPropagation()} className="mx-auto mt-14 max-w-xl rounded-3xl bg-white p-6">
+        <div className="fixed inset-0 z-[70] bg-[rgb(var(--overlay))/0.58] p-4" onClick={() => setSelectedRoute(null)}>
+          <div onClick={(event) => event.stopPropagation()} className="mx-auto mt-14 max-w-xl rounded-3xl bg-surface p-6">
             <h3 className="text-xl font-semibold">{selectedRoute.title}</h3>
             <p className="mt-2 text-sm text-ink/70">{selectedRoute.cities.join(' → ')}</p>
             <p className="mt-3 text-sm text-ink/70">{selectedRoute.transport} · {selectedRoute.durationDays} дней</p>

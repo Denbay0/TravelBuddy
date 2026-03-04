@@ -6,7 +6,7 @@ type PopularAuthorsCardProps = {
 
 export default function PopularAuthorsCard({ authors }: PopularAuthorsCardProps) {
   return (
-    <section className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-glow">
+    <section className="card-surface p-5 shadow-glow">
       <h2 className="text-lg font-semibold text-ink">Популярные авторы</h2>
       <p className="mt-1 text-sm text-ink/65">Следите за теми, кто пишет о маршрутах спокойно и по делу.</p>
       <ul className="mt-4 space-y-3">

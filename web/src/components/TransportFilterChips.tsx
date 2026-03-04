@@ -20,8 +20,8 @@ export default function TransportFilterChips<T extends string>({
           className={clsx(
             'rounded-full border px-4 py-2 text-sm transition',
             active === item
-              ? 'border-ink bg-ink text-white'
-              : 'border-ink/15 bg-white text-ink/75 hover:border-ink/35',
+              ? 'border-accent bg-accent text-[rgb(var(--text-on-accent))]'
+              : 'border-borderline/70 bg-surface text-ink/80 hover:border-accent/60',
           )}
         >
           {item}

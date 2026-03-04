@@ -13,7 +13,7 @@ export function TravelPostModal({ post, onClose }: TravelPostModalProps) {
     <AnimatePresence>
       {post ? (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/55 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--overlay))/0.64] px-4 py-6 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -21,7 +21,7 @@ export function TravelPostModal({ post, onClose }: TravelPostModalProps) {
           onClick={onClose}
         >
           <motion.article
-            className="relative grid max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/40 bg-white shadow-2xl md:grid-cols-2"
+            className="relative grid max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-borderline/70 bg-surface shadow-2xl md:grid-cols-2"
             initial={{ opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.985 }}
@@ -30,7 +30,7 @@ export function TravelPostModal({ post, onClose }: TravelPostModalProps) {
           >
             <button
               onClick={onClose}
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/85 p-2 text-ink transition hover:bg-white"
+              className="absolute right-3 top-3 z-10 btn-secondary rounded-full p-2"
               aria-label="Закрыть"
             >
               <X size={18} />

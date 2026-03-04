@@ -92,8 +92,8 @@ export default function RegisterPage() {
 
   return (
     <section className="min-h-screen bg-hero-gradient px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl gap-6 overflow-hidden rounded-[2rem] border border-white/50 bg-white/45 p-4 backdrop-blur-xl lg:grid-cols-[0.95fr_1.05fr] lg:p-8">
-        <div className="order-2 flex items-center justify-center rounded-3xl bg-white/70 p-4 sm:p-6 lg:order-1">
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl gap-6 overflow-hidden rounded-[2rem] border border-borderline/70 bg-surface/70 p-4 backdrop-blur-xl lg:grid-cols-[0.95fr_1.05fr] lg:p-8">
+        <div className="order-2 flex items-center justify-center rounded-3xl bg-surface/75 p-4 sm:p-6 lg:order-1">
           <AuthCard title="Создание аккаунта" subtitle="Начните своё travel-путешествие: маршруты, идеи и заметки в одном профиле.">
             <form className="space-y-5" onSubmit={handleSubmit} noValidate>
               <InputField
@@ -139,13 +139,13 @@ export default function RegisterPage() {
                 error={errors.confirmPassword}
               />
 
-              {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+              {error ? <p className="rounded-2xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p> : null}
 
               <SubmitButton text="Зарегистрироваться" loadingText="Создаём аккаунт..." isSubmitting={isSubmitting} />
 
               <p className="text-center text-sm text-ink/70">
                 Уже есть аккаунт?{' '}
-                <Link to="/login" className="font-medium text-amber hover:text-amber/80">
+                <Link to="/login" className="font-medium text-accent hover:text-accent/80">
                   Войти
                 </Link>
               </p>
@@ -153,16 +153,16 @@ export default function RegisterPage() {
           </AuthCard>
         </div>
 
-        <aside className="order-1 hidden rounded-3xl bg-gradient-to-br from-amber/90 via-amber to-pine p-8 text-white lg:order-2 lg:flex lg:flex-col lg:justify-between">
+        <aside className="order-1 hidden rounded-3xl bg-surface-elevated p-8 text-ink lg:order-2 lg:flex lg:flex-col lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.22em] text-white/70">Join TravelBuddy</p>
+            <p className="text-sm uppercase tracking-[0.22em] text-ink/70">Join TravelBuddy</p>
             <h2 className="mt-5 text-3xl font-semibold leading-tight">Пусть каждая идея превратится в новый маршрут.</h2>
-            <p className="mt-4 text-sm text-white/80">Создайте профиль, собирайте избранные места и делитесь впечатлениями с travel-сообществом.</p>
+            <p className="mt-4 text-sm text-ink/75">Создайте профиль, собирайте избранные места и делитесь впечатлениями с travel-сообществом.</p>
           </div>
-          <div className="grid gap-3 text-sm text-white/90">
-            <p className="rounded-2xl border border-white/35 bg-white/10 px-4 py-3">📍 Быстрое создание маршрутов</p>
-            <p className="rounded-2xl border border-white/35 bg-white/10 px-4 py-3">🧭 Персональные travel-дайджесты</p>
-            <p className="rounded-2xl border border-white/35 bg-white/10 px-4 py-3">🤝 Совместное планирование поездок</p>
+          <div className="grid gap-3 text-sm text-ink/80">
+            <p className="rounded-2xl border border-borderline/70 bg-sand/70 px-4 py-3">📍 Быстрое создание маршрутов</p>
+            <p className="rounded-2xl border border-borderline/70 bg-sand/70 px-4 py-3">🧭 Персональные travel-дайджесты</p>
+            <p className="rounded-2xl border border-borderline/70 bg-sand/70 px-4 py-3">🤝 Совместное планирование поездок</p>
           </div>
         </aside>
       </div>
