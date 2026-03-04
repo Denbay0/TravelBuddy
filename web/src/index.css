@@ -16,12 +16,12 @@
 }
 
 .dark {
-  --color-sand: 16 19 26;
-  --color-ink: 236 234 230;
-  --color-amber: 230 159 114;
-  --color-pine: 96 161 147;
-  --color-bg-hero-start: 22 27 36;
-  --color-bg-hero-end: 14 18 26;
+  --color-sand: 13 17 24;
+  --color-ink: 229 233 240;
+  --color-amber: 226 156 111;
+  --color-pine: 101 170 154;
+  --color-bg-hero-start: 18 24 34;
+  --color-bg-hero-end: 11 15 22;
 }
 
 html,
@@ -36,5 +36,12 @@ body {
 }
 
 .card-surface {
-  @apply rounded-3xl border border-white/50 bg-white/70 backdrop-blur-xl shadow-glow dark:border-white/10 dark:bg-white/5;
+  @apply rounded-3xl border border-ink/10 bg-white/80 backdrop-blur-xl shadow-glow dark:border-white/10 dark:bg-white/5;
+}
+
+button,
+input,
+select,
+textarea {
+  @apply text-ink;
 }

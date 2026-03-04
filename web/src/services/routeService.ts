@@ -12,11 +12,13 @@ export type RoutesQuery = {
 type RouteCreateRequest = {
   title: string
   description?: string
-  cities: string[]
+  startLocation: string
+  endLocation: string
+  stops: string[]
   durationDays: number
   transport: ApiRoute['transport']
   note?: string
-  points?: RoutePoint[]
+  points: RoutePoint[]
 }
 
 type RouteUpdateRequest = Partial<RouteCreateRequest>

@@ -7,7 +7,7 @@ from app.api.posts import _serialize_post
 from app.api.routes import _serialize_route
 from app.db.database import get_db
 from app.db.models import Post, Route, User
-from app.schemas.search import SearchResponse
+from app.schemas.search import SearchResponse, SearchUserOut
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -35,8 +35,19 @@ def global_search(
         if query in post.title.lower() or query in post.content.lower() or query in post.city.lower()
     ][:limit]
 
+    users = db.execute(select(User).order_by(User.created_at.desc()).limit(100)).scalars().all()
+    filtered_users = [
+        user
+        for user in users
+        if query in user.username.lower() or query in user.handle.lower() or query in user.email.lower()
+    ][:limit]
+
     return SearchResponse(
         query=q,
         routes=[_serialize_route(route, current_user.id) for route in filtered_routes],
         posts=[_serialize_post(post, current_user.id) for post in filtered_posts],
+        users=[
+            SearchUserOut(id=user.id, name=user.username, handle=f"@{user.handle}", avatar_url=user.avatar_url)
+            for user in filtered_users
+        ],
     )

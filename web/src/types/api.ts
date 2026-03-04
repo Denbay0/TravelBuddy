@@ -132,7 +132,17 @@ export type RoutePoint = {
   lon: number
 }
 
+export type ApiSearchUser = {
+  id: number
+  name: string
+  handle: string
+  avatarUrl: string
+}
+
 export type ApiRoute = {
+  startLocation: string
+  endLocation: string
+  stops: string[]
   id: number
   title: string
   description: string
@@ -181,4 +191,5 @@ export type SearchResponse = {
   query: string
   routes: ApiRoute[]
   posts: ApiPost[]
+  users: ApiSearchUser[]
 }
