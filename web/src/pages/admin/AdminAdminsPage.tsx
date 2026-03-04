@@ -48,7 +48,7 @@ export default function AdminAdminsPage() {
     }
   }
 
-  const handleCreate = async (payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'>) => {
+  const handleCreate = async (payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'> & { password: string }) => {
     const optimisticAdmin: AdminUser = {
       id: -Date.now(),
       createdAt: new Date().toISOString(),

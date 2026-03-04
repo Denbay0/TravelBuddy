@@ -7,6 +7,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app.api.auth import router as auth_router
+from app.api.admin_auth import router as admin_auth_router
+from app.api.admin import router as admin_router
 from app.api.posts import router as posts_router
 from app.api.profile import router as profile_router
 from app.api.routes import router as routes_router
@@ -17,6 +19,7 @@ from app.core.config import settings
 from app.db import models  # noqa: F401
 from app.db.database import SessionLocal, create_tables
 from app.core.redis import ping_redis
+from app.core.bootstrap_admin import ensure_bootstrap_admin
 from app.utils_profile import backfill_handles
 
 
@@ -31,6 +34,7 @@ async def lifespan(_: FastAPI):
     db: Session = SessionLocal()
     try:
         backfill_handles(db)
+        ensure_bootstrap_admin(db)
     finally:
         db.close()
 
@@ -48,6 +52,8 @@ app.add_middleware(
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 app.include_router(auth_router)
+app.include_router(admin_auth_router)
+app.include_router(admin_router)
 app.include_router(profile_router)
 app.include_router(routes_router)
 app.include_router(posts_router)

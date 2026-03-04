@@ -14,7 +14,10 @@ import { AuthProvider } from './auth/AuthContext.tsx'
 import { GuestOnlyRoute } from './features/auth/GuestOnlyRoute.tsx'
 import { ProtectedRoute } from './features/auth/ProtectedRoute.tsx'
 import { ThemeProvider } from './features/theme/ThemeContext.tsx'
-import InfoPage from './pages/InfoPage.tsx'
+import AboutPage from './pages/AboutPage.tsx'
+import BlogPage from './pages/BlogPage.tsx'
+import PolicyPage from './pages/PolicyPage.tsx'
+import TermsPage from './pages/TermsPage.tsx'
 import AdminLayout from './pages/admin/AdminLayout.tsx'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.tsx'
 import AdminPostsPage from './pages/admin/AdminPostsPage.tsx'
@@ -22,45 +25,48 @@ import AdminUsersPage from './pages/admin/AdminUsersPage.tsx'
 import AdminAdminsPage from './pages/admin/AdminAdminsPage.tsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.tsx'
 import AdminProtectedRoute from './features/admin/auth/AdminProtectedRoute.tsx'
+import { AdminAuthProvider } from './features/admin/auth/AdminAuthContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<App />}>
-              <Route index element={<HomePage />} />
-              <Route path="routes" element={<RoutesPage />} />
-              <Route path="community" element={<CommunityPage />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="blog" element={<BlogPage />} />
-              <Route path="policy" element={<PolicyPage />} />
-              <Route path="terms" element={<TermsPage />} />
-              <Route element={<ProtectedRoute />}>
-                <Route path="profile" element={<ProfilePage />} />
-              </Route>
-            </Route>
-            <Route element={<GuestOnlyRoute />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
-            <Route path="/admin">
-              <Route path="login" element={<AdminLoginPage />} />
-              <Route element={<AdminProtectedRoute />}>
-                <Route element={<AdminLayout />}>
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                  <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="posts" element={<AdminPostsPage />} />
-                  <Route path="users" element={<AdminUsersPage />} />
-                  <Route path="admins" element={<AdminAdminsPage />} />
+      <AdminAuthProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<App />}>
+                <Route index element={<HomePage />} />
+                <Route path="routes" element={<RoutesPage />} />
+                <Route path="community" element={<CommunityPage />} />
+                <Route path="about" element={<AboutPage />} />
+                <Route path="blog" element={<BlogPage />} />
+                <Route path="policy" element={<PolicyPage />} />
+                <Route path="terms" element={<TermsPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="profile" element={<ProfilePage />} />
                 </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
+              <Route element={<GuestOnlyRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+              </Route>
+              <Route path="/admin">
+                <Route path="login" element={<AdminLoginPage />} />
+                <Route element={<AdminProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboardPage />} />
+                    <Route path="posts" element={<AdminPostsPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="admins" element={<AdminAdminsPage />} />
+                  </Route>
+                </Route>
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </AdminAuthProvider>
     </AuthProvider>
   </StrictMode>,
 )

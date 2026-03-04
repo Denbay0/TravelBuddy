@@ -83,6 +83,7 @@ class UserOut(CamelModel):
     email: EmailStr
     handle: str
     avatar_url: str
+    is_admin: bool = False
     created_at: datetime
 
     @model_validator(mode="after")

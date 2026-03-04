@@ -34,6 +34,7 @@ def _ensure_user_columns() -> None:
         "home_city": "VARCHAR(128) NOT NULL DEFAULT ''",
         "favorite_transport": "VARCHAR(32) NOT NULL DEFAULT 'Пешком'",
         "visited_cities": "TEXT NOT NULL DEFAULT '[]'",
+        "is_admin": "BOOLEAN NOT NULL DEFAULT FALSE",
     }
 
     with engine.begin() as connection:
