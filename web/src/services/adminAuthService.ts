@@ -2,7 +2,7 @@ import { apiRequest, clearCsrfTokenCache } from '../lib/api'
 import type { ApiUser, LoginResponse, LogoutResponse } from '../types/api'
 
 export const adminAuthService = {
-  async login(payload: { email: string; password: string }): Promise<LoginResponse> {
+  async login(payload: { login: string; password: string }): Promise<LoginResponse> {
     return apiRequest<LoginResponse>('/admin/auth/login', {
       method: 'POST',
       body: payload,

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     bootstrap_admin_password: str | None = None
     bootstrap_admin_username: str = "admin"
 
+    admin_login: str | None = None
+    admin_password: str | None = None
+
     @field_validator("frontend_origins", "cors_allow_origins", mode="before")
     @classmethod
     def parse_origins(cls, value: Any) -> Any:
