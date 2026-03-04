@@ -14,10 +14,14 @@ import { AuthProvider } from './auth/AuthContext.tsx'
 import { GuestOnlyRoute } from './features/auth/GuestOnlyRoute.tsx'
 import { ProtectedRoute } from './features/auth/ProtectedRoute.tsx'
 import { ThemeProvider } from './features/theme/ThemeContext.tsx'
-import AboutPage from './pages/AboutPage.tsx'
-import BlogPage from './pages/BlogPage.tsx'
-import PolicyPage from './pages/PolicyPage.tsx'
-import TermsPage from './pages/TermsPage.tsx'
+import InfoPage from './pages/InfoPage.tsx'
+import AdminLayout from './pages/admin/AdminLayout.tsx'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage.tsx'
+import AdminPostsPage from './pages/admin/AdminPostsPage.tsx'
+import AdminUsersPage from './pages/admin/AdminUsersPage.tsx'
+import AdminAdminsPage from './pages/admin/AdminAdminsPage.tsx'
+import AdminLoginPage from './pages/admin/AdminLoginPage.tsx'
+import AdminProtectedRoute from './features/admin/auth/AdminProtectedRoute.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -40,6 +44,18 @@ createRoot(document.getElementById('root')!).render(
             <Route element={<GuestOnlyRoute />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+            </Route>
+            <Route path="/admin">
+              <Route path="login" element={<AdminLoginPage />} />
+              <Route element={<AdminProtectedRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="posts" element={<AdminPostsPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="admins" element={<AdminAdminsPage />} />
+                </Route>
+              </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
