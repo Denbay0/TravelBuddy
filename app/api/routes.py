@@ -43,17 +43,36 @@ def _compute_distance_km(points: list[RoutePoint]) -> float:
     return round(total, 2)
 
 
-def _parse_route_data(raw_cities: str | None) -> tuple[list[str], list[RoutePoint], float, str]:
+def _extract_locations(cities: list[str], payload: dict) -> tuple[str, str, list[str]]:
+    start_location = str(payload.get("start_location") or "").strip() if isinstance(payload, dict) else ""
+    end_location = str(payload.get("end_location") or "").strip() if isinstance(payload, dict) else ""
+
+    raw_stops = payload.get("stops", []) if isinstance(payload, dict) else []
+    stops = [str(stop).strip() for stop in raw_stops if str(stop).strip()] if isinstance(raw_stops, list) else []
+
+    if not start_location and cities:
+        start_location = cities[0]
+    if not end_location and len(cities) > 1:
+        end_location = cities[-1]
+    if not stops and len(cities) > 2:
+        stops = cities[1:-1]
+
+    return start_location, end_location, stops
+
+
+def _parse_route_data(raw_cities: str | None) -> tuple[str, str, list[str], list[str], list[RoutePoint], float, str]:
     if not raw_cities:
-        return [], [], 0.0, ""
+        return "", "", [], [], [], 0.0, ""
 
     try:
         parsed = json.loads(raw_cities)
     except (TypeError, json.JSONDecodeError):
-        return [], [], 0.0, ""
+        return "", "", [], [], [], 0.0, ""
 
     if isinstance(parsed, list):
-        return [str(city) for city in parsed], [], 0.0, ""
+        cities = [str(city) for city in parsed]
+        start_location, end_location, stops = _extract_locations(cities, {})
+        return start_location, end_location, stops, cities, [], 0.0, ""
 
     if isinstance(parsed, dict):
         points: list[RoutePoint] = []
@@ -71,21 +90,29 @@ def _parse_route_data(raw_cities: str | None) -> tuple[list[str], list[RoutePoin
 
         cities = parsed.get("cities", [])
         safe_cities = [str(city) for city in cities] if isinstance(cities, list) else []
+        start_location, end_location, stops = _extract_locations(safe_cities, parsed)
         distance_km = parsed.get("distance_km")
         note = parsed.get("note")
         return (
+            start_location,
+            end_location,
+            stops,
             safe_cities,
             points,
             float(distance_km) if isinstance(distance_km, (int, float)) else _compute_distance_km(points),
             str(note) if isinstance(note, str) else "",
         )
 
-    return [], [], 0.0, ""
+    return "", "", [], [], [], 0.0, ""
 
 
-def _pack_route_data(cities: list[str], points: list[RoutePoint], note: str) -> str:
+def _pack_route_data(start_location: str, end_location: str, stops: list[str], points: list[RoutePoint], note: str) -> str:
+    cities = [start_location, *stops, end_location]
     return json.dumps(
         {
+            "start_location": start_location,
+            "end_location": end_location,
+            "stops": stops,
             "cities": cities,
             "points": [point.model_dump() for point in points],
             "distance_km": _compute_distance_km(points),
@@ -96,11 +123,14 @@ def _pack_route_data(cities: list[str], points: list[RoutePoint], note: str) -> 
 
 
 def _serialize_route(route: Route, current_user_id: int | None = None) -> RouteOut:
-    cities, points, distance_km, note = _parse_route_data(route.cities)
+    start_location, end_location, stops, cities, points, distance_km, note = _parse_route_data(route.cities)
     return RouteOut(
         id=route.id,
         title=route.title,
         description=route.description or "",
+        start_location=start_location,
+        end_location=end_location,
+        stops=stops,
         cities=cities,
         duration_days=route.duration_days or 0,
         transport=route.transport,
@@ -157,7 +187,7 @@ def create_route(
         owner_id=current_user.id,
         title=payload.title,
         description=payload.description,
-        cities=_pack_route_data(payload.cities, payload.points, payload.note),
+        cities=_pack_route_data(payload.start_location, payload.end_location, payload.stops, payload.points, payload.note),
         duration_days=payload.duration_days,
         transport=payload.transport,
     )
@@ -224,11 +254,13 @@ def update_route(
     if "transport" in updates:
         route.transport = updates["transport"]
 
-    cities, points, _, note = _parse_route_data(route.cities)
-    next_cities = updates.get("cities", cities)
+    start_location, end_location, stops, _, points, _, note = _parse_route_data(route.cities)
+    next_start_location = updates.get("start_location", start_location)
+    next_end_location = updates.get("end_location", end_location)
+    next_stops = updates.get("stops", stops)
     next_points = updates.get("points", points)
     next_note = updates.get("note", note)
-    route.cities = _pack_route_data(next_cities, next_points, next_note)
+    route.cities = _pack_route_data(next_start_location, next_end_location, next_stops, next_points, next_note)
 
     db.add(route)
     db.commit()

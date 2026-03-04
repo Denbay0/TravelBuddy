@@ -15,17 +15,21 @@ class RoutePoint(CamelModel):
 class RouteCreateRequest(CamelModel):
     title: str = Field(min_length=1, max_length=255)
     description: str = ""
-    cities: list[str] = Field(default_factory=list)
+    start_location: str = Field(min_length=1, max_length=128)
+    end_location: str = Field(min_length=1, max_length=128)
+    stops: list[str] = Field(default_factory=list)
     duration_days: int = Field(default=1, ge=1)
     transport: TransportType = TransportType.WALK
     note: str = ""
-    points: list[RoutePoint] = Field(default_factory=list)
+    points: list[RoutePoint] = Field(min_length=2)
 
 
 class RouteUpdateRequest(CamelModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
-    cities: list[str] | None = None
+    start_location: str | None = Field(default=None, min_length=1, max_length=128)
+    end_location: str | None = Field(default=None, min_length=1, max_length=128)
+    stops: list[str] | None = None
     duration_days: int | None = Field(default=None, ge=1)
     transport: TransportType | None = None
     note: str | None = None
@@ -42,6 +46,9 @@ class RouteOut(CamelModel):
     id: int
     title: str
     description: str
+    start_location: str
+    end_location: str
+    stops: list[str]
     cities: list[str]
     duration_days: int
     transport: TransportType

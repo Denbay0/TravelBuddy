@@ -9,7 +9,7 @@ import { routeService } from '../services/routeService'
 import type { ApiRoute, RoutePoint } from '../types/api'
 import type { Route, RouteFilter, TransportCategory } from '../types/travel'
 
-const emptyForm: CreateRouteFormState = { title: '', stops: '', duration: '', transport: 'Автомобиль', note: '' }
+const emptyForm: CreateRouteFormState = { title: '', startLocation: '', endLocation: '', stops: '', duration: '', transport: 'Автомобиль', note: '' }
 
 function mapApiRouteToRoute(route: ApiRoute): Route {
   return {
@@ -106,14 +106,16 @@ export default function RoutesPage() {
   }
 
   const handleCreateRoute = async () => {
-    if (!form.title.trim() || !form.stops.trim() || !form.duration.trim()) return
-    const cities = form.stops.split(',').map((city) => city.trim()).filter(Boolean)
+    if (!form.title.trim() || !form.startLocation.trim() || !form.endLocation.trim() || !form.duration.trim()) return
+    const stops = form.stops.split(',').map((city) => city.trim()).filter(Boolean)
     try {
       const created = await routeService.create({
         title: form.title,
         description: form.note,
         note: form.note,
-        cities,
+        startLocation: form.startLocation,
+        endLocation: form.endLocation,
+        stops,
         points: routePoints,
         durationDays: Number(form.duration),
         transport: form.transport,
