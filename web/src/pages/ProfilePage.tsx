@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
 import { ProfileStats } from '../features/profile/components/ProfileStats'
 import { mapApiUserToProfile } from '../features/profile/mappers'
-import { authService } from '../services/authService'
 import { profileService } from '../services/profileService'
 import type { ApiProfileFavoriteRoute, ApiProfilePost } from '../types/api'
 import type { UserProfile } from '../features/profile/types'
+import { useAuth } from '../auth/useAuth'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -16,9 +16,14 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { user, isLoading: isAuthLoading, logout } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!user) {
+      return
+    }
+
     async function loadProfile() {
       setIsLoading(true)
       setError('')
@@ -41,19 +46,27 @@ export default function ProfilePage() {
     }
 
     void loadProfile()
-  }, [])
+  }, [user])
 
   const postsSubtitle = useMemo(() => `${profilePosts.length} публикации в ленте`, [profilePosts.length])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
-      await authService.logout()
-      navigate('/login')
+      await logout()
+      navigate('/', { replace: true })
     } catch (logoutError) {
       setError(logoutError instanceof Error ? logoutError.message : 'Не удалось выйти из аккаунта.')
       setIsLoggingOut(false)
     }
+  }
+
+  if (isAuthLoading) {
+    return <main className="mx-auto w-full max-w-6xl px-6 py-10 text-ink/70">Проверяем авторизацию...</main>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
   }
 
   if (isLoading) {

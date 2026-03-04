@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.models import User
 
 USERNAME_REGEX = re.compile(r"^[A-Za-z0-9_]{3,32}$")
-HANDLE_REGEX = re.compile(r"^[a-z0-9_]{3,32}$")
+HANDLE_REGEX = re.compile(r"^[A-Za-z0-9_]{3,32}$")
 
 
 def normalize_username(value: str) -> str:
@@ -18,7 +18,7 @@ def normalize_username(value: str) -> str:
 
 
 def username_to_handle_base(username: str) -> str:
-    base = re.sub(r"[^a-z0-9_]", "", username.strip().lower())
+    base = re.sub(r"[^A-Za-z0-9_]", "", username.strip())
     if not base:
         base = "user"
     if len(base) < 3:
@@ -29,8 +29,8 @@ def username_to_handle_base(username: str) -> str:
 def generate_unique_handle(db: Session, username: str, exclude_user_id: int | None = None) -> str:
     base = username_to_handle_base(username)
     for suffix in [""] + [str(i) for i in range(1, 10000)]:
-        candidate = f"{base}{suffix}"
-        candidate = candidate[:32]
+        max_base_len = 32 - len(suffix)
+        candidate = f"{base[:max_base_len]}{suffix}"
         if not HANDLE_REGEX.fullmatch(candidate):
             continue
 

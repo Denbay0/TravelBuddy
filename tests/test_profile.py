@@ -7,7 +7,7 @@ def _register_and_login(client: TestClient) -> str:
     register_response = client.post(
         "/auth/register",
         json={
-            "name": "valid_user",
+            "name": "Valid_User",
             "email": "user@example.com",
             "password": "StrongPass1",
             "confirmPassword": "StrongPass1",
@@ -29,13 +29,13 @@ def test_profile_me(client: TestClient) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["handle"] == "@valid_user"
+    assert body["handle"] == "@Valid_User"
     assert body["avatarUrl"] == "/media/avatars/default.svg"
     assert body["travelTagline"] == ""
     assert body["bio"] == ""
     assert body["homeCity"] == ""
     assert body["visitedCities"] == []
-    assert body["stats"] == {"trips": 0, "posts": 0, "savedRoutes": 0}
+    assert body["stats"] == {"trips": 0, "posts": 0, "savedRoutes": 0, "favoriteTransport": "Пешком"}
     assert body["favoriteRoutes"] == []
 
 
@@ -45,7 +45,7 @@ def test_profile_update_fields(client: TestClient) -> None:
     response = client.patch(
         "/profile/me",
         json={
-            "name": "new_name",
+            "name": "New_Name",
             "travelTagline": "Wander more",
             "bio": "Travel addict",
             "homeCity": "Rome",
@@ -56,11 +56,11 @@ def test_profile_update_fields(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["message"] == "Profile updated successfully"
-    assert body["profile"]["name"] == "new_name"
+    assert body["profile"]["name"] == "New_Name"
     assert body["profile"]["travelTagline"] == "Wander more"
     assert body["profile"]["bio"] == "Travel addict"
     assert body["profile"]["homeCity"] == "Rome"
-    assert body["profile"]["handle"] == "@new_name"
+    assert body["profile"]["handle"] == "@New_Name"
 
 
 def test_upload_and_reset_avatar(client: TestClient) -> None:

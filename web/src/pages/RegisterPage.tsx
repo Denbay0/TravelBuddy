@@ -5,6 +5,7 @@ import { AuthCard } from '../components/ui/AuthCard'
 import { InputField } from '../components/ui/InputField'
 import { SubmitButton } from '../components/ui/SubmitButton'
 import { authService } from '../services/authService'
+import { useAuth } from '../auth/useAuth'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -55,7 +56,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const { setUser } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -64,7 +65,6 @@ export default function RegisterPage() {
     const nextErrors = validate(values)
     setErrors(nextErrors)
     setError('')
-    setSuccess('')
 
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -73,18 +73,16 @@ export default function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      await authService.register({
+      const response = await authService.register({
         name: values.name,
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
       })
 
-      setSuccess('Аккаунт создан! Перенаправляем на страницу входа...')
+      setUser(response.user)
       setValues({ name: '', email: '', password: '', confirmPassword: '' })
-      setTimeout(() => {
-        navigate('/login')
-      }, 500)
+      navigate('/profile', { replace: true })
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Что-то пошло не так. Повторите попытку.')
     } finally {
@@ -142,7 +140,6 @@ export default function RegisterPage() {
               />
 
               {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-              {success ? <p className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</p> : null}
 
               <SubmitButton text="Зарегистрироваться" loadingText="Создаём аккаунт..." isSubmitting={isSubmitting} />
 
