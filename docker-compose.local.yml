@@ -5,8 +5,10 @@ services:
     env_file:
       - .env.local
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -37,6 +39,12 @@ services:
       POSTGRES_PASSWORD: travelbuddy
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U travelbuddy -d travelbuddy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   redis:
     image: redis:7-alpine

@@ -6,9 +6,10 @@ type Props = {
   label: string
   value: string
   onPick: (location: MapLocation) => void
+  onQueryChange?: (value: string) => void
 }
 
-export default function RouteLocationAutocomplete({ label, value, onPick }: Props) {
+export default function RouteLocationAutocomplete({ label, value, onPick, onQueryChange }: Props) {
   const [query, setQuery] = useState(value)
   const [items, setItems] = useState<MapLocation[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -34,14 +35,19 @@ export default function RouteLocationAutocomplete({ label, value, onPick }: Prop
     return () => clearTimeout(timeout)
   }, [query])
 
+  const handleInputChange = (nextValue: string) => {
+    setQuery(nextValue)
+    onQueryChange?.(nextValue)
+  }
+
   return (
     <label className="relative text-sm text-ink/80">{label}
-      <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Начните вводить город" className="form-control mt-2" />
+      <input value={query} onChange={(event) => handleInputChange(event.target.value)} placeholder="Начните вводить город" className="form-control mt-2" />
       {isLoading ? <div className="mt-2 text-xs text-ink/60">Загрузка подсказок...</div> : null}
       {items.length > 0 ? (
         <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-2xl border border-borderline/70 bg-surface p-1 shadow-xl">
           {items.map((item, idx) => (
-            <button key={`${item.lat}-${item.lon}-${idx}`} type="button" className="w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-surface-elevated" onClick={() => { onPick(item); setQuery(item.label); setItems([]) }}>
+            <button key={`${item.lat}-${item.lon}-${idx}`} type="button" className="w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-surface-elevated" onClick={() => { onPick(item); handleInputChange(item.label); setItems([]) }}>
               <div>{item.label}</div>
               <div className="text-xs text-ink/60">{item.city ?? item.country ?? 'Локация'}</div>
             </button>

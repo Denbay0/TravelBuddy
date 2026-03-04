@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../features/admin/auth/useAdminAuth'
+import { env } from '../../config/env'
 
 export default function AdminLoginPage() {
   const { admin, login } = useAdminAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [loginValue, setLoginValue] = useState('')
-  const [password, setPassword] = useState('')
+  const [loginValue, setLoginValue] = useState(env.adminLogin)
+  const [password, setPassword] = useState(env.adminPassword)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 

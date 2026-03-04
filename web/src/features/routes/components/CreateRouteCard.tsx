@@ -26,20 +26,29 @@ type Props = {
 export default function CreateRouteCard({ form, onChange, onSubmit, submitLabel = 'Сохранить маршрут', submitHint }: Props) {
   const [origin, setOrigin] = useState<MapLocation | null>(null)
   const [destination, setDestination] = useState<MapLocation | null>(null)
+  const [originQuery, setOriginQuery] = useState('')
+  const [destinationQuery, setDestinationQuery] = useState('')
   const [waypoints, setWaypoints] = useState<MapLocation[]>([])
   const [preview, setPreview] = useState<RoutePreviewResponse | null>(null)
-  const [status, setStatus] = useState('Недостаточно данных для построения')
+  const [status, setStatus] = useState('Выберите города из подсказок')
   const [isLoading, setIsLoading] = useState(false)
 
   const points = useMemo(() => (origin && destination ? [origin, ...waypoints, destination] : []), [origin, destination, waypoints])
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (!origin || !destination) {
-        setStatus('Недостаточно данных для построения')
+      if (!originQuery.trim() || !destinationQuery.trim()) {
+        setStatus('Введите города отправления и прибытия')
         setPreview(null)
         return
       }
+
+      if (!origin || !destination) {
+        setStatus('Выберите город из подсказок')
+        setPreview(null)
+        return
+      }
+
       setIsLoading(true)
       try {
         const response = await mapService.previewRoute({
@@ -59,9 +68,10 @@ export default function CreateRouteCard({ form, onChange, onSubmit, submitLabel 
     }, 450)
 
     return () => clearTimeout(timer)
-  }, [destination, form.transport, origin, waypoints])
+  }, [destination, destinationQuery, form.transport, origin, originQuery, waypoints])
 
   const styleUrl = env.geoapifyStyleUrl || `https://maps.geoapify.com/v1/styles/osm-carto/style.json?apiKey=${env.geoapifyMapKey}`
+  const hasMapConfig = Boolean(env.geoapifyMapKey || env.geoapifyStyleUrl)
 
   return (
     <section className="card-surface p-5 sm:p-6">
@@ -73,8 +83,34 @@ export default function CreateRouteCard({ form, onChange, onSubmit, submitLabel 
           </label>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-            <RouteLocationAutocomplete label="Откуда" value={origin?.label ?? ''} onPick={setOrigin} />
-            <RouteLocationAutocomplete label="Куда" value={destination?.label ?? ''} onPick={setDestination} />
+            <RouteLocationAutocomplete
+              label="Откуда"
+              value={originQuery}
+              onPick={(item) => {
+                setOrigin(item)
+                setOriginQuery(item.label)
+              }}
+              onQueryChange={(nextValue) => {
+                setOriginQuery(nextValue)
+                if (origin && nextValue !== origin.label) {
+                  setOrigin(null)
+                }
+              }}
+            />
+            <RouteLocationAutocomplete
+              label="Куда"
+              value={destinationQuery}
+              onPick={(item) => {
+                setDestination(item)
+                setDestinationQuery(item.label)
+              }}
+              onQueryChange={(nextValue) => {
+                setDestinationQuery(nextValue)
+                if (destination && nextValue !== destination.label) {
+                  setDestination(null)
+                }
+              }}
+            />
             <RouteWaypointsEditor waypoints={waypoints} onAdd={(point) => setWaypoints((prev) => [...prev, point])} onRemove={(index) => setWaypoints((prev) => prev.filter((_, i) => i !== index))} />
           </div>
 
@@ -89,12 +125,12 @@ export default function CreateRouteCard({ form, onChange, onSubmit, submitLabel 
           </label>
 
           <RouteSummaryCard distanceKm={preview?.distanceKm ?? 0} pointsCount={points.length} transport={form.transport} routeType={preview?.routeType ?? 'schematic'} status={isLoading ? 'Пересчитываем маршрут...' : status} />
-          <button className="btn-primary w-full" onClick={() => onSubmit({ origin, destination, waypoints, preview })}>{submitLabel}</button>
+          <button className="btn-primary w-full" onClick={() => onSubmit({ origin, destination, waypoints, preview })} disabled={!origin || !destination}>{submitLabel}</button>
           {submitHint ? <p className="text-xs text-ink/70">{submitHint}</p> : null}
         </div>
 
         <div>
-          {!env.geoapifyMapKey ? <div className="rounded-2xl border border-amber/40 bg-amber/10 p-4 text-sm">Добавьте VITE_GEOAPIFY_MAP_KEY для отображения карты.</div> : <RoutePlannerMap points={(preview?.points ?? points).map((p) => ({ name: 'label' in p ? p.label : p.name, lat: p.lat, lon: p.lon }))} geojson={preview?.geojson} routeType={preview?.routeType ?? 'schematic'} styleUrl={styleUrl} />}
+          {!hasMapConfig ? <div className="rounded-2xl border border-amber/40 bg-amber/10 p-4 text-sm">Добавьте VITE_GEOAPIFY_MAP_KEY или VITE_GEOAPIFY_STYLE_URL для отображения карты.</div> : <RoutePlannerMap points={(preview?.points ?? points).map((p) => ({ name: 'label' in p ? p.label : p.name, lat: p.lat, lon: p.lon }))} geojson={preview?.geojson} routeType={preview?.routeType ?? 'schematic'} styleUrl={styleUrl} />}
         </div>
       </div>
     </section>

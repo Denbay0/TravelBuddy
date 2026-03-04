@@ -7,7 +7,22 @@ const ALLOWED_HOSTS = (process.env.VITE_ALLOWED_HOSTS || '127.0.0.1,localhost')
   .map((host) => host.trim())
   .filter(Boolean)
 
-const proxyPaths = ['/auth', '/profile', '/routes', '/posts', '/users', '/search', '/reports', '/media', '/maps']
+const proxyPaths = [
+  '/auth',
+  '/admin/auth',
+  '/admin/dashboard',
+  '/admin/posts',
+  '/admin/users',
+  '/admin/admins',
+  '/profile',
+  '/routes',
+  '/posts',
+  '/users',
+  '/search',
+  '/reports',
+  '/media',
+  '/maps',
+]
 
 export default defineConfig({
   plugins: [react()],

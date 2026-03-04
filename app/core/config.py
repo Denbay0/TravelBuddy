@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     admin_login: str | None = None
     admin_password: str | None = None
+    admin_email: str = "admin@travelbuddy.dev"
 
     @field_validator("frontend_origins", "cors_allow_origins", mode="before")
     @classmethod
