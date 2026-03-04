@@ -22,6 +22,7 @@ def _serialize_user(user: User) -> UserOut:
         email=user.email,
         handle=f"@{user.handle}",
         avatar_url=build_avatar_url(user.avatar_path),
+        is_admin=user.is_admin,
         created_at=user.created_at,
     )
 

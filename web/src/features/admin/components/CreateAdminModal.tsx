@@ -4,6 +4,7 @@ import type { AccountStatus, AdminRole } from '../types'
 type CreateAdminInput = {
   name: string
   email: string
+  password: string
   role: AdminRole
   status: AccountStatus
 }
@@ -18,6 +19,7 @@ type CreateAdminModalProps = {
 const initialForm: CreateAdminInput = {
   name: '',
   email: '',
+  password: '',
   role: 'moderator',
   status: 'active',
 }
@@ -34,13 +36,14 @@ export default function CreateAdminModal({ isOpen, isSubmitting = false, onClose
   }
 
   const handleSubmit = () => {
-    if (!form.name.trim() || !form.email.trim()) {
+    if (!form.name.trim() || !form.email.trim() || form.password.length < 12) {
       return
     }
 
     onCreate({
       name: form.name.trim(),
       email: form.email.trim(),
+      password: form.password,
       role: form.role,
       status: form.status,
     })
@@ -67,6 +70,13 @@ export default function CreateAdminModal({ isOpen, isSubmitting = false, onClose
             value={form.email}
             onChange={(event) => handleChange('email', event.target.value)}
             placeholder="name@travelbuddy.dev"
+            className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm"
+          />
+          <input
+            value={form.password}
+            onChange={(event) => handleChange('password', event.target.value)}
+            placeholder="Temporary password (min 12 chars)"
+            type="password"
             className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm"
           />
           <div className="grid grid-cols-2 gap-2">

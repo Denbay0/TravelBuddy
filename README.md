@@ -55,3 +55,16 @@ Create routes, write travel posts, save favorites, search across content, and ex
 - Framer Motion
 - Leaflet / React-Leaflet
 
+
+---
+
+## Admin access flow
+
+- Admin UI is separated from public routes: ` /admin/login ` and ` /admin `.
+- There is **no admin registration** in UI.
+- Backend enforces `is_admin` for all `/admin/*` endpoints and returns `403` for non-admin users.
+- First admin can be created with env bootstrap on startup (`BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `BOOTSTRAP_ADMIN_USERNAME`) or manually via script:
+
+```bash
+python scripts/create_admin.py --email admin@example.com --password 'StrongAdminPass123' --username admin
+```

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     env: Literal["dev", "test", "prod"] = "dev"
     debug: bool = False
 
+    bootstrap_admin_email: str | None = None
+    bootstrap_admin_password: str | None = None
+    bootstrap_admin_username: str = "admin"
+
     @field_validator("frontend_origins", "cors_allow_origins", mode="before")
     @classmethod
     def parse_origins(cls, value: Any) -> Any:

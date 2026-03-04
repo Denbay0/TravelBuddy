@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { useAdminAuth } from '../auth/useAdminAuth'
 import AdminSidebar, { type AdminNavLink } from './AdminSidebar'
 
 const adminLinks: AdminNavLink[] = [
@@ -11,6 +12,7 @@ const adminLinks: AdminNavLink[] = [
 
 export default function AdminLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const { admin, logout } = useAdminAuth()
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -20,17 +22,26 @@ export default function AdminLayout() {
         </aside>
 
         <section className="card-surface min-h-[70vh] p-4 sm:p-6">
-          <div className="mb-4 flex items-center justify-between border-b border-ink/10 pb-3 lg:hidden">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-ink/50">Admin</p>
-            <button
-              type="button"
-              onClick={() => setIsMobileSidebarOpen((current) => !current)}
-              className="rounded-xl border border-ink/15 bg-white/70 px-3 py-2 text-sm font-medium text-ink shadow-sm transition hover:border-ink/30 dark:bg-white/10"
-              aria-expanded={isMobileSidebarOpen}
-              aria-controls="mobile-admin-sidebar"
-            >
-              Menu
-            </button>
+          <div className="mb-4 flex items-center justify-between border-b border-ink/10 pb-3">
+            <p className="text-sm font-semibold text-ink/70">{admin?.name}</p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsMobileSidebarOpen((current) => !current)}
+                className="rounded-xl border border-ink/15 bg-white/70 px-3 py-2 text-sm font-medium text-ink shadow-sm transition hover:border-ink/30 dark:bg-white/10 lg:hidden"
+                aria-expanded={isMobileSidebarOpen}
+                aria-controls="mobile-admin-sidebar"
+              >
+                Menu
+              </button>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="rounded-xl border border-ink/20 px-3 py-2 text-xs font-medium text-ink/80 transition hover:bg-ink/5"
+              >
+                Выйти
+              </button>
+            </div>
           </div>
 
           {isMobileSidebarOpen ? (

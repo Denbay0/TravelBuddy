@@ -1,11 +1,4 @@
-import {
-  adminUsers,
-  dashboardMetrics,
-  managedPosts,
-  managedUsers,
-  onlineUsersBreakdown,
-  recentActivity,
-} from '../features/admin/mockData'
+import { apiRequest } from '../lib/api'
 import type {
   AccountStatus,
   AdminRole,
@@ -23,94 +16,119 @@ type ListQuery<TStatus extends string> = {
   status?: TStatus
 }
 
-let postsStore = [...managedPosts]
-let usersStore = [...managedUsers]
-let adminsStore = [...adminUsers]
+type AdminUsersApiResponse = {
+  items: Array<{ id: number; name: string; email: string; createdAt: string; isAdmin: boolean }>
+}
 
-function includeBySearch(value: string | undefined, ...fields: string[]) {
-  if (!value) {
-    return true
-  }
+type AdminPostsApiResponse = {
+  items: Array<{ id: number; title: string; city: string; authorName: string; createdAt: string }>
+}
 
-  const normalized = value.trim().toLowerCase()
-  return fields.some((field) => field.toLowerCase().includes(normalized))
+function statusFromAdminFlag(isAdmin: boolean): AccountStatus {
+  return isAdmin ? 'active' : 'pending'
 }
 
 export const adminService = {
   async getDashboardMetrics(): Promise<DashboardMetrics> {
-    return Promise.resolve(dashboardMetrics)
+    const summary = await apiRequest<{ totalUsers: number; totalPosts: number; totalRoutes: number; adminUsers: number }>('/admin/dashboard/summary')
+    return {
+      pendingReports: 0,
+      publishedPosts: summary.totalPosts,
+      newUsersLast7Days: summary.totalUsers,
+      activeAdmins: summary.adminUsers,
+      postTrend: 0,
+      userTrend: 0,
+      reportsTrend: 0,
+    }
   },
 
   async getOnlineUsersBreakdown(): Promise<OnlineUsersBreakdown> {
-    return Promise.resolve(onlineUsersBreakdown)
+    return { totalOnline: 1, web: 0, mobile: 0, adminPanel: 1 }
   },
 
   async getRecentActivity(): Promise<RecentActivityItem[]> {
-    return Promise.resolve(recentActivity)
+    return []
   },
 
   async listPosts(query: ListQuery<PostStatus> = {}): Promise<ManagedPost[]> {
-    const filtered = postsStore.filter((post) => {
-      if (query.status && post.status !== query.status) {
-        return false
-      }
-
-      return includeBySearch(query.search, post.title, post.authorName, String(post.id))
-    })
-
-    return Promise.resolve(filtered)
+    const response = await apiRequest<AdminPostsApiResponse>(`/admin/posts${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
+    return response.items
+      .map((post) => ({
+        id: post.id,
+        title: post.title,
+        authorName: post.authorName,
+        status: 'published' as PostStatus,
+        reportsCount: 0,
+        likesCount: 0,
+        createdAt: post.createdAt,
+      }))
+      .filter((post) => (query.status ? post.status === query.status : true))
   },
 
   async listUsers(query: ListQuery<AccountStatus> = {}): Promise<ManagedUser[]> {
-    const filtered = usersStore.filter((user) => {
-      if (query.status && user.status !== query.status) {
-        return false
-      }
-
-      return includeBySearch(query.search, user.name, user.email, String(user.id))
-    })
-
-    return Promise.resolve(filtered)
+    const response = await apiRequest<AdminUsersApiResponse>(`/admin/users${query.search ? `?search=${encodeURIComponent(query.search)}` : ''}`)
+    return response.items
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        status: statusFromAdminFlag(user.isAdmin),
+        postsCount: 0,
+        reportsCount: 0,
+        joinedAt: user.createdAt,
+      }))
+      .filter((user) => (query.status ? user.status === query.status : true))
   },
 
   async listAdmins(query: ListQuery<AccountStatus> & { role?: AdminRole } = {}): Promise<AdminUser[]> {
-    const filtered = adminsStore.filter((admin) => {
-      if (query.status && admin.status !== query.status) {
-        return false
-      }
-
-      if (query.role && admin.role !== query.role) {
-        return false
-      }
-
-      return includeBySearch(query.search, admin.name, admin.email, String(admin.id))
-    })
-
-    return Promise.resolve(filtered)
+    const response = await apiRequest<AdminUsersApiResponse>('/admin/admins')
+    return response.items
+      .map((admin) => ({
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: 'super_admin' as AdminRole,
+        status: 'active' as AccountStatus,
+        lastActiveAt: admin.createdAt,
+        createdAt: admin.createdAt,
+      }))
+      .filter((admin) => {
+        if (query.status && admin.status !== query.status) return false
+        if (query.role && admin.role !== query.role) return false
+        if (query.search) {
+          const value = query.search.toLowerCase()
+          return admin.name.toLowerCase().includes(value) || admin.email.toLowerCase().includes(value)
+        }
+        return true
+      })
   },
 
   async deletePost(postId: number): Promise<void> {
-    postsStore = postsStore.filter((post) => post.id !== postId)
+    await apiRequest(`/admin/posts/${postId}`, { method: 'DELETE' })
   },
 
   async deleteUser(userId: number): Promise<void> {
-    usersStore = usersStore.filter((user) => user.id !== userId)
+    await apiRequest(`/admin/users/${userId}`, { method: 'DELETE' })
   },
 
   async deleteAdmin(adminId: number): Promise<void> {
-    adminsStore = adminsStore.filter((admin) => admin.id !== adminId)
+    await apiRequest(`/admin/admins/${adminId}`, { method: 'DELETE' })
   },
 
-  async createAdmin(payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'>): Promise<AdminUser> {
-    const nextAdmin: AdminUser = {
-      id: Math.max(0, ...adminsStore.map((admin) => admin.id)) + 1,
-      createdAt: new Date().toISOString(),
-      lastActiveAt: new Date().toISOString(),
-      ...payload,
+  async createAdmin(payload: Omit<AdminUser, 'id' | 'createdAt' | 'lastActiveAt'> & { password: string }): Promise<AdminUser> {
+    const created = await apiRequest<{ id: number; name: string; email: string; createdAt: string }>('/admin/admins', {
+      method: 'POST',
+      body: { name: payload.name, email: payload.email, password: payload.password },
+    })
+
+    return {
+      id: created.id,
+      name: created.name,
+      email: created.email,
+      role: payload.role,
+      status: 'active',
+      lastActiveAt: created.createdAt,
+      createdAt: created.createdAt,
     }
-
-    adminsStore = [nextAdmin, ...adminsStore]
-
-    return Promise.resolve(nextAdmin)
   },
 }

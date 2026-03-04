@@ -10,6 +10,7 @@ export type ApiUser = {
   email: string
   handle: string
   avatarUrl: string
+  isAdmin: boolean
   createdAt: string
 }
 

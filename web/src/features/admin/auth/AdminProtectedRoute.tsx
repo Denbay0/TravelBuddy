@@ -1,21 +1,17 @@
-import { Outlet } from 'react-router-dom'
-import type { AdminAccessRequirement, AdminAuthState } from './types'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useAdminAuth } from './useAdminAuth'
 
-type AdminProtectedRouteProps = {
-  requirement?: AdminAccessRequirement
-}
+export default function AdminProtectedRoute() {
+  const { admin, isLoading } = useAdminAuth()
+  const location = useLocation()
 
-const placeholderAdminAuthState: AdminAuthState = {
-  isAuthenticated: true,
-  role: 'super_admin',
-}
+  if (isLoading) {
+    return <div className="p-8 text-sm text-ink/70">Проверяем доступ администратора...</div>
+  }
 
-export default function AdminProtectedRoute({ requirement }: AdminProtectedRouteProps) {
-  void requirement
-  void placeholderAdminAuthState
+  if (!admin?.isAdmin) {
+    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+  }
 
-  // Pass-through seam for now.
-  // In a later iteration, replace this return with role-based checks and redirect
-  // unauthenticated or unauthorized users to /admin/login (or another entrypoint).
   return <Outlet />
 }
