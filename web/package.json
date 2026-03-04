@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm install --no-audit --no-fund",
     "dev": "vite",
     "dev:docker": "vite --host 0.0.0.0 --port 5173 --strictPort",
     "build": "tsc -b && vite build",
@@ -13,13 +14,17 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.4",
+    "jspdf": "^2.5.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.576.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

@@ -5,8 +5,23 @@
 @tailwind utilities;
 
 :root {
-  color: #1d1a17;
-  background: #f8f5ef;
+  --color-sand: 247 241 232;
+  --color-ink: 29 26 23;
+  --color-amber: 216 135 82;
+  --color-pine: 50 94 86;
+  --color-bg-hero-start: 248 245 239;
+  --color-bg-hero-end: 244 237 226;
+  color: rgb(var(--color-ink));
+  background: rgb(var(--color-sand));
+}
+
+.dark {
+  --color-sand: 16 19 26;
+  --color-ink: 236 234 230;
+  --color-amber: 230 159 114;
+  --color-pine: 96 161 147;
+  --color-bg-hero-start: 22 27 36;
+  --color-bg-hero-end: 14 18 26;
 }
 
 html,
@@ -21,5 +36,5 @@ body {
 }
 
 .card-surface {
-  @apply rounded-3xl border border-white/50 bg-white/70 backdrop-blur-xl shadow-glow;
+  @apply rounded-3xl border border-white/50 bg-white/70 backdrop-blur-xl shadow-glow dark:border-white/10 dark:bg-white/5;
 }
