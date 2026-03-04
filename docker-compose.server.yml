@@ -1,13 +1,9 @@
-# Backward-compatible default: local development profile.
-# Prefer explicit files:
-#   docker compose -f docker-compose.local.yml up -d --build
-#   docker compose -f docker-compose.server.yml up -d --build
 services:
   backend:
     build: .
     container_name: travelbuddy-backend
     env_file:
-      - .env.local
+      - .env.server
     depends_on:
       - postgres
       - redis
@@ -15,22 +11,19 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./media:/app/media
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   frontend:
     build:
       context: ./web
     container_name: travelbuddy-frontend
     env_file:
-      - .env.local
-    volumes:
-      - ./web:/app
-      - /app/node_modules
-    ports:
-      - "127.0.0.1:5173:5173"
+      - .env.server
     depends_on:
       - backend
-    command: npm run dev:docker
+    ports:
+      - "127.0.0.1:4173:4173"
+    command: sh -c "npm run build && npm run preview -- --host 0.0.0.0 --port 4173 --strictPort"
 
   postgres:
     image: postgres:16-alpine

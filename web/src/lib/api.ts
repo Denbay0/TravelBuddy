@@ -85,7 +85,7 @@ type CsrfTokenPayload = {
 }
 
 const NETWORK_ERROR_MESSAGE =
-  'Не удалось подключиться к серверу. Проверьте, что backend запущен и доступен по dev-proxy target.'
+  'Не удалось подключиться к серверу. Проверьте API URL, прокси и доступность backend.'
 
 function joinUrl(base: string, path: string): string {
   if (!base || base === '/') {

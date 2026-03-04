@@ -1,143 +1,144 @@
 # TravelBuddy (FastAPI + React/Vite + PostgreSQL + Redis)
 
-Учебный fullstack-проект с JWT-аутентификацией через cookies, CSRF-защитой и профилем пользователя.
+Проект поддерживает **два отдельных режима запуска**: `local` и `server`.
+Один и тот же код запускается разными env/compose файлами — без ручного переписывания конфигов после `git pull`.
 
-## Структура проекта
+## 1) Файлы окружений
 
-```text
-.
-├── app/
-│   ├── api/
-│   │   ├── auth.py
-│   │   ├── deps.py
-│   │   └── profile.py
-│   ├── core/
-│   │   ├── config.py
-│   │   ├── redis.py
-│   │   └── security.py
-│   ├── db/
-│   │   ├── database.py
-│   │   └── models.py
-│   ├── schemas/
-│   │   ├── auth.py
-│   │   └── user.py
-│   ├── main.py
-│   └── utils_profile.py
-├── media/
-│   └── avatars/
-│       └── default.svg
-├── tests/
-├── web/
-├── .dockerignore
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-├── Dockerfile
-├── README.md
-└── requirements.txt
-```
+В репозитории есть шаблоны:
 
-## Что реализовано
+- `.env.example` — общий базовый шаблон
+- `.env.local.example` — настройки для локальной разработки
+- `.env.server.example` — настройки для сервера (`https://fishingteam.su`)
 
-### Auth
-
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/logout`
-- `GET /auth/me`
-- `GET /auth/csrf`
-
-### Профиль
-
-- `GET /profile/me`
-- `PATCH /profile/me`
-- `POST /profile/avatar`
-- `DELETE /profile/avatar`
-
-## Хранилище данных
-
-- Основная база: **PostgreSQL** (SQLAlchemy URL через `DATABASE_URL`).
-- Кэш/инфраструктура: **Redis** (подключение и ping на старте через `REDIS_URL`).
-- Медиа-файлы: директория `media/` (в БД хранится только путь аватара).
-
-## Локальный запуск backend (без Docker)
-
-1. Создайте виртуальное окружение:
+### Подготовка local
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+cp .env.local.example .env.local
 ```
 
-2. Установите зависимости:
+### Подготовка server
 
 ```bash
-pip install -r requirements.txt
+cp .env.server.example .env.server
 ```
 
-3. Создайте `.env` на основе примера:
+> В git не коммитятся рабочие `.env.local` и `.env.server`.
+
+---
+
+## 2) Запуск локально (Local mode)
+
+Используется `docker-compose.local.yml`.
 
 ```bash
-cp .env.example .env
+docker compose -f docker-compose.local.yml up -d --build
 ```
 
-4. Убедитесь, что PostgreSQL и Redis доступны по URL из `.env`.
+После запуска:
 
-5. Запустите сервер:
+- frontend: `http://127.0.0.1:5173` (или `http://localhost:5173`)
+- backend: `http://127.0.0.1:8000`
+- docs: `http://127.0.0.1:8000/docs`
+
+Особенности local:
+
+- `COOKIE_SECURE=false`
+- CORS и origins рассчитаны на `localhost`/`127.0.0.1`
+- frontend работает через Vite dev server и proxy на backend
+
+Остановка:
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+docker compose -f docker-compose.local.yml down
 ```
 
-Документация API: `http://127.0.0.1:8000/docs`
+---
 
-## Запуск через Docker Compose
+## 3) Запуск на сервере (Server mode)
+
+Используется `docker-compose.server.yml`.
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.server.yml up -d --build
 ```
 
-Снаружи:
+Особенности server:
 
-- frontend: `http://127.0.0.1:5173`
-- backend docs: `http://127.0.0.1:8000/docs`
+- backend публикуется только на `127.0.0.1:8000`
+- frontend preview публикуется только на `127.0.0.1:4173`
+- PostgreSQL и Redis **не торчат наружу**
+- внешний трафик обслуживает nginx
+- `COOKIE_SECURE=true`, `COOKIE_DOMAIN=fishingteam.su`
 
-Внутри docker-сети:
+Остановка:
 
-- frontend (Vite proxy) -> backend: `http://backend:8000`
-- backend -> postgres: `postgres:5432`
-- backend -> redis: `redis:6379`
+```bash
+docker compose -f docker-compose.server.yml down
+```
 
+---
 
-## Быстрый smoke-check интеграции
+## 4) Быстрое переключение окружений
 
-1. Откройте `http://127.0.0.1:5173/register` и создайте пользователя.
-2. Войдите через `http://127.0.0.1:5173/login`.
-3. Проверьте, что профиль открывается на `http://127.0.0.1:5173/profile` без ошибок авторизации.
-4. Проверьте, что маршруты и сообщество загружают реальные данные API:
-   - `http://127.0.0.1:5173/routes`
-   - `http://127.0.0.1:5173/community`
-5. При необходимости сверяйте backend-контракты в `http://127.0.0.1:8000/docs`.
+Локально:
 
-## Docker-сервисы
+```bash
+docker compose -f docker-compose.local.yml up -d --build
+```
 
-- `backend` — FastAPI
-- `frontend` — React/Vite (dev server на `0.0.0.0:5173`)
-- `postgres` — PostgreSQL 16
-- `redis` — Redis 7
+На сервере:
 
-## Переменные окружения
+```bash
+docker compose -f docker-compose.server.yml up -d --build
+```
 
-Минимальный набор:
+Никакого ручного редактирования одного общего `.env` не требуется.
 
-- `SECRET_KEY`
-- `ALGORITHM`
-- `ACCESS_TOKEN_EXPIRE_MINUTES`
-- `DATABASE_URL`
-- `REDIS_URL`
-- `JWT_COOKIE_NAME`
-- `CSRF_COOKIE_NAME`
-- `COOKIE_SECURE`
-- `COOKIE_SAMESITE`
-- `COOKIE_PATH`
+---
+
+## 5) Что важно в env
+
+Ключевые переменные backend:
+
+- `ENV`, `DEBUG`
 - `FRONTEND_ORIGINS`
+- `CORS_ALLOW_ORIGINS`
+- `COOKIE_SECURE`, `COOKIE_DOMAIN`, `COOKIE_SAMESITE`, `COOKIE_PATH`
+- `APP_BASE_URL`
+
+Ключевые переменные frontend (Vite):
+
+- `VITE_API_BASE_URL`
+- `VITE_MEDIA_BASE_URL`
+- `VITE_DEV_PROXY_TARGET`
+- `VITE_ALLOWED_HOSTS`
+
+---
+
+## 6) Обновление сервера после git pull
+
+Типичный сценарий:
+
+```bash
+git pull
+docker compose -f docker-compose.server.yml up -d --build
+docker compose -f docker-compose.server.yml ps
+```
+
+Если менялись только backend/frontend контейнеры, Compose сам пересоберёт нужные сервисы.
+
+---
+
+## 7) Проверка интеграции frontend ↔ backend
+
+Минимальный smoke-check:
+
+1. Зарегистрироваться: `/register`
+2. Войти: `/login`
+3. Проверить `GET /auth/me` через открытие `/profile`
+4. Проверить маршруты `/routes`
+5. Проверить ленту `/community`
+6. Проверить logout
+
+Для API-контрактов: `http://127.0.0.1:8000/docs` (в local режиме).

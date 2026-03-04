@@ -12,6 +12,8 @@ env/
 
 # Environment files
 .env
+.env.local
+.env.server
 
 # Tooling caches
 .pytest_cache/

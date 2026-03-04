@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,15 +17,20 @@ class Settings(BaseSettings):
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     cookie_path: str = "/"
     cookie_domain: str | None = None
-    frontend_origins: str = "http://127.0.0.1:5173"
 
-    media_root: str = "media"
-    cors_allow_origins: list[str] = [
-        "http://127.0.0.1:5173",
-    ]
+    app_base_url: str = "http://127.0.0.1:8000"
+    frontend_origins: list[str] = ["http://127.0.0.1:5173", "http://localhost:5173"]
+    cors_allow_origins: list[str] = ["http://127.0.0.1:5173", "http://localhost:5173"]
 
     env: Literal["dev", "test", "prod"] = "dev"
     debug: bool = False
+
+    @field_validator("frontend_origins", "cors_allow_origins", mode="before")
+    @classmethod
+    def parse_origins(cls, value: Any) -> Any:
+        if isinstance(value, str) and not value.strip().startswith("["):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env",
