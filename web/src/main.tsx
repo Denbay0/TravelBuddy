@@ -21,7 +21,7 @@ import AdminPostsPage from './pages/admin/AdminPostsPage.tsx'
 import AdminUsersPage from './pages/admin/AdminUsersPage.tsx'
 import AdminAdminsPage from './pages/admin/AdminAdminsPage.tsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.tsx'
-import { AdminRouteAccess } from './features/auth/AdminRouteAccess.tsx'
+import AdminProtectedRoute from './features/admin/auth/AdminProtectedRoute.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -45,14 +45,16 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Route>
-            <Route path="/admin" element={<AdminRouteAccess />}>
-              <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="posts" element={<AdminPostsPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="admins" element={<AdminAdminsPage />} />
-                <Route path="login" element={<AdminLoginPage />} />
+            <Route path="/admin">
+              <Route path="login" element={<AdminLoginPage />} />
+              <Route element={<AdminProtectedRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="posts" element={<AdminPostsPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="admins" element={<AdminAdminsPage />} />
+                </Route>
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
