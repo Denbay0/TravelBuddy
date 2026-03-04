@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import CreateRouteCard, { type CreateRouteFormState } from '../features/routes/components/CreateRouteCard'
@@ -8,10 +8,10 @@ import RoutesHero from '../features/routes/components/RoutesHero'
 import { type RouteSort } from '../features/routes/components/routeFiltersConfig'
 import { isAuthError } from '../lib/authGuards'
 import { routeService } from '../services/routeService'
-import type { ApiRoute, RoutePoint } from '../types/api'
-import type { Route, RouteFilter, TransportCategory } from '../types/travel'
+import type { ApiRoute } from '../types/api'
+import type { Route, RouteFilter } from '../types/travel'
 
-const emptyForm: CreateRouteFormState = { title: '', startLocation: '', endLocation: '', stops: '', duration: '', transport: 'Автомобиль', note: '' }
+const emptyForm: CreateRouteFormState = { title: '', duration: '', transport: 'Автомобиль', note: '' }
 
 function mapApiRouteToRoute(route: ApiRoute): Route {
   return {
@@ -41,8 +41,6 @@ export default function RoutesPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [pendingRouteId, setPendingRouteId] = useState<number | null>(null)
-  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([])
-  const [distanceKm, setDistanceKm] = useState(0)
 
   const createRef = useRef<HTMLDivElement>(null)
   const popularRef = useRef<HTMLDivElement>(null)
@@ -60,22 +58,14 @@ export default function RoutesPage() {
   }, [params])
 
   useEffect(() => {
-    if (location.hash === '#create') {
-      createRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
+    if (location.hash === '#create') createRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [location.hash])
 
   const loadRoutes = useCallback(async () => {
     setIsLoading(true)
     setError('')
     try {
-      const response = await routeService.list({
-        page,
-        limit: 12,
-        search,
-        sort: sort === 'Популярные' ? 'popular' : 'new',
-        savedOnly: activeFilter === 'Сохранённые' && Boolean(user),
-      })
+      const response = await routeService.list({ page, limit: 12, search, sort: sort === 'Популярные' ? 'popular' : 'new', savedOnly: activeFilter === 'Сохранённые' && Boolean(user) })
       setRoutes(response.items.map(mapApiRouteToRoute))
       setTotal(response.total)
     } catch (loadError) {
@@ -85,56 +75,46 @@ export default function RoutesPage() {
     }
   }, [activeFilter, page, search, sort, user])
 
-  useEffect(() => {
-    void loadRoutes()
-  }, [loadRoutes])
-
-  useEffect(() => {
-    async function refreshPreview() {
-      if (routePoints.length < 2) {
-        setDistanceKm(0)
-        return
-      }
-      try {
-        const preview = await routeService.preview(routePoints)
-        setDistanceKm(preview.distanceKm)
-      } catch {
-        setDistanceKm(0)
-      }
-    }
-    void refreshPreview()
-  }, [routePoints])
+  useEffect(() => { void loadRoutes() }, [loadRoutes])
 
   const handleFieldChange = (field: keyof CreateRouteFormState, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: field === 'transport' ? (value as TransportCategory) : value }))
+    setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleCreateRoute = async () => {
+  const handleCreateRoute = async ({ origin, destination, waypoints, preview }: Parameters<ComponentProps<typeof CreateRouteCard>['onSubmit']>[0]) => {
     if (!user) {
-      setError('Чтобы создать маршрут, войдите в аккаунт.')
+      setError('Нужно войти в аккаунт, чтобы сохранить маршрут.')
       navigate('/login')
       return
     }
-    if (!form.title.trim() || !form.startLocation.trim() || !form.endLocation.trim() || !form.duration.trim()) return
-    const stops = form.stops.split(',').map((city) => city.trim()).filter(Boolean)
+    if (!origin || !destination || !preview || !form.title.trim() || !form.duration.trim()) {
+      setError('Проверьте обязательные поля маршрута.')
+      return
+    }
+
     try {
       const created = await routeService.create({
         title: form.title,
         description: form.note,
         note: form.note,
-        startLocation: form.startLocation,
-        endLocation: form.endLocation,
-        stops,
-        points: routePoints,
         durationDays: Number(form.duration),
         transport: form.transport,
+        originName: origin.label,
+        originLat: origin.lat,
+        originLon: origin.lon,
+        destinationName: destination.label,
+        destinationLat: destination.lat,
+        destinationLon: destination.lon,
+        waypoints: waypoints.map((point) => ({ name: point.label, lat: point.lat, lon: point.lon })),
+        routeGeojson: preview.geojson ?? null,
+        distanceKm: preview.distanceKm,
+        routeType: preview.routeType,
       })
       setRoutes((prev) => [mapApiRouteToRoute(created), ...prev])
       setForm(emptyForm)
-      setRoutePoints([])
-      setDistanceKm(0)
+      setError('')
     } catch (createError) {
-      setError(isAuthError(createError) ? 'Чтобы создать маршрут, войдите в аккаунт.' : createError instanceof Error ? createError.message : 'Не удалось создать маршрут.')
+      setError(isAuthError(createError) ? 'Нужно войти в аккаунт, чтобы сохранить маршрут.' : createError instanceof Error ? createError.message : 'Не удалось создать маршрут.')
     }
   }
 
@@ -151,19 +131,13 @@ export default function RoutesPage() {
       setRoutes((prev) => prev.map((item) => (item.id === route.id ? { ...item, isSaved: response.isSaved, saves: response.saves } : item)))
     } catch (saveError) {
       setError(isAuthError(saveError) ? 'Сохранять маршруты можно после входа в аккаунт.' : saveError instanceof Error ? saveError.message : 'Не удалось обновить сохранение.')
-    } finally {
-      setPendingRouteId(null)
-    }
+    } finally { setPendingRouteId(null) }
   }
 
   const filteredRoutes = useMemo(() => {
     const query = search.toLowerCase().trim()
     const base = routes.filter((route) => {
-      const matchesSearch =
-        !query ||
-        route.title.toLowerCase().includes(query) ||
-        route.country.toLowerCase().includes(query) ||
-        route.cities.some((city) => city.toLowerCase().includes(query))
+      const matchesSearch = !query || route.title.toLowerCase().includes(query) || route.country.toLowerCase().includes(query) || route.cities.some((city) => city.toLowerCase().includes(query))
       if (activeFilter === 'По транспорту') return matchesSearch && route.transport === form.transport
       if (activeFilter === 'По длительности') return matchesSearch && route.durationDays <= 7
       if (activeFilter === 'Популярные') return matchesSearch && route.saves >= 1
@@ -172,69 +146,25 @@ export default function RoutesPage() {
       return matchesSearch
     })
 
-    return [...base].sort((a, b) =>
-      sort === 'Популярные'
-        ? b.saves - a.saves
-        : sort === 'Новые'
-          ? b.id - a.id
-          : sort === 'Короткие'
-            ? a.durationDays - b.durationDays
-            : b.durationDays - a.durationDays,
-    )
+    return [...base].sort((a, b) => sort === 'Популярные' ? b.saves - a.saves : sort === 'Новые' ? b.id - a.id : sort === 'Короткие' ? a.durationDays - b.durationDays : b.durationDays - a.durationDays)
   }, [activeFilter, form.transport, routes, search, sort, user])
 
   return (
     <>
-      <RoutesHero
-        onCreateRoute={() => createRef.current?.scrollIntoView({ behavior: 'smooth' })}
-        onShowPopular={() => {
-          setSort('Популярные')
-          setActiveFilter('Популярные')
-          popularRef.current?.scrollIntoView({ behavior: 'smooth' })
-        }}
-      />
-      <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-10">
+      <RoutesHero onCreateRoute={() => createRef.current?.scrollIntoView({ behavior: 'smooth' })} onShowPopular={() => { setSort('Популярные'); setActiveFilter('Популярные'); popularRef.current?.scrollIntoView({ behavior: 'smooth' }) }} />
+      <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {error ? <div className="rounded-2xl border border-amber/40 bg-amber/15 px-4 py-3 text-sm text-ink/90">{error}</div> : null}
         <div ref={createRef}>
-          <CreateRouteCard
-            form={form}
-            onChange={handleFieldChange}
-            onSubmit={handleCreateRoute}
-            onPointsResolved={setRoutePoints}
-            distanceKm={distanceKm}
-            submitLabel={user ? 'Сохранить маршрут' : 'Войти, чтобы сохранить маршрут'}
-            submitHint={!user ? 'Вы можете заполнить форму и посмотреть превью маршрута без авторизации.' : undefined}
-          />
+          <CreateRouteCard form={form} onChange={handleFieldChange} onSubmit={handleCreateRoute} submitLabel={user ? 'Сохранить маршрут' : 'Войти, чтобы сохранить маршрут'} submitHint={!user ? 'Просмотр карты доступен без авторизации. Сохранение — после входа.' : undefined} />
         </div>
-        <RouteFilters
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          search={search}
-          onSearchChange={setSearch}
-          sort={sort}
-          onSortChange={setSort}
-        />
+        <RouteFilters activeFilter={activeFilter} onFilterChange={setActiveFilter} search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} />
         {isLoading ? <p className="text-sm text-ink/65">Загрузка маршрутов...</p> : null}
-        {!isLoading && filteredRoutes.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-4 py-4 text-sm text-ink/80">Ничего не найдено. Попробуйте изменить запрос или поискать по названию маршрута и городу.</div> : null}
-        <div ref={popularRef}>
-          <FeaturedRoutesSection routes={filteredRoutes} onToggleSave={handleToggleSave} pendingRouteId={pendingRouteId} />
-        </div>
+        {!isLoading && filteredRoutes.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-4 py-4 text-sm text-ink/80">Ничего не найдено.</div> : null}
+        <div ref={popularRef}><FeaturedRoutesSection routes={filteredRoutes} onToggleSave={handleToggleSave} pendingRouteId={pendingRouteId} /></div>
         <div className="flex items-center justify-end gap-3">
-          <button
-            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            disabled={page === 1}
-            className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50"
-          >
-            Назад
-          </button>
+          <button onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page === 1} className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50">Назад</button>
           <span className="text-sm text-ink/70">Страница {page}</span>
-          <button
-            onClick={() => setPage((prev) => prev + 1)}
-            disabled={routes.length === 0 || page * 12 >= total}
-            className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50"
-          >
-            Вперёд
-          </button>
+          <button onClick={() => setPage((prev) => prev + 1)} disabled={routes.length === 0 || page * 12 >= total} className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50">Вперёд</button>
         </div>
       </main>
     </>
