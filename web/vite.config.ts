@@ -11,7 +11,7 @@ const ALLOWED_HOSTS = (process.env.VITE_ALLOWED_HOSTS || '127.0.0.1,localhost')
 
 const proxyPaths = [
   '/auth',
-  '/admin',
+  '/api/admin',
   '/profile',
   '/routes',
   '/posts',
