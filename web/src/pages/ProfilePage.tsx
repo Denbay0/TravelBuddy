@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { ProfileHeader } from '../features/profile/components/ProfileHeader'
 import { ProfileSection } from '../features/profile/components/ProfileSection'
@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', bio: '', homeCity: '', travelTagline: '' })
   const { user, isLoading: isAuthLoading, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -49,6 +51,32 @@ export default function ProfilePage() {
   }, [user])
 
   const postsSubtitle = useMemo(() => `${profilePosts.length} публикации в ленте`, [profilePosts.length])
+
+
+
+  const openEdit = () => {
+    if (!profile) return
+    setEditForm({
+      name: profile.name,
+      bio: profile.bio,
+      homeCity: profile.homeCity,
+      travelTagline: profile.travelTagline,
+    })
+    setIsEditOpen(true)
+  }
+
+  const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!profile) return
+    const updated = { ...profile, ...editForm }
+    setProfile(updated)
+    setIsEditOpen(false)
+    try {
+      await profileService.updateMe(editForm)
+    } catch {
+      setError('Изменения сохранены локально. Сервер временно недоступен.')
+    }
+  }
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -87,7 +115,7 @@ export default function ProfilePage() {
     <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-10">
       {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-      <ProfileHeader profile={profile} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
+      <ProfileHeader profile={profile} onEdit={openEdit} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
 
       <ProfileSection title="Статистика путешествий" subtitle={`Домашний город: ${profile.homeCity}`}>
         <ProfileStats stats={profile.stats} />
@@ -128,6 +156,23 @@ export default function ProfilePage() {
           </div>
         )}
       </ProfileSection>
+      {isEditOpen ? (
+        <div className="fixed inset-0 z-[70] bg-ink/40 p-4" onClick={() => setIsEditOpen(false)}>
+          <form onSubmit={handleSaveProfile} onClick={(event) => event.stopPropagation()} className="mx-auto mt-16 max-w-xl rounded-3xl bg-white p-6 dark:bg-[#1c2230]">
+            <h3 className="text-xl font-semibold">Редактировать профиль</h3>
+            <div className="mt-4 grid gap-3">
+              <input value={editForm.name} onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="Имя" />
+              <input value={editForm.travelTagline} onChange={(e) => setEditForm((prev) => ({ ...prev, travelTagline: e.target.value }))} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="Короткий слоган" />
+              <input value={editForm.homeCity} onChange={(e) => setEditForm((prev) => ({ ...prev, homeCity: e.target.value }))} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="Домашний город" />
+              <textarea value={editForm.bio} onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))} rows={3} className="rounded-xl border border-ink/15 px-3 py-2" placeholder="О себе" />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-full border border-ink/20 px-4 py-2 text-sm">Отмена</button>
+              <button type="submit" className="rounded-full bg-ink px-4 py-2 text-sm text-white">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   )
 }
