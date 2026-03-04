@@ -43,6 +43,7 @@ def _parse_visited_cities(raw_value: str | None) -> list[str]:
 
 
 def _serialize_profile(user: User) -> ProfileMeResponse:
+    tags = _parse_visited_cities(user.visited_cities)
     return ProfileMeResponse(
         id=user.id,
         name=user.username,
@@ -52,7 +53,8 @@ def _serialize_profile(user: User) -> ProfileMeResponse:
         travel_tagline=user.travel_tagline or "",
         bio=user.bio or "",
         home_city=user.home_city or "",
-        visited_cities=_parse_visited_cities(user.visited_cities),
+        visited_cities=tags,
+        travel_tags=tags,
         stats=ProfileStats(trips=len(user.routes or []), posts=len(user.posts or []), saved_routes=len(user.saved_routes or []), favorite_transport=user.favorite_transport or "Пешком"),
         favorite_routes=[],
         created_at=user.created_at,
@@ -83,6 +85,9 @@ def update_profile(
         current_user.bio = payload.bio
     if payload.home_city is not None:
         current_user.home_city = payload.home_city
+    if payload.travel_tags is not None:
+        clean_tags = [str(tag).strip() for tag in payload.travel_tags if str(tag).strip()]
+        current_user.visited_cities = json.dumps(clean_tags[:12], ensure_ascii=False)
 
     db.add(current_user)
     db.commit()

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, verify_csrf
+from app.api.deps import get_current_user, get_current_user_optional, verify_csrf
 from app.db.database import get_db
 from app.db.models import Post, PostComment, PostLike, PostSave, User
 from app.schemas.auth import MessageResponse
@@ -55,7 +55,7 @@ def list_posts(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> PostListResponse:
     total = db.scalar(select(func.count(Post.id))) or 0
     posts = (
@@ -64,7 +64,7 @@ def list_posts(
         .all()
     )
     return PostListResponse(
-        items=[_serialize_post(post, current_user.id) for post in posts], page=page, limit=limit, total=total
+        items=[_serialize_post(post, current_user.id if current_user else None) for post in posts], page=page, limit=limit, total=total
     )
 
 
@@ -78,15 +78,15 @@ def create_post(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _serialize_post(post, current_user.id)
+    return _serialize_post(post, current_user.id if current_user else None)
 
 
 @router.get("/{post_id}", response_model=PostOut)
-def get_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> PostOut:
+def get_post(post_id: int, db: Session = Depends(get_db), current_user: User | None = Depends(get_current_user_optional)) -> PostOut:
     post = db.scalar(select(Post).where(Post.id == post_id))
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    return _serialize_post(post, current_user.id)
+    return _serialize_post(post, current_user.id if current_user else None)
 
 
 @router.patch("/{post_id}", response_model=PostOut, dependencies=[Depends(verify_csrf)])
@@ -110,7 +110,7 @@ def update_post(
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _serialize_post(post, current_user.id)
+    return _serialize_post(post, current_user.id if current_user else None)
 
 
 @router.delete("/{post_id}", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
@@ -136,27 +136,27 @@ def like_post(post_id: int, db: Session = Depends(get_db), current_user: User = 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
-    existing = db.scalar(select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id))
+    existing = db.scalar(select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id if current_user else None))
     if not existing:
-        db.add(PostLike(post_id=post_id, user_id=current_user.id))
+        db.add(PostLike(post_id=post_id, user_id=current_user.id if current_user else None))
         db.commit()
 
     likes = db.scalar(select(func.count(PostLike.id)).where(PostLike.post_id == post_id)) or 0
     saves = db.scalar(select(func.count(PostSave.id)).where(PostSave.post_id == post_id)) or 0
-    is_saved = bool(db.scalar(select(PostSave.id).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id)))
+    is_saved = bool(db.scalar(select(PostSave.id).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id if current_user else None)))
     return PostReactionResponse(message="Post liked", liked=True, saved=is_saved, is_saved=is_saved, likes=likes, saves=saves)
 
 
 @router.delete("/{post_id}/like", response_model=PostReactionResponse, dependencies=[Depends(verify_csrf)])
 def unlike_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> PostReactionResponse:
-    existing = db.scalar(select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id))
+    existing = db.scalar(select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id if current_user else None))
     if existing:
         db.delete(existing)
         db.commit()
 
     likes = db.scalar(select(func.count(PostLike.id)).where(PostLike.post_id == post_id)) or 0
     saves = db.scalar(select(func.count(PostSave.id)).where(PostSave.post_id == post_id)) or 0
-    is_saved = bool(db.scalar(select(PostSave.id).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id)))
+    is_saved = bool(db.scalar(select(PostSave.id).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id if current_user else None)))
     return PostReactionResponse(message="Post unliked", liked=False, saved=is_saved, is_saved=is_saved, likes=likes, saves=saves)
 
 
@@ -166,27 +166,27 @@ def save_post(post_id: int, db: Session = Depends(get_db), current_user: User = 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
-    existing = db.scalar(select(PostSave).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id))
+    existing = db.scalar(select(PostSave).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id if current_user else None))
     if not existing:
-        db.add(PostSave(post_id=post_id, user_id=current_user.id))
+        db.add(PostSave(post_id=post_id, user_id=current_user.id if current_user else None))
         db.commit()
 
     likes = db.scalar(select(func.count(PostLike.id)).where(PostLike.post_id == post_id)) or 0
     saves = db.scalar(select(func.count(PostSave.id)).where(PostSave.post_id == post_id)) or 0
-    is_liked = bool(db.scalar(select(PostLike.id).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id)))
+    is_liked = bool(db.scalar(select(PostLike.id).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id if current_user else None)))
     return PostReactionResponse(message="Post saved", liked=is_liked, saved=True, is_saved=True, likes=likes, saves=saves)
 
 
 @router.delete("/{post_id}/save", response_model=PostReactionResponse, dependencies=[Depends(verify_csrf)])
 def unsave_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> PostReactionResponse:
-    existing = db.scalar(select(PostSave).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id))
+    existing = db.scalar(select(PostSave).where(PostSave.post_id == post_id, PostSave.user_id == current_user.id if current_user else None))
     if existing:
         db.delete(existing)
         db.commit()
 
     likes = db.scalar(select(func.count(PostLike.id)).where(PostLike.post_id == post_id)) or 0
     saves = db.scalar(select(func.count(PostSave.id)).where(PostSave.post_id == post_id)) or 0
-    is_liked = bool(db.scalar(select(PostLike.id).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id)))
+    is_liked = bool(db.scalar(select(PostLike.id).where(PostLike.post_id == post_id, PostLike.user_id == current_user.id if current_user else None)))
     return PostReactionResponse(message="Post unsaved", liked=is_liked, saved=False, is_saved=False, likes=likes, saves=saves)
 
 

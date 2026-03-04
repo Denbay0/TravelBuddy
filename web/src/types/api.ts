@@ -56,6 +56,7 @@ export type ApiProfile = {
   bio: string
   homeCity: string
   visitedCities: string[]
+  travelTags: string[]
   stats: {
     trips: number
     posts: number

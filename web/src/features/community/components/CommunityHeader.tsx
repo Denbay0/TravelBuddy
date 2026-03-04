@@ -2,11 +2,13 @@ import SectionHeader from '../../../components/SectionHeader'
 
 type CommunityHeaderProps = {
   onCreatePost: () => void
+  createLabel?: string
+  createHint?: string
 }
 
-export default function CommunityHeader({ onCreatePost }: CommunityHeaderProps) {
+export default function CommunityHeader({ onCreatePost, createLabel = 'Поделиться поездкой', createHint }: CommunityHeaderProps) {
   return (
-    <section className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-glow md:p-8 dark:border-white/10 dark:bg-white/5">
+    <section className="rounded-3xl border border-borderline/70 bg-surface p-6 shadow-glow md:p-8">
       <SectionHeader
         badge="Лента сообщества"
         title="Истории, в которые хочется поехать"
@@ -14,8 +16,9 @@ export default function CommunityHeader({ onCreatePost }: CommunityHeaderProps) 
       />
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <button onClick={onCreatePost} className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ink/90">Поделиться поездкой</button>
+        <button onClick={onCreatePost} className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-[rgb(var(--color-accent-contrast))] transition hover:opacity-90">{createLabel}</button>
       </div>
+      {createHint ? <p className="mt-3 text-sm text-muted">{createHint}</p> : null}
     </section>
   )
 }

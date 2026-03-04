@@ -62,6 +62,7 @@ class ProfileUpdateRequest(CamelModel):
     travel_tagline: str | None = None
     bio: str | None = None
     home_city: str | None = None
+    travel_tags: list[str] | None = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -136,6 +137,7 @@ class ProfileMeResponse(CamelModel):
     bio: str = ""
     home_city: str = ""
     visited_cities: list[str] = Field(default_factory=list)
+    travel_tags: list[str] = Field(default_factory=list)
     stats: ProfileStats = Field(default_factory=ProfileStats)
     favorite_routes: list[ProfileFavoriteRouteItem] = Field(default_factory=list)
     created_at: datetime

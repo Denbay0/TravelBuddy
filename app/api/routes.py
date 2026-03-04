@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, verify_csrf
+from app.api.deps import get_current_user, get_current_user_optional, verify_csrf
 from app.db.database import get_db
 from app.db.models import Route, RouteSave, User
 from app.schemas.auth import MessageResponse
@@ -156,7 +156,7 @@ def list_routes(
     limit: int = Query(default=10, ge=1, le=100),
     q: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> RouteListResponse:
     routes_query = select(Route).order_by(Route.created_at.desc())
     routes = db.execute(routes_query).scalars().all()
@@ -173,7 +173,7 @@ def list_routes(
     start = (page - 1) * limit
     paginated = routes[start : start + limit]
     return RouteListResponse(
-        items=[_serialize_route(route, current_user.id) for route in paginated], page=page, limit=limit, total=total
+        items=[_serialize_route(route, current_user.id if current_user else None) for route in paginated], page=page, limit=limit, total=total
     )
 
 
@@ -194,7 +194,7 @@ def create_route(
     db.add(route)
     db.commit()
     db.refresh(route)
-    return _serialize_route(route, current_user.id)
+    return _serialize_route(route, current_user.id if current_user else None)
 
 
 @router.get("/trending", response_model=RouteListResponse)
@@ -202,7 +202,7 @@ def trending_routes(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> RouteListResponse:
     all_routes = (
         db.execute(
@@ -219,16 +219,16 @@ def trending_routes(
     start = (page - 1) * limit
     routes = all_routes[start : start + limit]
     return RouteListResponse(
-        items=[_serialize_route(route, current_user.id) for route in routes], page=page, limit=limit, total=total
+        items=[_serialize_route(route, current_user.id if current_user else None) for route in routes], page=page, limit=limit, total=total
     )
 
 
 @router.get("/{route_id}", response_model=RouteOut)
-def get_route(route_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> RouteOut:
+def get_route(route_id: int, db: Session = Depends(get_db), current_user: User | None = Depends(get_current_user_optional)) -> RouteOut:
     route = db.scalar(select(Route).where(Route.id == route_id))
     if not route:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Route not found")
-    return _serialize_route(route, current_user.id)
+    return _serialize_route(route, current_user.id if current_user else None)
 
 
 @router.patch("/{route_id}", response_model=RouteOut, dependencies=[Depends(verify_csrf)])
@@ -265,7 +265,7 @@ def update_route(
     db.add(route)
     db.commit()
     db.refresh(route)
-    return _serialize_route(route, current_user.id)
+    return _serialize_route(route, current_user.id if current_user else None)
 
 
 @router.delete("/{route_id}", response_model=MessageResponse, dependencies=[Depends(verify_csrf)])
@@ -291,9 +291,9 @@ def save_route(route_id: int, db: Session = Depends(get_db), current_user: User 
     if not route:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Route not found")
 
-    existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id))
+    existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id if current_user else None))
     if not existing:
-        db.add(RouteSave(route_id=route_id, user_id=current_user.id))
+        db.add(RouteSave(route_id=route_id, user_id=current_user.id if current_user else None))
         db.commit()
 
     saves = db.scalar(select(func.count(RouteSave.id)).where(RouteSave.route_id == route_id)) or 0
@@ -302,7 +302,7 @@ def save_route(route_id: int, db: Session = Depends(get_db), current_user: User 
 
 @router.delete("/{route_id}/save", response_model=RouteSaveResponse, dependencies=[Depends(verify_csrf)])
 def unsave_route(route_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> RouteSaveResponse:
-    existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id))
+    existing = db.scalar(select(RouteSave).where(RouteSave.route_id == route_id, RouteSave.user_id == current_user.id if current_user else None))
     if existing:
         db.delete(existing)
         db.commit()

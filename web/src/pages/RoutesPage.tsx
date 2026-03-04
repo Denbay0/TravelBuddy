@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import CreateRouteCard, { type CreateRouteFormState } from '../features/routes/components/CreateRouteCard'
 import FeaturedRoutesSection from '../features/routes/components/FeaturedRoutesSection'
 import RouteFilters from '../features/routes/components/RouteFilters'
 import RoutesHero from '../features/routes/components/RoutesHero'
 import { type RouteSort } from '../features/routes/components/routeFiltersConfig'
+import { isAuthError } from '../lib/authGuards'
 import { routeService } from '../services/routeService'
 import type { ApiRoute, RoutePoint } from '../types/api'
 import type { Route, RouteFilter, TransportCategory } from '../types/travel'
@@ -45,7 +47,9 @@ export default function RoutesPage() {
   const createRef = useRef<HTMLDivElement>(null)
   const popularRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
+  const { user } = useAuth()
 
   useEffect(() => {
     setSearch(params.get('q') || '')
@@ -70,7 +74,7 @@ export default function RoutesPage() {
         limit: 12,
         search,
         sort: sort === 'Популярные' ? 'popular' : 'new',
-        savedOnly: activeFilter === 'Сохранённые',
+        savedOnly: activeFilter === 'Сохранённые' && Boolean(user),
       })
       setRoutes(response.items.map(mapApiRouteToRoute))
       setTotal(response.total)
@@ -79,7 +83,7 @@ export default function RoutesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [activeFilter, page, search, sort])
+  }, [activeFilter, page, search, sort, user])
 
   useEffect(() => {
     void loadRoutes()
@@ -106,6 +110,11 @@ export default function RoutesPage() {
   }
 
   const handleCreateRoute = async () => {
+    if (!user) {
+      setError('Чтобы создать маршрут, войдите в аккаунт.')
+      navigate('/login')
+      return
+    }
     if (!form.title.trim() || !form.startLocation.trim() || !form.endLocation.trim() || !form.duration.trim()) return
     const stops = form.stops.split(',').map((city) => city.trim()).filter(Boolean)
     try {
@@ -125,20 +134,23 @@ export default function RoutesPage() {
       setRoutePoints([])
       setDistanceKm(0)
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Не удалось создать маршрут.')
+      setError(isAuthError(createError) ? 'Чтобы создать маршрут, войдите в аккаунт.' : createError instanceof Error ? createError.message : 'Не удалось создать маршрут.')
     }
   }
 
   const handleToggleSave = async (route: Route) => {
+    if (!user) {
+      setError('Сохранять маршруты можно после входа в аккаунт.')
+      navigate('/login')
+      return
+    }
     setPendingRouteId(route.id)
     setError('')
     try {
       const response = route.isSaved ? await routeService.unsave(route.id) : await routeService.save(route.id)
-      setRoutes((prev) =>
-        prev.map((item) => (item.id === route.id ? { ...item, isSaved: response.isSaved, saves: response.saves } : item)),
-      )
+      setRoutes((prev) => prev.map((item) => (item.id === route.id ? { ...item, isSaved: response.isSaved, saves: response.saves } : item)))
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Не удалось обновить сохранение.')
+      setError(isAuthError(saveError) ? 'Сохранять маршруты можно после входа в аккаунт.' : saveError instanceof Error ? saveError.message : 'Не удалось обновить сохранение.')
     } finally {
       setPendingRouteId(null)
     }
@@ -156,7 +168,7 @@ export default function RoutesPage() {
       if (activeFilter === 'По длительности') return matchesSearch && route.durationDays <= 7
       if (activeFilter === 'Популярные') return matchesSearch && route.saves >= 1
       if (activeFilter === 'Новые') return matchesSearch && Boolean(route.isNew)
-      if (activeFilter === 'Сохранённые') return matchesSearch && Boolean(route.isSaved)
+      if (activeFilter === 'Сохранённые') return user ? matchesSearch && Boolean(route.isSaved) : matchesSearch
       return matchesSearch
     })
 
@@ -169,7 +181,7 @@ export default function RoutesPage() {
             ? a.durationDays - b.durationDays
             : b.durationDays - a.durationDays,
     )
-  }, [activeFilter, form.transport, routes, search, sort])
+  }, [activeFilter, form.transport, routes, search, sort, user])
 
   return (
     <>
@@ -182,7 +194,7 @@ export default function RoutesPage() {
         }}
       />
       <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-10">
-        {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+        {error ? <div className="rounded-2xl border border-amber/40 bg-amber/15 px-4 py-3 text-sm text-ink/90">{error}</div> : null}
         <div ref={createRef}>
           <CreateRouteCard
             form={form}
@@ -190,6 +202,8 @@ export default function RoutesPage() {
             onSubmit={handleCreateRoute}
             onPointsResolved={setRoutePoints}
             distanceKm={distanceKm}
+            submitLabel={user ? 'Сохранить маршрут' : 'Войти, чтобы сохранить маршрут'}
+            submitHint={!user ? 'Вы можете заполнить форму и посмотреть превью маршрута без авторизации.' : undefined}
           />
         </div>
         <RouteFilters
@@ -201,6 +215,7 @@ export default function RoutesPage() {
           onSortChange={setSort}
         />
         {isLoading ? <p className="text-sm text-ink/65">Загрузка маршрутов...</p> : null}
+        {!isLoading && filteredRoutes.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-4 py-4 text-sm text-ink/80">Ничего не найдено. Попробуйте изменить запрос или поискать по названию маршрута и городу.</div> : null}
         <div ref={popularRef}>
           <FeaturedRoutesSection routes={filteredRoutes} onToggleSave={handleToggleSave} pendingRouteId={pendingRouteId} />
         </div>
@@ -208,7 +223,7 @@ export default function RoutesPage() {
           <button
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             disabled={page === 1}
-            className="rounded-full border border-ink/20 px-4 py-2 text-sm disabled:opacity-50"
+            className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50"
           >
             Назад
           </button>
@@ -216,7 +231,7 @@ export default function RoutesPage() {
           <button
             onClick={() => setPage((prev) => prev + 1)}
             disabled={routes.length === 0 || page * 12 >= total}
-            className="rounded-full border border-ink/20 px-4 py-2 text-sm disabled:opacity-50"
+            className="rounded-full border border-borderline/70 px-4 py-2 text-sm disabled:opacity-50"
           >
             Вперёд
           </button>

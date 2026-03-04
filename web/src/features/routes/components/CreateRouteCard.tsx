@@ -46,6 +46,8 @@ type CreateRouteCardProps = {
   onSubmit: () => void
   onPointsResolved?: (points: RoutePoint[]) => void
   distanceKm?: number
+  submitLabel?: string
+  submitHint?: string
 }
 
 function PointBadge({ index, total }: { index: number; total: number }) {
@@ -54,7 +56,7 @@ function PointBadge({ index, total }: { index: number; total: number }) {
   return <span className="rounded-full bg-ink/10 px-2 py-0.5 text-xs">Остановка</span>
 }
 
-export default function CreateRouteCard({ form, onChange, onSubmit, onPointsResolved, distanceKm }: CreateRouteCardProps) {
+export default function CreateRouteCard({ form, onChange, onSubmit, onPointsResolved, distanceKm, submitLabel = 'Сохранить маршрут', submitHint }: CreateRouteCardProps) {
   const [points, setPoints] = useState<Point[]>([])
   const [isResolving, setIsResolving] = useState(false)
 
@@ -136,7 +138,8 @@ export default function CreateRouteCard({ form, onChange, onSubmit, onPointsReso
         {isResolving ? <span className="text-sm text-ink/70">Обновляем маршрут на карте...</span> : null}
       </div>
 
-      <button onClick={onSubmit} className="mt-5 rounded-full bg-pine px-6 py-3 font-medium text-white transition hover:bg-pine/90">Сохранить маршрут</button>
+      <button onClick={onSubmit} className="mt-5 rounded-full bg-pine px-6 py-3 font-medium text-white transition hover:bg-pine/90">{submitLabel}</button>
+      {submitHint ? <p className="mt-2 text-sm text-ink/70">{submitHint}</p> : null}
     </section>
   )
 }

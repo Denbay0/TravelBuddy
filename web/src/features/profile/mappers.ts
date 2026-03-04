@@ -27,6 +27,7 @@ export function mapApiUserToProfile(user: ApiProfile): UserProfile {
     bio: user.bio || DEFAULT_BIO,
     homeCity: user.homeCity || DEFAULT_HOME_CITY,
     visitedCities: user.visitedCities ?? [],
+    travelTags: user.travelTags ?? user.visitedCities ?? [],
     favoriteRoutes: user.favoriteRoutes ?? [],
     stats: {
       trips: user.stats?.trips ?? 0,
