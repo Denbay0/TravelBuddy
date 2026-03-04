@@ -30,9 +30,11 @@ class Settings(BaseSettings):
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
     bootstrap_admin_username: str = "admin"
+    enforce_bootstrap_admin_password: bool = True
 
     admin_login: str | None = None
     admin_password: str | None = None
+    admin_email: str = "admin@travelbuddy.dev"
 
     @field_validator("frontend_origins", "cors_allow_origins", mode="before")
     @classmethod
@@ -57,7 +59,11 @@ class Settings(BaseSettings):
                 if isinstance(parsed, list):
                     return [str(item).strip() for item in parsed if str(item).strip()]
 
-            return [item.strip().strip("[]") for item in raw.replace("\n", ",").split(",") if item.strip().strip("[]") ]
+            return [
+                item.strip().strip("[]")
+                for item in raw.replace("\n", ",").split(",")
+                if item.strip().strip("[]")
+            ]
 
         return value
 
