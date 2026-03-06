@@ -1,7 +1,7 @@
 import type { TrendingRoute } from '../features/community/types'
 import { apiRequest } from '../lib/api'
 import type { User } from '../types/travel'
-import type { ApiPost, ApiPostComment, ApiPostReactionResponse, RouteListResponse } from '../types/api'
+import type { ApiPost, ApiPostComment, ApiPostReactionResponse, PostCommentsResponse, RouteListResponse } from '../types/api'
 import { postService } from './postService'
 
 type FeedQuery = {
@@ -64,6 +64,10 @@ export const communityService = {
     return postService.save(postId)
   },
 
+
+  async getComments(postId: number, page = 1, limit = 100): Promise<PostCommentsResponse> {
+    return postService.comments(postId, page, limit)
+  },
   async addComment(postId: number, content: string): Promise<ApiPostComment> {
     return postService.createComment(postId, content)
   },
