@@ -22,9 +22,9 @@ export default function AdminLayout() {
         </aside>
 
         <section className="card-surface min-h-[70vh] p-4 sm:p-6">
-          <div className="mb-4 flex items-center justify-between border-b border-ink/10 pb-3">
-            <p className="text-sm font-semibold text-ink/70">{admin?.name}</p>
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3">
+            <p className="min-w-0 text-sm font-semibold text-ink/70 [overflow-wrap:anywhere]">{admin?.name}</p>
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsMobileSidebarOpen((current) => !current)}
