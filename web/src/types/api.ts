@@ -119,6 +119,8 @@ export type ApiPost = {
 export type ApiPostComment = {
   id: number
   content: string
+  likesCount?: number
+  likes?: number
   owner: {
     id: number
     name: string

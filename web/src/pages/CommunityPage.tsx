@@ -9,8 +9,10 @@ import { popularAuthors, trendingRoutes } from '../features/community/mockData'
 import type { CommunityPost, TrendingRoute } from '../features/community/types'
 import { isAuthError } from '../lib/authGuards'
 import { communityService } from '../services/communityService'
-import type { ApiPost } from '../types/api'
+import type { ApiPost, ApiPostComment } from '../types/api'
 import type { User } from '../types/travel'
+
+const COMMENTS_BATCH_SIZE = 3
 
 const emptyForm: CommunityPostForm = {
   imageUrl: '',
@@ -44,8 +46,27 @@ function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityP
   }
 }
 
+function getCommentLikes(comment: ApiPostComment): number {
+  return comment.likesCount ?? comment.likes ?? 0
+}
+
+function sortComments(comments: ApiPostComment[]): ApiPostComment[] {
+  return [...comments].sort((left, right) => {
+    const likesDiff = getCommentLikes(right) - getCommentLikes(left)
+    if (likesDiff !== 0) return likesDiff
+
+    const rightDate = new Date(right.createdAt).getTime()
+    const leftDate = new Date(left.createdAt).getTime()
+    if (rightDate !== leftDate) return rightDate - leftDate
+
+    return right.id - left.id
+  })
+}
+
 export default function CommunityPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([])
+  const [commentsByPostId, setCommentsByPostId] = useState<Record<number, ApiPostComment[]>>({})
+  const [visibleCommentsByPostId, setVisibleCommentsByPostId] = useState<Record<number, number>>({})
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form, setForm] = useState<CommunityPostForm>(emptyForm)
   const [error, setError] = useState('')
@@ -73,9 +94,29 @@ export default function CommunityPage() {
           communityService.getPopularUsers(1, 5),
           communityService.getTrendingRoutes(1, 5),
         ])
-        setPosts(feedResponse.items.map((post) => mapApiPostToCommunityPost(post)))
+
+        const mappedPosts = feedResponse.items.map((post) => mapApiPostToCommunityPost(post))
+        setPosts(mappedPosts)
         setAuthors(popularUsersResponse.length > 0 ? popularUsersResponse : popularAuthors)
         setTrending(trendingRoutesResponse.length > 0 ? trendingRoutesResponse : trendingRoutes)
+
+        const commentResponses = await Promise.all(
+          feedResponse.items.map(async (post) => ({
+            postId: post.id,
+            response: await communityService.getComments(post.id, 1, 100),
+          })),
+        )
+
+        const nextCommentsByPostId: Record<number, ApiPostComment[]> = {}
+        const nextVisibleComments: Record<number, number> = {}
+
+        commentResponses.forEach(({ postId, response }) => {
+          nextCommentsByPostId[postId] = sortComments(response.items)
+          nextVisibleComments[postId] = COMMENTS_BATCH_SIZE
+        })
+
+        setCommentsByPostId(nextCommentsByPostId)
+        setVisibleCommentsByPostId(nextVisibleComments)
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить ленту сообщества.')
       } finally {
@@ -105,6 +146,8 @@ export default function CommunityPage() {
       })
 
       setPosts((prev) => [mapApiPostToCommunityPost(createdPost, form.imageUrl || undefined), ...prev])
+      setCommentsByPostId((prev) => ({ ...prev, [createdPost.id]: [] }))
+      setVisibleCommentsByPostId((prev) => ({ ...prev, [createdPost.id]: COMMENTS_BATCH_SIZE }))
       setForm(emptyForm)
       setIsModalOpen(false)
     } catch (createError) {
@@ -141,12 +184,31 @@ export default function CommunityPage() {
   const handleComment = async (post: CommunityPost, content: string) => {
     if (!content?.trim()) return
     if (!user) return openLoginHint('Комментарии доступны после входа в аккаунт.')
+
     try {
-      await communityService.addComment(post.id, content)
+      const createdComment = await communityService.addComment(post.id, content)
       setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, comments: item.comments + 1 } : item)))
+      setCommentsByPostId((prev) => {
+        const previous = prev[post.id] || []
+        return {
+          ...prev,
+          [post.id]: sortComments([...previous, createdComment]),
+        }
+      })
+      setVisibleCommentsByPostId((prev) => ({
+        ...prev,
+        [post.id]: Math.max(prev[post.id] ?? COMMENTS_BATCH_SIZE, COMMENTS_BATCH_SIZE),
+      }))
     } catch (commentError) {
       setError(isAuthError(commentError) ? 'Комментарии доступны после входа в аккаунт.' : commentError instanceof Error ? commentError.message : 'Не удалось добавить комментарий.')
     }
+  }
+
+  const handleShowMoreComments = (post: CommunityPost) => {
+    setVisibleCommentsByPostId((prev) => ({
+      ...prev,
+      [post.id]: (prev[post.id] ?? COMMENTS_BATCH_SIZE) + COMMENTS_BATCH_SIZE,
+    }))
   }
 
   const query = (params.get('q') || '').toLowerCase().trim()
@@ -162,18 +224,28 @@ export default function CommunityPage() {
           <section className="space-y-5">
             {isLoading ? <p className="text-sm text-ink/65">Загрузка публикаций...</p> : null}
             {!isLoading && visiblePosts.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-5 py-6 text-sm text-ink/80">Ничего не найдено. Попробуйте изменить запрос или поищите по названию маршрута/города.</div> : null}
-            {visiblePosts.map((post) => (
-              <FeedPostCard
-                key={post.id}
-                post={post}
-                onToggleLike={handleToggleLike}
-                onToggleSave={handleToggleSave}
-                onComment={handleComment}
-                isPending={pendingPostId === post.id}
-                canInteract={Boolean(user)}
-                onAuthRequired={() => openLoginHint('Это действие доступно только после входа в аккаунт.')}
-              />
-            ))}
+            {visiblePosts.map((post) => {
+              const sortedComments = commentsByPostId[post.id] || []
+              const visibleCount = visibleCommentsByPostId[post.id] ?? COMMENTS_BATCH_SIZE
+              const visibleComments = sortedComments.slice(0, visibleCount)
+              const hasMoreComments = sortedComments.length > visibleComments.length
+
+              return (
+                <FeedPostCard
+                  key={post.id}
+                  post={post}
+                  comments={visibleComments}
+                  hasMoreComments={hasMoreComments}
+                  onShowMoreComments={handleShowMoreComments}
+                  onToggleLike={handleToggleLike}
+                  onToggleSave={handleToggleSave}
+                  onComment={handleComment}
+                  isPending={pendingPostId === post.id}
+                  canInteract={Boolean(user)}
+                  onAuthRequired={() => openLoginHint('Это действие доступно только после входа в аккаунт.')}
+                />
+              )
+            })}
           </section>
 
           <FeedSidebar authors={authors} routes={trending} />
