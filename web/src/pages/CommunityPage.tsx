@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import CommunityHeader from '../features/community/components/CommunityHeader'
@@ -9,7 +9,7 @@ import { popularAuthors, trendingRoutes } from '../features/community/mockData'
 import type { CommunityPost, TrendingRoute } from '../features/community/types'
 import { isAuthError } from '../lib/authGuards'
 import { communityService } from '../services/communityService'
-import type { ApiPost } from '../types/api'
+import type { ApiPost, ApiPostComment } from '../types/api'
 import type { User } from '../types/travel'
 
 const emptyForm: CommunityPostForm = {
@@ -34,7 +34,8 @@ function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityP
       month: 'long',
       year: 'numeric',
     }),
-    imageUrl: imageUrl || `https://source.unsplash.com/1600x900/?travel,${encodeURIComponent(post.city)}`,
+    imageUrl:
+      imageUrl || `https://source.unsplash.com/1600x900/?travel,${encodeURIComponent(post.city)}`,
     caption: post.content,
     transport: post.transport,
     likes: post.likesCount,
@@ -77,7 +78,11 @@ export default function CommunityPage() {
         setAuthors(popularUsersResponse.length > 0 ? popularUsersResponse : popularAuthors)
         setTrending(trendingRoutesResponse.length > 0 ? trendingRoutesResponse : trendingRoutes)
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить ленту сообщества.')
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Не удалось загрузить ленту сообщества.',
+        )
       } finally {
         setIsLoading(false)
       }
@@ -108,7 +113,9 @@ export default function CommunityPage() {
       setForm(emptyForm)
       setIsModalOpen(false)
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Не удалось создать публикацию.')
+      setError(
+        createError instanceof Error ? createError.message : 'Не удалось создать публикацию.',
+      )
     }
   }
 
@@ -117,9 +124,21 @@ export default function CommunityPage() {
     setPendingPostId(post.id)
     try {
       const response = await communityService.toggleLike(post.id, Boolean(post.liked))
-      setPosts((prev) => prev.map((item) => item.id === post.id ? { ...item, liked: response.liked, saved: response.isSaved, likes: response.likes } : item))
+      setPosts((prev) =>
+        prev.map((item) =>
+          item.id === post.id
+            ? { ...item, liked: response.liked, saved: response.isSaved, likes: response.likes }
+            : item,
+        ),
+      )
     } catch (actionError) {
-      setError(isAuthError(actionError) ? 'Лайки доступны после входа в аккаунт.' : actionError instanceof Error ? actionError.message : 'Не удалось обновить лайк.')
+      setError(
+        isAuthError(actionError)
+          ? 'Лайки доступны после входа в аккаунт.'
+          : actionError instanceof Error
+            ? actionError.message
+            : 'Не удалось обновить лайк.',
+      )
     } finally {
       setPendingPostId(null)
     }
@@ -130,38 +149,97 @@ export default function CommunityPage() {
     setPendingPostId(post.id)
     try {
       const response = await communityService.toggleSave(post.id, Boolean(post.saved))
-      setPosts((prev) => prev.map((item) => item.id === post.id ? { ...item, saved: response.isSaved, liked: response.liked, likes: response.likes } : item))
+      setPosts((prev) =>
+        prev.map((item) =>
+          item.id === post.id
+            ? { ...item, saved: response.isSaved, liked: response.liked, likes: response.likes }
+            : item,
+        ),
+      )
     } catch (actionError) {
-      setError(isAuthError(actionError) ? 'Чтобы сохранять публикации, войдите в аккаунт.' : actionError instanceof Error ? actionError.message : 'Не удалось обновить сохранение.')
+      setError(
+        isAuthError(actionError)
+          ? 'Чтобы сохранять публикации, войдите в аккаунт.'
+          : actionError instanceof Error
+            ? actionError.message
+            : 'Не удалось обновить сохранение.',
+      )
     } finally {
       setPendingPostId(null)
     }
   }
 
-  const handleComment = async (post: CommunityPost, content: string) => {
-    if (!content?.trim()) return
-    if (!user) return openLoginHint('Комментарии доступны после входа в аккаунт.')
+  const handleComment = async (
+    post: CommunityPost,
+    content: string,
+  ): Promise<ApiPostComment | null> => {
+    if (!content.trim()) {
+      return null
+    }
+
+    if (!user) {
+      openLoginHint('Комментарии доступны после входа в аккаунт.')
+      return null
+    }
+
     try {
-      await communityService.addComment(post.id, content)
-      setPosts((prev) => prev.map((item) => (item.id === post.id ? { ...item, comments: item.comments + 1 } : item)))
+      const createdComment = await communityService.addComment(post.id, content)
+      setPosts((prev) =>
+        prev.map((item) =>
+          item.id === post.id ? { ...item, comments: item.comments + 1 } : item,
+        ),
+      )
+      return createdComment
     } catch (commentError) {
-      setError(isAuthError(commentError) ? 'Комментарии доступны после входа в аккаунт.' : commentError instanceof Error ? commentError.message : 'Не удалось добавить комментарий.')
+      setError(
+        isAuthError(commentError)
+          ? 'Комментарии доступны после входа в аккаунт.'
+          : commentError instanceof Error
+            ? commentError.message
+            : 'Не удалось добавить комментарий.',
+      )
+      return null
     }
   }
 
   const query = (params.get('q') || '').toLowerCase().trim()
-  const visiblePosts = useMemo(() => posts.filter((post) => !query || post.caption.toLowerCase().includes(query) || post.route.toLowerCase().includes(query)), [posts, query])
+  const visiblePosts = useMemo(
+    () =>
+      posts.filter(
+        (post) =>
+          !query ||
+          post.caption.toLowerCase().includes(query) ||
+          post.route.toLowerCase().includes(query),
+      ),
+    [posts, query],
+  )
 
   return (
     <>
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 md:py-10">
-        <CommunityHeader onCreatePost={() => user ? setIsModalOpen(true) : openLoginHint('Чтобы поделиться поездкой, войдите или зарегистрируйтесь.')} createHint={!user ? 'Публикация доступна после авторизации.' : undefined} />
-        {error ? <div className="rounded-2xl border border-amber/40 bg-amber/15 px-4 py-3 text-sm text-ink/90">{error}</div> : null}
+        <CommunityHeader
+          onCreatePost={() =>
+            user
+              ? setIsModalOpen(true)
+              : openLoginHint('Чтобы поделиться поездкой, войдите или зарегистрируйтесь.')
+          }
+          createHint={!user ? 'Публикация доступна после авторизации.' : undefined}
+        />
+        {error ? (
+          <div className="rounded-2xl border border-amber/40 bg-amber/15 px-4 py-3 text-sm text-ink/90">
+            {error}
+          </div>
+        ) : null}
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section className="space-y-5">
             {isLoading ? <p className="text-sm text-ink/65">Загрузка публикаций...</p> : null}
-            {!isLoading && visiblePosts.length === 0 ? <div className="rounded-2xl border border-borderline/60 bg-surface px-5 py-6 text-sm text-ink/80">Ничего не найдено. Попробуйте изменить запрос или поищите по названию маршрута/города.</div> : null}
+            {!isLoading && visiblePosts.length === 0 ? (
+              <div className="rounded-2xl border border-borderline/60 bg-surface px-5 py-6 text-sm text-ink/80">
+                Ничего не найдено. Попробуйте изменить запрос или поищите по названию
+                маршрута/города.
+              </div>
+            ) : null}
             {visiblePosts.map((post) => (
               <FeedPostCard
                 key={post.id}
@@ -171,7 +249,9 @@ export default function CommunityPage() {
                 onComment={handleComment}
                 isPending={pendingPostId === post.id}
                 canInteract={Boolean(user)}
-                onAuthRequired={() => openLoginHint('Это действие доступно только после входа в аккаунт.')}
+                onAuthRequired={() =>
+                  openLoginHint('Это действие доступно только после входа в аккаунт.')
+                }
               />
             ))}
           </section>
