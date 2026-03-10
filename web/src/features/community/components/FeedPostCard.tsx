@@ -147,7 +147,10 @@ export default function FeedPostCard({
   const canLoadMoreComments = canInteract && comments.length < commentsTotal
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-borderline/70 bg-surface shadow-glow">
+    <article
+      data-testid="community-post-card"
+      className="overflow-hidden rounded-3xl border border-borderline/70 bg-surface shadow-glow"
+    >
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
           <img
@@ -157,12 +160,15 @@ export default function FeedPostCard({
           />
           <div>
             <p className="font-semibold">{post.author.name}</p>
-            <p className="text-xs text-muted">
+            <p data-testid="community-post-route-date" className="text-xs text-muted">
               {post.route} · {post.date}
             </p>
           </div>
         </div>
-        <span className="mt-1 inline-flex rounded-full border border-borderline/60 bg-sand px-2.5 py-1 text-[11px] text-ink/70">
+        <span
+          data-testid="community-post-transport"
+          className="mt-1 inline-flex rounded-full border border-borderline/60 bg-sand px-2.5 py-1 text-[11px] text-ink/70"
+        >
           {post.transport}
         </span>
       </div>
@@ -177,7 +183,9 @@ export default function FeedPostCard({
       </div>
 
       <div className="space-y-4 px-5 py-4">
-        <p className="text-sm leading-relaxed text-ink/80">{post.caption}</p>
+        <p data-testid="community-post-caption" className="text-sm leading-relaxed text-ink/80">
+          {post.caption}
+        </p>
 
         <div className="flex items-center justify-between border-t border-borderline/60 pt-3 text-sm text-ink/70">
           <div className="flex items-center gap-4">
@@ -193,7 +201,10 @@ export default function FeedPostCard({
               <MessageCircle size={16} />
               {commentsTotal}
             </span>
-            <button className="inline-flex items-center gap-1.5 transition hover:text-ink">
+            <button
+              data-testid="community-post-share-button"
+              className="inline-flex items-center gap-1.5 transition hover:text-ink"
+            >
               <Share2 size={16} /> Поделиться
             </button>
           </div>
@@ -208,9 +219,16 @@ export default function FeedPostCard({
         </div>
 
         {comments.length > 0 || commentsError || isCommentsLoading ? (
-          <div className="space-y-3 rounded-2xl border border-borderline/60 bg-sand/30 px-3 py-3">
+          <div
+            data-testid="community-post-comments"
+            className="space-y-3 rounded-2xl border border-borderline/60 bg-sand/30 px-3 py-3"
+          >
             {comments.map((item) => (
-              <div key={item.id} className="rounded-xl bg-surface px-3 py-2 shadow-sm">
+              <div
+                key={item.id}
+                data-testid="community-post-comment-item"
+                className="rounded-xl bg-surface px-3 py-2 shadow-sm"
+              >
                 <div className="flex items-center justify-between gap-3 text-xs text-muted">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-ink">{item.owner.name}</p>
@@ -242,6 +260,7 @@ export default function FeedPostCard({
 
         <div className="flex gap-2">
           <textarea
+            data-testid="community-post-comment-input"
             value={comment}
             onChange={(event) => setComment(event.target.value)}
             rows={2}
@@ -249,6 +268,7 @@ export default function FeedPostCard({
             className="w-full resize-none rounded-xl border border-borderline/70 px-3 py-2 text-sm outline-none"
           />
           <button
+            data-testid="community-post-comment-submit"
             disabled={isCommentSubmitting}
             onClick={() => handleProtectedAction(handleCommentSubmit)}
             className="rounded-xl bg-accent px-3 py-2 text-[rgb(var(--color-accent-contrast))] disabled:opacity-60"
