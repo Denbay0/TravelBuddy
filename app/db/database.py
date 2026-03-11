@@ -63,10 +63,27 @@ def _ensure_route_columns() -> None:
                 connection.execute(text(f"ALTER TABLE routes ADD COLUMN {column_name} {column_definition}"))
 
 
+def _ensure_post_columns() -> None:
+    inspector = inspect(engine)
+    if "posts" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("posts")}
+    required_columns = {
+        "trip_date": "DATE",
+    }
+
+    with engine.begin() as connection:
+        for column_name, column_definition in required_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE posts ADD COLUMN {column_name} {column_definition}"))
+
+
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_user_columns()
     _ensure_route_columns()
+    _ensure_post_columns()
 
 
 def get_db() -> Generator[Session, None, None]:

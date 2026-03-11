@@ -42,7 +42,9 @@ export default function FeedPostCard({
   const [commentsError, setCommentsError] = useState('')
   const [isCommentsLoading, setIsCommentsLoading] = useState(false)
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState('')
   const loadedCommentsPostIdRef = useRef<number | null>(null)
+  const shareFeedbackTimeoutRef = useRef<number | null>(null)
 
   const handleProtectedAction = (action: () => void | Promise<void>) => {
     if (!canInteract) {
@@ -115,6 +117,60 @@ export default function FeedPostCard({
     loadedCommentsPostIdRef.current = post.id
     void loadComments(1, false)
   }, [canInteract, loadComments, post.comments, post.id])
+
+  useEffect(
+    () => () => {
+      if (shareFeedbackTimeoutRef.current) {
+        window.clearTimeout(shareFeedbackTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  const showShareFeedback = (message: string) => {
+    setShareFeedback(message)
+
+    if (shareFeedbackTimeoutRef.current) {
+      window.clearTimeout(shareFeedbackTimeoutRef.current)
+    }
+
+    shareFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setShareFeedback('')
+      shareFeedbackTimeoutRef.current = null
+    }, 3_000)
+  }
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        showShareFeedback('Ссылка скопирована в буфер обмена.')
+        return
+      } catch {
+        // Fall back to the Web Share API or UI feedback below.
+      }
+    }
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: post.route,
+          text: post.caption,
+          url: shareUrl,
+        })
+        showShareFeedback('Ссылка готова к отправке.')
+        return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return
+        }
+      }
+    }
+
+    showShareFeedback('Поделиться можно вручную: ссылка уже в адресной строке.')
+  }
 
   const handleCommentSubmit = async () => {
     const next = comment.trim()
@@ -202,7 +258,9 @@ export default function FeedPostCard({
               {commentsTotal}
             </span>
             <button
+              type="button"
               data-testid="community-post-share-button"
+              onClick={() => void handleShare()}
               className="inline-flex items-center gap-1.5 transition hover:text-ink"
             >
               <Share2 size={16} /> Поделиться
@@ -217,6 +275,12 @@ export default function FeedPostCard({
             Сохранить
           </button>
         </div>
+
+        {shareFeedback ? (
+          <p role="alert" className="text-xs font-medium text-emerald-600">
+            {shareFeedback}
+          </p>
+        ) : null}
 
         {comments.length > 0 || commentsError || isCommentsLoading ? (
           <div

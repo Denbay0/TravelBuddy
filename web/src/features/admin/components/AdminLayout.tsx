@@ -17,11 +17,11 @@ export default function AdminLayout() {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="grid min-h-[calc(100vh-3rem)] gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="card-surface hidden h-fit p-4 lg:sticky lg:top-6 lg:block">
+        <aside className="card-surface hidden h-fit min-w-0 p-4 lg:sticky lg:top-6 lg:block">
           <AdminSidebar links={adminLinks} />
         </aside>
 
-        <section className="card-surface min-h-[70vh] p-4 sm:p-6">
+        <section className="card-surface min-h-[70vh] min-w-0 p-4 sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3">
             <p className="min-w-0 text-sm font-semibold text-ink/70 [overflow-wrap:anywhere]">{admin?.name}</p>
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">

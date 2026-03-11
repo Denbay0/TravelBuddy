@@ -20,7 +20,29 @@ const emptyForm: CommunityPostForm = {
   date: '',
 }
 
-function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityPost {
+function formatCommunityDate(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+  }
+
+  return new Date(value).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function mapApiPostToCommunityPost(
+  post: ApiPost,
+  imageUrl?: string,
+  overrides?: Partial<Pick<CommunityPost, 'date' | 'transport'>>,
+): CommunityPost {
   return {
     id: post.id,
     author: {
@@ -29,15 +51,11 @@ function mapApiPostToCommunityPost(post: ApiPost, imageUrl?: string): CommunityP
       avatarUrl: `https://i.pravatar.cc/160?u=${post.owner.id}`,
     },
     route: post.city,
-    date: new Date(post.createdAt).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }),
+    date: overrides?.date ?? formatCommunityDate(post.tripDate || post.createdAt),
     imageUrl:
       imageUrl || `https://source.unsplash.com/1600x900/?travel,${encodeURIComponent(post.city)}`,
     caption: post.content,
-    transport: post.transport,
+    transport: overrides?.transport ?? post.transport,
     likes: post.likesCount,
     comments: post.commentsCount,
     saved: post.isSaved,
@@ -103,13 +121,22 @@ export default function CommunityPage() {
     if (!form.caption.trim() || !form.route.trim()) return
 
     try {
+      const submittedForm = { ...form }
       const createdPost = await communityService.createPost({
-        title: form.caption.slice(0, 50) || `Пост о маршруте ${form.route}`,
-        content: form.caption,
-        city: form.route,
+        title: submittedForm.caption.slice(0, 50) || `Пост о маршруте ${submittedForm.route}`,
+        content: submittedForm.caption,
+        city: submittedForm.route,
+        transport: submittedForm.transport,
+        tripDate: submittedForm.date || undefined,
       })
 
-      setPosts((prev) => [mapApiPostToCommunityPost(createdPost, form.imageUrl || undefined), ...prev])
+      setPosts((prev) => [
+        mapApiPostToCommunityPost(createdPost, submittedForm.imageUrl || undefined, {
+          date: submittedForm.date ? formatCommunityDate(submittedForm.date) : undefined,
+          transport: submittedForm.transport,
+        }),
+        ...prev,
+      ])
       setForm(emptyForm)
       setIsModalOpen(false)
     } catch (createError) {

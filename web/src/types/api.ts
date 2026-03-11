@@ -102,6 +102,7 @@ export type ApiPost = {
   content: string
   city: string
   transport: TransportCategory
+  tripDate?: string | null
   owner: {
     id: number
     name: string
