@@ -246,6 +246,9 @@ export default function FeedPostCard({
         <div className="flex items-center justify-between border-t border-borderline/60 pt-3 text-sm text-ink/70">
           <div className="flex items-center gap-4">
             <button
+              type="button"
+              data-testid="community-post-like-button"
+              aria-pressed={post.liked ? 'true' : 'false'}
               disabled={isPending}
               onClick={() => handleProtectedAction(() => onToggleLike?.(post))}
               className="inline-flex items-center gap-1.5 transition hover:text-ink disabled:opacity-50"
@@ -267,6 +270,9 @@ export default function FeedPostCard({
             </button>
           </div>
           <button
+            type="button"
+            data-testid="community-post-save-button"
+            aria-pressed={post.saved ? 'true' : 'false'}
             disabled={isPending}
             onClick={() => handleProtectedAction(() => onToggleSave?.(post))}
             className="inline-flex items-center gap-1.5 transition hover:text-ink disabled:opacity-50"
@@ -313,6 +319,7 @@ export default function FeedPostCard({
             {canLoadMoreComments && !isCommentsLoading ? (
               <button
                 type="button"
+                data-testid="community-post-comments-load-more"
                 onClick={() => void loadComments(commentsPage + 1, true)}
                 className="text-sm font-medium text-accent transition hover:opacity-80"
               >

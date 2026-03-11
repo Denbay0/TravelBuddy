@@ -17,6 +17,9 @@ env/
 
 # Tooling caches
 .pytest_cache/
+.pytest_cache_pytest/
+.pytest_media/
+pytest-cache-files-*/
 .mypy_cache/
 .ruff_cache/
 

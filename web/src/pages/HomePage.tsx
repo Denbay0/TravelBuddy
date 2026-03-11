@@ -222,7 +222,7 @@ export default function HomePage() {
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold">Пример travel-отчёта</h3>
-              <button onClick={() => setIsReportOpen(false)}>
+              <button onClick={() => setIsReportOpen(false)} aria-label="Закрыть отчёт">
                 <X size={18} />
               </button>
             </div>

@@ -56,7 +56,14 @@ def remove_avatar_file(media_root: str, avatar_path: str | None) -> None:
         return
     file_path = Path(media_root) / avatar_path
     if file_path.exists() and file_path.is_file():
-        file_path.unlink()
+        try:
+            file_path.unlink()
+        except PermissionError:
+            try:
+                file_path.chmod(0o666)
+                file_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def backfill_handles(db: Session) -> None:

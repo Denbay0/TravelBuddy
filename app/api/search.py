@@ -8,6 +8,7 @@ from app.api.routes import _serialize_route
 from app.db.database import get_db
 from app.db.models import Post, Route, User
 from app.schemas.search import SearchResponse, SearchUserOut
+from app.utils_profile import build_avatar_url
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -47,7 +48,12 @@ def global_search(
         routes=[_serialize_route(route, current_user.id if current_user else None) for route in filtered_routes],
         posts=[_serialize_post(post, current_user.id if current_user else None) for post in filtered_posts],
         users=[
-            SearchUserOut(id=user.id, name=user.username, handle=f"@{user.handle}", avatar_url=user.avatar_url)
+            SearchUserOut(
+                id=user.id,
+                name=user.username,
+                handle=f"@{user.handle}",
+                avatar_url=build_avatar_url(user.avatar_path),
+            )
             for user in filtered_users
         ],
     )

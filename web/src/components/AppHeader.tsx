@@ -137,7 +137,11 @@ export default function AppHeader() {
           ) : null}
         </div>
 
-        <button className="btn-outline rounded-full p-2 md:hidden" onClick={() => setIsMenuOpen((prev) => !prev)}>
+        <button
+          className="btn-outline rounded-full p-2 md:hidden"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+          aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+        >
           {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
       </div>
@@ -174,7 +178,7 @@ export default function AppHeader() {
             ) : (
               <Link to="/login" onClick={() => setIsMenuOpen(false)} className="btn-outline px-3 py-2">Войти</Link>
             )}
-            <button onClick={toggleTheme} className="btn-outline rounded-full p-2">
+            <button onClick={toggleTheme} className="btn-outline rounded-full p-2" aria-label="Сменить тему">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
