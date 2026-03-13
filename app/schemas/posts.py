@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import Field
 
@@ -11,6 +11,7 @@ class PostCreateRequest(CamelModel):
     content: str = Field(min_length=1)
     city: str = Field(min_length=1, max_length=128)
     transport: TransportType = TransportType.WALK
+    trip_date: date | None = None
 
 
 class PostUpdateRequest(CamelModel):
@@ -18,6 +19,7 @@ class PostUpdateRequest(CamelModel):
     content: str | None = Field(default=None, min_length=1)
     city: str | None = Field(default=None, min_length=1, max_length=128)
     transport: TransportType | None = None
+    trip_date: date | None = None
 
 
 class CommentCreateRequest(CamelModel):
@@ -50,6 +52,7 @@ class PostOut(CamelModel):
     content: str
     city: str
     transport: TransportType
+    trip_date: date | None
     owner: PostOwner
     likes_count: int
     comments_count: int

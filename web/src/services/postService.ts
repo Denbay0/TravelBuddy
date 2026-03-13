@@ -12,7 +12,13 @@ export const postService = {
     return apiRequest<PostListResponse>(`/posts?page=${page}&limit=${limit}`)
   },
 
-  async create(payload: { title: string; content: string; city: string }): Promise<ApiPost> {
+  async create(payload: {
+    title: string
+    content: string
+    city: string
+    transport: string
+    tripDate?: string
+  }): Promise<ApiPost> {
     return apiRequest<ApiPost>('/posts', {
       method: 'POST',
       body: payload,
@@ -23,7 +29,16 @@ export const postService = {
     return apiRequest<ApiPost>(`/posts/${postId}`)
   },
 
-  async update(postId: number, payload: Partial<{ title: string; content: string; city: string }>): Promise<ApiPost> {
+  async update(
+    postId: number,
+    payload: Partial<{
+      title: string
+      content: string
+      city: string
+      transport: string
+      tripDate: string
+    }>,
+  ): Promise<ApiPost> {
     return apiRequest<ApiPost>(`/posts/${postId}`, {
       method: 'PATCH',
       body: payload,

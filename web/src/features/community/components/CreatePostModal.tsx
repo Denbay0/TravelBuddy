@@ -32,7 +32,11 @@ export default function CreatePostModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[rgb(var(--overlay))/0.55] px-4 py-8 backdrop-blur-sm" onClick={onClose}>
+    <div
+      data-testid="community-create-post-modal"
+      className="fixed inset-0 z-[60] bg-[rgb(var(--overlay))/0.55] px-4 py-8 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
         className="mx-auto max-w-xl rounded-3xl border border-borderline/80 bg-surface p-6 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
@@ -51,6 +55,7 @@ export default function CreatePostModal({
           <label className="grid gap-1.5 text-sm text-ink/75">
             Ссылка на фото
             <input
+              data-testid="community-post-image-url"
               value={form.imageUrl}
               onChange={(event) => onChange('imageUrl', event.target.value)}
               placeholder="https://..."
@@ -61,6 +66,7 @@ export default function CreatePostModal({
           <label className="grid gap-1.5 text-sm text-ink/75">
             Локация или маршрут
             <input
+              data-testid="community-post-route"
               value={form.route}
               onChange={(event) => onChange('route', event.target.value)}
               placeholder="Рим — Флоренция"
@@ -71,6 +77,7 @@ export default function CreatePostModal({
           <label className="grid gap-1.5 text-sm text-ink/75">
             Дата поездки
             <input
+              data-testid="community-post-date"
               type="date"
               value={form.date}
               onChange={(event) => onChange('date', event.target.value)}
@@ -81,6 +88,7 @@ export default function CreatePostModal({
           <label className="grid gap-1.5 text-sm text-ink/75">
             Транспорт
             <select
+              data-testid="community-post-transport"
               value={form.transport}
               onChange={(event) => onChange('transport', event.target.value)}
               className="form-control px-4 py-2.5"
@@ -96,6 +104,7 @@ export default function CreatePostModal({
           <label className="grid gap-1.5 text-sm text-ink/75">
             Подпись
             <textarea
+              data-testid="community-post-caption"
               value={form.caption}
               onChange={(event) => onChange('caption', event.target.value)}
               rows={4}
@@ -104,7 +113,11 @@ export default function CreatePostModal({
             />
           </label>
 
-          <button type="submit" className="btn-primary mt-2 px-5 py-2.5 text-sm">
+          <button
+            data-testid="community-post-submit"
+            type="submit"
+            className="btn-primary mt-2 px-5 py-2.5 text-sm"
+          >
             Опубликовать
           </button>
         </form>

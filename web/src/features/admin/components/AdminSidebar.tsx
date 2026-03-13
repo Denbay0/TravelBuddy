@@ -12,7 +12,7 @@ type AdminSidebarProps = {
 }
 
 const baseNavLinkClass =
-  'rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-ink/70 transition hover:border-ink/10 hover:bg-white/60 hover:text-ink dark:hover:bg-white/10'
+  'block w-full rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-ink/70 transition hover:border-ink/10 hover:bg-white/60 hover:text-ink dark:hover:bg-white/10'
 
 export default function AdminSidebar({ links, onNavigate, className = '' }: AdminSidebarProps) {
   return (
@@ -20,7 +20,7 @@ export default function AdminSidebar({ links, onNavigate, className = '' }: Admi
       <div className="mb-6 px-3">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/40">Admin panel</p>
       </div>
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -28,7 +28,7 @@ export default function AdminSidebar({ links, onNavigate, className = '' }: Admi
             onClick={onNavigate}
             className={({ isActive }) =>
               isActive
-                ? 'rounded-xl border border-amber/20 bg-amber/10 px-3 py-2 text-sm font-semibold text-ink shadow-sm'
+                ? 'block w-full rounded-xl border border-amber/20 bg-amber/10 px-3 py-2 text-sm font-semibold text-ink shadow-sm'
                 : baseNavLinkClass
             }
           >

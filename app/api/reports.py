@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -58,7 +58,7 @@ def download_example_report_pdf() -> Response:
     content = _render_pdf(
         "TravelBuddy Example Report",
         [
-            f"Generated at: {datetime.utcnow().isoformat()} UTC",
+            f"Generated at: {datetime.now(timezone.utc).isoformat()}",
             "",
             "Маршрут: Рим -> Флоренция -> Милан",
             "Длительность: 6 дней",

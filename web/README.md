@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# TravelBuddy Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend for TravelBuddy built with React, TypeScript and Vite.
 
-Currently, two official plugins are available:
+## Community E2E
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Playwright E2E tests for the community module live in `tests/e2e/community.spec.ts`.
 
-## React Compiler
+Covered scenarios:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- creating a publication and checking that it appears in the feed
+- verifying the selected transport on the post card
+- verifying the selected trip date on the post card
+- adding a comment and checking that it appears in the UI
+- clicking the share button and checking for an observable UI result
 
-## Expanding the ESLint configuration
+## Regression Scenarios
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Three tests are intentionally kept as regression tests and may fail until the
+current product defects are fixed:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `Транспорт публикации...`
+  The post card shows a different transport than the one selected in the creation form.
+- `Дата поездки...`
+  The selected trip date is not shown on the post card after publication.
+- `Кнопка "Поделиться"...`
+  The share button click currently does not produce an observable UI result.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+The tests remain unchanged to document current defects without changing
+application business logic.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## How To Run
+
+1. Install frontend dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Install Playwright runtime dependencies on a fresh machine or CI runner:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npx playwright install chromium ffmpeg
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. Run the E2E suite:
+
+```bash
+npm run test:e2e
+```
+
+Additional commands:
+
+```bash
+npm run test:e2e:headed
+npm run test:e2e:ui
+npm run test:e2e:report
+```
+
+## Execution Notes
+
+- Playwright starts the local Vite dev server automatically through `webServer`
+  unless `PLAYWRIGHT_BASE_URL` is provided.
+- Local retries are `0`.
+- In CI, retries are `1`, so `trace` and `video` are recorded on the first retry.
+- Screenshots are recorded on every failure.
+
+## Artifacts
+
+Failure artifacts are stored here:
+
+- `test-results/`:
+  screenshots, traces, videos and error context
+- `playwright-report/`:
+  HTML report for local inspection
+
+Open the HTML report after a run:
+
+```bash
+npm run test:e2e:report
 ```

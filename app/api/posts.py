@@ -29,6 +29,7 @@ def _serialize_post(post: Post, current_user_id: int | None = None) -> PostOut:
         content=post.content or "",
         city=post.city or "",
         transport=post.transport,
+        trip_date=post.trip_date,
         owner=PostOwner(id=post.owner.id, name=post.owner.username, handle=f"@{post.owner.handle}"),
         likes_count=len(post.likes or []),
         comments_count=len(post.comments or []),
@@ -74,7 +75,14 @@ def create_post(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> PostOut:
-    post = Post(owner_id=current_user.id, title=payload.title, content=payload.content, city=payload.city, transport=payload.transport)
+    post = Post(
+        owner_id=current_user.id,
+        title=payload.title,
+        content=payload.content,
+        city=payload.city,
+        transport=payload.transport,
+        trip_date=payload.trip_date,
+    )
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -103,7 +111,7 @@ def update_post(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner can edit this post")
 
     updates = payload.model_dump(exclude_unset=True)
-    for field in ("title", "content", "city", "transport"):
+    for field in ("title", "content", "city", "transport", "trip_date"):
         if field in updates:
             setattr(post, field, updates[field])
 

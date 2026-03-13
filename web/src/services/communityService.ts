@@ -46,7 +46,13 @@ export const communityService = {
     }))
   },
 
-  async createPost(payload: { title: string; content: string; city: string }): Promise<ApiPost> {
+  async createPost(payload: {
+    title: string
+    content: string
+    city: string
+    transport: string
+    tripDate?: string
+  }): Promise<ApiPost> {
     return postService.create(payload)
   },
 

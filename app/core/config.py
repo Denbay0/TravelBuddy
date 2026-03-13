@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://travelbuddy:travelbuddy@postgres:5432/travelbuddy"
     redis_url: str = "redis://redis:6379/0"
     geoapify_api_key: str | None = None
+    media_root: str = "media"
 
     jwt_cookie_name: str = "access_token"
     csrf_cookie_name: str = "csrf_token"
